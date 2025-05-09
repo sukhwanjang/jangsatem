@@ -1,5 +1,19 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";  // 경로 수정된 부분
+
+interface BusinessCard {
+  id: number;
+  name: string;
+  region: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  region: string;
+}
 
 export default function Home() {
   const categories = [
@@ -26,26 +40,43 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 18;
 
-  const posts = Array.from({ length: 42 }).map((_, i) => ({
-    id: i + 1,
-    title: `견적 요청 ${i + 1}`,
-    content: "이 작업에 대해 견적이 필요합니다. 자세한 내용은 아래를 참고해주세요.",
-    region: i % 2 === 0 ? "서울 강남" : "부산 해운대",
-    category: "간판"
-  }));
+  const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]); // Supabase에서 명함 데이터를 저장할 상태
+  const [posts, setPosts] = useState<Post[]>([]); // 견적문의 데이터 추가
 
-  const businessCards = Array.from({ length: 45 }).map((_, i) => ({
-    id: i + 1,
-    name: `업체명 ${i + 1}`,
-    region: i % 2 === 0 ? "서울 강남" : "부산 해운대"
-  }));
+  useEffect(() => {
+    const fetchData = async () => {
+      // 명함 데이터 가져오기
+      const { data: cards, error: cardError } = await supabase
+        .from("business_cards") // 실제 Supabase 테이블 이름
+        .select("*");
 
+      if (cardError) {
+        console.error("명함 불러오기 실패:", cardError.message);
+      } else {
+        setBusinessCards(cards || []);
+      }
+
+      // 견적문의 데이터 가져오기
+      const { data: postsData, error: postError } = await supabase
+        .from("posts") // 실제 Supabase 테이블 이름
+        .select("*");
+
+      if (postError) {
+        console.error("견적문의 불러오기 실패:", postError.message);
+      } else {
+        setPosts(postsData || []);
+      }
+    };
+
+    fetchData();
+  }, []); // 컴포넌트 처음 로드될 때만 실행
+
+  // 명함 데이터 페이지네이션 처리
   const paginatedCards = businessCards.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // 견적문의 데이터 페이지네이션 처리
   const paginatedPosts = posts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const totalPages = Math.ceil(
-    activeTab === "명함" ? businessCards.length / itemsPerPage : posts.length / itemsPerPage
-  );
+  const totalPages = Math.ceil(businessCards.length / itemsPerPage);
 
   return (
     <main className="min-h-screen flex bg-white text-gray-800">
