@@ -86,28 +86,28 @@ export default function Home() {
   const totalPages = Math.ceil(businessCards.length / itemsPerPage);
 
   const handleSubmit = async () => {
-  if (!newPostTitle || !newPostContent) {
-    alert("제목과 내용을 입력해주세요!");
-    return;
-  }
-
-  // Supabase에 글을 추가
-  const { data, error } = await supabase
-    .from("posts")
-    .insert([{ title: newPostTitle, content: newPostContent, region: "지역명" }]);
-
-  if (error) {
-    console.error("글 추가 실패:", error.message);
-  } else {
-    // data가 null인 경우를 안전하게 처리
-    if (data) {
-      setPosts([data[0], ...posts]); // 새 글을 앞에 추가
-      setIsWriting((prev) => ({ ...prev, [activeTab]: false })); // 글쓰기 종료
-      setNewPostTitle(""); // 입력 폼 초기화
-      setNewPostContent("");
+    if (!newPostTitle || !newPostContent) {
+      alert("제목과 내용을 입력해주세요!");
+      return;
     }
-  }
-};
+
+    // Supabase에 글을 추가
+    const { data, error } = await supabase
+      .from("posts")
+      .insert([{ title: newPostTitle, content: newPostContent, region: "지역명" }]);
+
+    if (error) {
+      console.error("글 추가 실패:", error.message);
+    } else {
+      // data가 null인 경우를 안전하게 처리
+      if (data) {
+        setPosts([data[0], ...posts]); // 새 글을 앞에 추가
+        setIsWriting((prev) => ({ ...prev, [activeTab]: false })); // 글쓰기 종료
+        setNewPostTitle(""); // 입력 폼 초기화
+        setNewPostContent("");
+      }
+    }
+  };
 
   return (
     <main className="min-h-screen flex bg-white text-gray-800">
@@ -128,7 +128,9 @@ export default function Home() {
                 className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
                   selectedCategory === item ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 }`}
-              >{item}</button>
+              >
+                {item}
+              </button>
               {openCategory === item && (
                 <div className="pl-4 pt-1 space-y-1">
                   {fixedSubCategories.map((sub) => (
@@ -141,7 +143,9 @@ export default function Home() {
                       className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
                         activeTab === sub ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
                       }`}
-                    >▸ {sub}</button>
+                    >
+                      ▸ {sub}
+                    </button>
                   ))}
                 </div>
               )}
@@ -239,7 +243,9 @@ export default function Home() {
                   className={`px-3 py-1 text-sm rounded border ${
                     currentPage === i + 1 ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
                   }`}
-                >{i + 1}</button>
+                >
+                  {i + 1}
+                </button>
               ))}
             </div>
           </>
