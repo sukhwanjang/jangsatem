@@ -13,6 +13,7 @@ interface Post {
   title: string;
   content: string;
   region: string;
+  user_id?: string;
 }
 
 export default function Home() {
@@ -31,19 +32,23 @@ export default function Home() {
 
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({ 명함: false, 견적문의: false });
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUserAndData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
       const { data: cards, error: cardError } = await supabase.from("business_cards").select("*");
       if (!cardError && cards) setBusinessCards(cards);
 
       const { data: postsData, error: postError } = await supabase.from("posts").select("*");
       if (!postError && postsData) setPosts(postsData);
     };
-    fetchData();
+    fetchUserAndData();
   }, []);
 
   const fillEmptyCards = <T,>(items: T[], total: number): (T | null)[] => {
@@ -67,13 +72,20 @@ export default function Home() {
   );
 
   const handleSubmit = async () => {
+    if (!user) {
+      alert("로그인 후 작성 가능합니다.");
+      return;
+    }
+
     if (!newPostTitle || !newPostContent) {
       alert("제목과 내용을 입력해주세요!");
       return;
     }
+
     const { data, error } = await supabase
       .from("posts")
-      .insert([{ title: newPostTitle, content: newPostContent, region: "지역명" }]);
+      .insert([{ title: newPostTitle, content: newPostContent, region: "지역명", user_id: user.id }]);
+
     if (!error && data) {
       setPosts([data[0], ...posts]);
       setIsWriting((prev) => ({ ...prev, [activeTab]: false }));
@@ -82,7 +94,6 @@ export default function Home() {
     }
   };
 
-  // BusinessCard인지 확인하는 타입 가드
   const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
     return "name" in item;
   };
@@ -134,6 +145,36 @@ export default function Home() {
       </aside>
 
       <div className="flex-1 p-6">
+        {/* 로그인 상태 표시 */}
+        <header className="flex justify-end mb-4">
+          {user ? (
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setUser(null);
+              }}
+              className="px-3 py-1 bg-gray-300 text-sm rounded hover:bg-gray-400"
+            >
+              로그아웃
+            </button>
+          ) : (
+            <button
+              onClick={async () => {
+                const email = prompt("이메일 입력");
+                const password = prompt("비밀번호 입력");
+                if (email && password) {
+                  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                  if (error) alert("로그인 실패");
+                  else setUser(data.user);
+                }
+              }}
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            >
+              로그인
+            </button>
+          )}
+        </header>
+
         {view === 'main' ? (
           <>
             <div className="mb-8">
@@ -166,12 +207,14 @@ export default function Home() {
           <>
             <header className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
-              <button
-                onClick={() => setIsWriting((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }))}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-              >
-                {isWriting[activeTab] ? "취소" : "글쓰기"}
-              </button>
+              {user && (
+                <button
+                  onClick={() => setIsWriting((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }))}
+                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                >
+                  {isWriting[activeTab] ? "취소" : "글쓰기"}
+                </button>
+              )}
             </header>
 
             {isWriting[activeTab] && (
