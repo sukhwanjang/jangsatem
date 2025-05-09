@@ -217,7 +217,7 @@ export default function Home() {
               })}
             </div>
 
-            <div className="flex justify-center mt-6 space-x-2"> //
+            <div className="flex justify-center mt-6 space-x-2">
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i + 1}
