@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js"; // ✅ 타입 추가
 
 interface BusinessCard {
   id: number;
@@ -32,7 +33,7 @@ export default function Home() {
 
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null); // ✅ 여기 수정됨
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({ 명함: false, 견적문의: false });
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
