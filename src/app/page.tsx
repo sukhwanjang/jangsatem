@@ -43,6 +43,13 @@ export default function Home() {
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]); // Supabase에서 명함 데이터를 저장할 상태
   const [posts, setPosts] = useState<Post[]>([]); // 견적문의 데이터 추가
 
+  const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({
+    명함: false,
+    견적문의: false,
+  });
+  const [newPostTitle, setNewPostTitle] = useState("");
+  const [newPostContent, setNewPostContent] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       // 명함 데이터 가져오기
@@ -77,6 +84,30 @@ export default function Home() {
   const paginatedPosts = posts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalPages = Math.ceil(businessCards.length / itemsPerPage);
+
+  const handleSubmit = async () => {
+  if (!newPostTitle || !newPostContent) {
+    alert("제목과 내용을 입력해주세요!");
+    return;
+  }
+
+  // Supabase에 글을 추가
+  const { data, error } = await supabase
+    .from("posts")
+    .insert([{ title: newPostTitle, content: newPostContent, region: "지역명" }]);
+
+  if (error) {
+    console.error("글 추가 실패:", error.message);
+  } else {
+    // data가 null인 경우를 안전하게 처리
+    if (data) {
+      setPosts([data[0], ...posts]); // 새 글을 앞에 추가
+      setIsWriting((prev) => ({ ...prev, [activeTab]: false })); // 글쓰기 종료
+      setNewPostTitle(""); // 입력 폼 초기화
+      setNewPostContent("");
+    }
+  }
+};
 
   return (
     <main className="min-h-screen flex bg-white text-gray-800">
@@ -148,6 +179,32 @@ export default function Home() {
             <header className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
             </header>
+
+            {/* 글쓰기 버튼 */}
+            <button onClick={() => setIsWriting((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }))}>
+              {isWriting[activeTab] ? "취소" : "글쓰기"}
+            </button>
+
+            {isWriting[activeTab] && (
+              <div className="writing-form">
+                <input
+                  type="text"
+                  placeholder="제목을 입력하세요"
+                  value={newPostTitle}
+                  onChange={(e) => setNewPostTitle(e.target.value)}
+                  className="input"
+                />
+                <textarea
+                  placeholder="내용을 입력하세요"
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  className="textarea"
+                />
+                <button onClick={handleSubmit} className="submit-btn">
+                  제출
+                </button>
+              </div>
+            )}
 
             {activeTab === "명함" && (
               <div className="grid grid-cols-6 gap-4">
