@@ -18,7 +18,7 @@ interface Post {
 export default function Home() {
   const categories = [
     "간판",
-    "현수막", //
+    "현수막", 
     "배너",
     "메뉴판",
     "시트컷팅",
