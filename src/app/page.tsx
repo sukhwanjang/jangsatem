@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image'; // ✅ next/image import는 최상단 필수
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import { supabase } from "src/lib/supabase";
@@ -19,6 +20,7 @@ interface Post {
   region: string;
   user_id?: string;
 }
+
 
 export default function Home() {
   const categories = [
@@ -226,8 +228,9 @@ const paginatedPosts = fillEmptyCards(
                 <p className="text-2xl font-semibold text-blue-800">여기에 대기업스러운 메인 이미지 또는 프로모션 삽입 가능</p>
               </div>
             </div>
+...
 
-            <section>
+<section>
   <h2 className="text-base font-semibold mb-3">💼 입점 대기 중인 홍보 업체</h2>
   <div className="flex flex-wrap gap-2 justify-start">
     {fillEmptyCards(businessCards.slice(0, 63), 63).map((card, i) => (
@@ -241,9 +244,11 @@ const paginatedPosts = fillEmptyCards(
         {card ? (
           <>
             {card.image_url && typeof card.image_url === 'string' ? (
-              <img
+              <Image
                 src={card.image_url}
                 alt={card.name}
+                width={100}
+                height={55}
                 className="w-full h-[55%] object-cover rounded mb-0.5"
               />
             ) : (
