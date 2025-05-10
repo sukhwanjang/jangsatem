@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [region, setRegion] = useState('');
+  const [age, setAge] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -28,8 +29,8 @@ export default function LoginPage() {
       if (error) setError(error.message);
       else router.replace('/');
     } else {
-      if (!username || !region) {
-        setError('ID와 지역을 입력해주세요.');
+      if (!username || !region || !age) {
+        setError('ID, 나이, 지역을 모두 입력해주세요.');
         setLoading(false);
         return;
       }
@@ -39,12 +40,16 @@ export default function LoginPage() {
         options: {
           data: {
             username,
-            region
+            region,
+            age
           }
         }
       });
       if (error) setError(error.message);
-      else alert('회원가입 성공! 이메일을 확인하세요.');
+      else {
+        alert('회원가입 완료! 장사아이템가득, 장사템입니다!');
+        router.replace('/');
+      }
     }
 
     setLoading(false);
@@ -69,6 +74,20 @@ export default function LoginPage() {
               className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="나이"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
               type="text"
               placeholder="사는 지역"
               value={region}
@@ -85,13 +104,16 @@ export default function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-4 py-2 mb-5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+
+        {mode === 'login' && (
+          <input
+            type="password"
+            placeholder="비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 mb-5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        )}
 
         <button
           onClick={handleSubmit}
