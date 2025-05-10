@@ -185,7 +185,7 @@ export default function Home() {
               <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
               <div className="grid grid-cols-3 gap-6">
                 {fillEmptyCards(businessCards.slice(0, 6), 6).map((card, i) => (
-                  <div key={i} className="border rounded-xl p-6 text-center shadow-md hover:shadow-lg transition min-h-[200px]">
+                  <div key={i} className="border rounded-xl p-6 text-center shadow-md hover:shadow-lg transition min-h-[300px]">
                     {card ? (
                       <>
                         <div className="w-full h-36 bg-gray-100 rounded mb-4 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
