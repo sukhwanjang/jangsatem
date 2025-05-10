@@ -182,23 +182,23 @@ export default function Home() {
             </div>
 
             <section>
-              <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
-              <div className="grid grid-cols-3 gap-6">
-  {fillEmptyCards(businessCards.slice(0, 6), 6).map((card, i) => (
-    <div key={i} className="aspect-square border rounded-xl p-4 text-center shadow-md hover:shadow-lg transition bg-white">
-      {card ? (
-        <>
-          <div className="w-full h-2/3 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
-          <p className="font-semibold text-base">{card.name}</p>
-          <p className="text-sm text-gray-500">{card.region}</p>
-        </>
-      ) : (
-        <div className="w-full h-full bg-gray-100 rounded" />
-      )}
-    </div>
-  ))}
-</div>
-            </section>
+  <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
+  <div className="grid grid-cols-3 gap-6">
+    {fillEmptyCards(businessCards.slice(0, 6), 6).map((card, i) => (
+      <div key={i} className="aspect-[4/3] border rounded-xl p-4 text-center shadow-md hover:shadow-lg transition bg-white">
+        {card ? (
+          <>
+            <div className="w-full h-2/3 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
+            <p className="font-semibold text-base">{card.name}</p>
+            <p className="text-sm text-gray-500">{card.region}</p>
+          </>
+        ) : (
+          <div className="w-full h-full bg-gray-100 rounded" />
+        )}
+      </div>
+    ))}
+  </div>
+</section>
           </>
         ) : (
           <>
