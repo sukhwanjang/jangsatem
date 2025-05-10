@@ -191,7 +191,7 @@ export default function Home() {
             </section>
           </>
         ) : (
-          <div className="text-center text-gray-400">카테고리 보기 기능 준비 중...</div>
+          <div className="text-center text-gray-400">카테고리 보기 기능 준비 중...</div> //
         )}
       </div>
     </main>
