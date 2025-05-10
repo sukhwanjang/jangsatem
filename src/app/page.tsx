@@ -27,6 +27,8 @@ export default function Home() {
   "인테리어", "프렌차이즈"
 ];
 
+const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
+
   const fixedSubCategories = ["명함", "견적문의"];
 
   const router = useRouter();
@@ -108,13 +110,14 @@ export default function Home() {
   return (
     <main className="min-h-screen flex bg-white text-gray-800">
       <aside className="w-60 min-h-screen border-r p-6 bg-gray-50 overflow-y-auto">
+         </aside>
         <div className="text-xl font-bold mb-4 text-blue-600 cursor-pointer" onClick={() => setView('main')}>
           장사템
         </div>
         <div className="space-y-2">
           {categories.map((item) => (
             <div key={item}>
-              <button
+                            <button
                 onClick={() => {
                   setOpenCategory(openCategory === item ? null : item);
                   setSelectedCategory(item);
@@ -150,7 +153,27 @@ export default function Home() {
             </div>
           ))}
         </div>
-      </aside>
+
+        {/* ✅ 여기부터 자유 게시판 3개 버튼 추가 */}
+        <div className="pt-4 border-t border-gray-200 mt-4 space-y-2">
+          {extraBoards.map((board) => (
+            <button
+              key={board}
+              onClick={() => {
+                setSelectedCategory(board);
+                setActiveTab(""); // 서브카테고리 없음
+                setView("category");
+                setCurrentPage(1);
+              }}
+              className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
+                selectedCategory === board ? "bg-green-100 text-green-700" : "text-gray-700 hover:bg-green-50 hover:text-green-600"
+              }`}
+            >
+              {board}
+            </button>
+          ))}
+        </div>
+
 
       <div className="flex-1 p-6">
         <header className="flex justify-end mb-4">
