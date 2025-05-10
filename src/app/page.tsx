@@ -94,12 +94,18 @@ const paginatedPosts = fillEmptyCards(
     }
 
     const { data, error } = await supabase
-      .from("posts")
-      .insert([{ title: newPostTitle, content: newPostContent, region: "지역명", user_id: user.id }]);
+  .from("posts")
+  .insert([{ 
+    title: newPostTitle, 
+    content: newPostContent, 
+    region: selectedCategory,  // ✅ 이거 핵심
+    user_id: user.id 
+  }]);
+
 
     if (!error && data) {
       setPosts([data[0], ...posts]);
-      setIsWriting((prev) => ({ ...prev, [activeTab]: false }));
+      setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
       setNewPostTitle("");
       setNewPostContent("");
     }
@@ -297,7 +303,7 @@ const paginatedPosts = fillEmptyCards(
 }))}
                   className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                 >
-                  {isWriting[activeTab] ? "취소" : "글쓰기"}
+                  {isWriting[selectedCategory] ? "취소" : "글쓰기"} // ✅
                 </button>
               )}
             </header>
