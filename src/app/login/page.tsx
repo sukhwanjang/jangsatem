@@ -5,14 +5,15 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [region, setRegion] = useState('');
   const [age, setAge] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -29,8 +30,8 @@ export default function LoginPage() {
       if (error) setError(error.message);
       else router.replace('/');
     } else {
-      if (!username || !region || !age) {
-        setError('ID, 나이, 지역을 모두 입력해주세요.');
+      if (!username || !region || !age || !email || !password) {
+        setError('모든 항목을 입력해주세요.');
         setLoading(false);
         return;
       }
@@ -47,8 +48,8 @@ export default function LoginPage() {
       });
       if (error) setError(error.message);
       else {
-        alert('회원가입 완료! 장사아이템가득, 장사템입니다!');
-        router.replace('/');
+        setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
+        setTimeout(() => router.replace('/'), 2000);
       }
     }
 
@@ -63,6 +64,7 @@ export default function LoginPage() {
         </h1>
 
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+        {successMessage && <p className="text-green-600 text-center font-semibold mb-4">{successMessage}</p>}
 
         {mode === 'signup' && (
           <>
@@ -94,25 +96,33 @@ export default function LoginPage() {
               onChange={(e) => setRegion(e.target.value)}
               className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <input
+              type="email"
+              placeholder="이메일"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </>
         )}
 
-        <input
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-
         {mode === 'login' && (
-          <input
-            type="password"
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 mb-5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <>
+            <input
+              type="email"
+              placeholder="이메일"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 mb-5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </>
         )}
 
         <button
