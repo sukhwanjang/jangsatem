@@ -50,14 +50,27 @@ export default function LoginPage() {
       }
 
       // 이메일 중복 확인
-      const { data: existingUser, error: checkError } = await supabase
-        .from('users')
+      const { data: existingEmail, error: emailCheckError } = await supabase
+        .from('auth.users')
         .select('email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
-      if (existingUser) {
+      if (existingEmail) {
         setError('이미 등록된 이메일입니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 아이디 중복 확인
+      const { data: existingUsername, error: usernameCheckError } = await supabase
+        .from('users')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existingUsername) {
+        setError('이미 사용 중인 아이디입니다.');
         setLoading(false);
         return;
       }
