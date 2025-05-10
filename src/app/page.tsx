@@ -8,6 +8,8 @@ interface BusinessCard {
   id: number;
   name: string;
   region: string;
+  image_url?: string;   // ✅ 이미지 URL
+  link_url?: string;    // ✅ 클릭 시 이동할 외부 URL
 }
 
 interface Post {
@@ -183,27 +185,39 @@ export default function Home() {
 
             <section>
   <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
-  <div className="grid grid-cols-5 gap-4">
+  <div className="grid grid-cols-5 gap-3">
     {fillEmptyCards(businessCards.slice(0, 10), 10).map((card, i) => (
-      <div
+      <a
         key={i}
-        className="aspect-square border rounded-lg p-2 text-center shadow-sm hover:shadow-md transition bg-white"
+        href={card?.link_url || "#"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="aspect-square border rounded-md p-1 text-center shadow-sm hover:shadow-md transition bg-white block"
       >
         {card ? (
           <>
-            <div className="w-full h-2/3 bg-gray-100 rounded mb-1 flex items-center justify-center text-gray-300 text-xs">
-              이미지 없음
-            </div>
-            <p className="font-medium text-sm truncate">{card.name}</p>
-            <p className="text-xs text-gray-500">{card.region}</p>
+            {card.image_url && typeof card.image_url === 'string' ? (
+              <img
+                src={card.image_url}
+                alt={card.name}
+                className="w-full h-[60%] object-cover rounded mb-1"
+              />
+            ) : (
+              <div className="w-full h-[60%] bg-gray-100 rounded mb-1 flex items-center justify-center text-gray-300 text-[10px]">
+                이미지 없음
+              </div>
+            )}
+            <p className="font-semibold text-xs truncate">{card.name}</p>
+            <p className="text-[10px] text-gray-500">{card.region}</p>
           </>
         ) : (
           <div className="w-full h-full bg-gray-100 rounded" />
         )}
-      </div>
+      </a>
     ))}
   </div>
 </section>
+
           </>
         ) : (
           <>
