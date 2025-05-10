@@ -242,6 +242,46 @@ const paginatedPosts = fillEmptyCards(
     ))}
   </div>
 </section>
+<section className="mt-12">
+  <h2 className="text-xl font-bold mb-4 text-gray-800">🔥 커뮤니티 최신글</h2>
+  <div className="grid grid-cols-3 gap-6">
+    {/* 자유게시판 */}
+    <div className="bg-white border rounded-lg p-4 shadow">
+      <h3 className="text-lg font-semibold mb-2 text-blue-600">자유게시판</h3>
+      <ul className="space-y-2">
+        {posts.filter(p => p.region === "자유게시판").slice(0, 3).map((post) => (
+          <li key={post.id} className="text-sm text-gray-700 hover:underline cursor-pointer">
+            {post.title}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    {/* 유머게시판 */}
+    <div className="bg-white border rounded-lg p-4 shadow">
+      <h3 className="text-lg font-semibold mb-2 text-pink-600">유머게시판</h3>
+      <ul className="space-y-2">
+        {posts.filter(p => p.region === "유머게시판").slice(0, 3).map((post) => (
+          <li key={post.id} className="text-sm text-gray-700 hover:underline cursor-pointer">
+            {post.title}
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    {/* 내가게자랑 */}
+    <div className="bg-white border rounded-lg p-4 shadow">
+      <h3 className="text-lg font-semibold mb-2 text-green-600">내가게자랑</h3>
+      <ul className="space-y-2">
+        {posts.filter(p => p.region === "내가게자랑").slice(0, 3).map((post) => (
+          <li key={post.id} className="text-sm text-gray-700 hover:underline cursor-pointer">
+            {post.title}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
 
 
           </>
