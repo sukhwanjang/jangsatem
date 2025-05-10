@@ -72,7 +72,6 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
   );
 
   const filteredPosts = posts.filter(post => post.region === selectedCategory);
-
 const paginatedPosts = fillEmptyCards(
   filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
   itemsPerPage
@@ -303,7 +302,7 @@ const paginatedPosts = fillEmptyCards(
 }))}
                   className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                 >
-                  {isWriting[selectedCategory] ? "취소" : "글쓰기"} // ✅
+                  {isWriting[selectedCategory] ? "취소" : "글쓰기"} {/* ✅ 글쓰기 버튼 */}
                 </button>
               )}
             </header>
