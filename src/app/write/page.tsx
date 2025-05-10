@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from "src/lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export default function WritePage() {
   const router = useRouter();
