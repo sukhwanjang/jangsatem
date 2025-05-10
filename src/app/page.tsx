@@ -45,11 +45,11 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
 
-      const { data: cards, error: cardError } = await supabase.from("business_cards").select("*");
-      if (!cardError && cards) setBusinessCards(cards);
+      const { data: cards } = await supabase.from("business_cards").select("*");
+      if (cards) setBusinessCards(cards);
 
-      const { data: postsData, error: postError } = await supabase.from("posts").select("*");
-      if (!postError && postsData) setPosts(postsData);
+      const { data: postsData } = await supabase.from("posts").select("*");
+      if (postsData) setPosts(postsData);
     };
     fetchUserAndData();
   }, []);
@@ -148,7 +148,6 @@ export default function Home() {
       </aside>
 
       <div className="flex-1 p-6">
-        {/* 로그인 상태 표시 */}
         <header className="flex justify-end mb-4">
           {user ? (
             <button
@@ -181,17 +180,17 @@ export default function Home() {
 
             <section>
               <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
-              <div className="grid grid-cols-6 gap-4">
-                {fillEmptyCards(businessCards.slice(0, 12), 12).map((card, i) => (
-                  <div key={i} className="border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition">
+              <div className="grid grid-cols-3 gap-6">
+                {fillEmptyCards(businessCards.slice(0, 6), 6).map((card, i) => (
+                  <div key={i} className="border rounded-xl p-6 text-center shadow-md hover:shadow-lg transition min-h-[200px]">
                     {card ? (
                       <>
-                        <div className="w-full h-28 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
-                        <p className="font-semibold text-sm">{card.name}</p>
-                        <p className="text-xs text-gray-500">{card.region}</p>
+                        <div className="w-full h-36 bg-gray-100 rounded mb-4 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
+                        <p className="font-semibold text-base mb-1">{card.name}</p>
+                        <p className="text-sm text-gray-500">{card.region}</p>
                       </>
                     ) : (
-                      <div className="w-full h-28 bg-gray-100 rounded mb-2" />
+                      <div className="w-full h-36 bg-gray-100 rounded mb-4" />
                     )}
                   </div>
                 ))}
