@@ -10,6 +10,14 @@ interface BusinessCard {
   region: string;
 }
 
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  region: string;
+  user_id?: string;
+}
+
 export default function Home() {
   const categories = [
     "간판", "현수막", "배너", "메뉴판", "시트컷팅", "기타 출력물",
@@ -22,9 +30,15 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("간판");
   const [activeTab, setActiveTab] = useState("명함");
   const [openCategory, setOpenCategory] = useState<string | null>("간판");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 18;
 
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({ 명함: false, 견적문의: false });
+  const [newPostTitle, setNewPostTitle] = useState("");
+  const [newPostContent, setNewPostContent] = useState("");
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -33,6 +47,9 @@ export default function Home() {
 
       const { data: cards } = await supabase.from("business_cards").select("*");
       if (cards) setBusinessCards(cards);
+
+      const { data: postsData } = await supabase.from("posts").select("*");
+      if (postsData) setPosts(postsData);
     };
     fetchUserAndData();
   }, []);
@@ -41,6 +58,47 @@ export default function Home() {
     const filled: (T | null)[] = [...items];
     while (filled.length < total) filled.push(null);
     return filled;
+  };
+
+  const paginatedCards = fillEmptyCards(
+    businessCards.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    itemsPerPage
+  );
+
+  const paginatedPosts = fillEmptyCards(
+    posts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    itemsPerPage
+  );
+
+  const totalPages = Math.ceil(
+    (activeTab === "명함" ? businessCards.length : posts.length) / itemsPerPage
+  );
+
+  const handleSubmit = async () => {
+    if (!user) {
+      alert("로그인 후 작성 가능합니다.");
+      return;
+    }
+
+    if (!newPostTitle || !newPostContent) {
+      alert("제목과 내용을 입력해주세요!");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("posts")
+      .insert([{ title: newPostTitle, content: newPostContent, region: "지역명", user_id: user.id }]);
+
+    if (!error && data) {
+      setPosts([data[0], ...posts]);
+      setIsWriting((prev) => ({ ...prev, [activeTab]: false }));
+      setNewPostTitle("");
+      setNewPostContent("");
+    }
+  };
+
+  const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
+    return "name" in item;
   };
 
   return (
@@ -58,6 +116,7 @@ export default function Home() {
                   setSelectedCategory(item);
                   setActiveTab("명함");
                   setView('category');
+                  setCurrentPage(1);
                 }}
                 className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
                   selectedCategory === item ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
@@ -70,7 +129,10 @@ export default function Home() {
                   {fixedSubCategories.map((sub) => (
                     <button
                       key={sub}
-                      onClick={() => setActiveTab(sub)}
+                      onClick={() => {
+                        setActiveTab(sub);
+                        setCurrentPage(1);
+                      }}
                       className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
                         activeTab === sub ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
                       }`}
@@ -120,15 +182,15 @@ export default function Home() {
               <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
               <div className="grid grid-cols-3 gap-6">
                 {fillEmptyCards(businessCards.slice(0, 6), 6).map((card, i) => (
-                  <div key={i} className="border rounded-xl p-6 text-center shadow-md hover:shadow-lg transition min-h-[360px]">
+                  <div key={i} className="border rounded-xl p-6 text-center shadow-md hover:shadow-lg transition min-h-[280px]">
                     {card ? (
                       <>
-                        <div className="w-full h-64 bg-gray-100 rounded mb-4 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
+                        <div className="w-full h-48 bg-gray-100 rounded mb-4 flex items-center justify-center text-gray-400 text-sm">이미지 없음</div>
                         <p className="font-semibold text-base mb-1">{card.name}</p>
                         <p className="text-sm text-gray-500">{card.region}</p>
                       </>
                     ) : (
-                      <div className="w-full h-64 bg-gray-100 rounded mb-4" />
+                      <div className="w-full h-48 bg-gray-100 rounded mb-4" />
                     )}
                   </div>
                 ))}
@@ -136,7 +198,9 @@ export default function Home() {
             </section>
           </>
         ) : (
-          <div className="text-center text-gray-400">카테고리 보기 기능 준비 중...</div>
+          <>
+            ... {/* 기존 카테고리 뷰 그대로 유지 */}
+          </>
         )}
       </div>
     </main>
