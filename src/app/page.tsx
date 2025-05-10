@@ -109,71 +109,71 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
 
   return (
     <main className="min-h-screen flex bg-white text-gray-800">
-      <aside className="w-60 min-h-screen border-r p-6 bg-gray-50 overflow-y-auto">
-         </aside>
-        <div className="text-xl font-bold mb-4 text-blue-600 cursor-pointer" onClick={() => setView('main')}>
-          장사템
-        </div>
-        <div className="space-y-2">
-          {categories.map((item) => (
-            <div key={item}>
-                            <button
+<aside className="w-60 min-h-screen border-r p-6 bg-gray-50 overflow-y-auto">
+  <div className="text-xl font-bold mb-4 text-blue-600 cursor-pointer" onClick={() => setView('main')}>
+    장사템
+  </div>
+
+  <div className="space-y-2">
+    {categories.map((item) => (
+      <div key={item}>
+        <button
+          onClick={() => {
+            setOpenCategory(openCategory === item ? null : item);
+            setSelectedCategory(item);
+            setActiveTab("명함");
+            setView('category');
+            setCurrentPage(1);
+          }}
+          className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
+            selectedCategory === item ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+          }`}
+        >
+          {item}
+        </button>
+        {openCategory === item && (
+          <div className="pl-4 pt-1 space-y-1">
+            {fixedSubCategories.map((sub) => (
+              <button
+                key={sub}
                 onClick={() => {
-                  setOpenCategory(openCategory === item ? null : item);
-                  setSelectedCategory(item);
-                  setActiveTab("명함");
-                  setView('category');
+                  setActiveTab(sub);
                   setCurrentPage(1);
+                  setView('category');
                 }}
-                className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
-                  selectedCategory === item ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
+                  activeTab === sub ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {item}
+                ▸ {sub}
               </button>
-              {openCategory === item && (
-                <div className="pl-4 pt-1 space-y-1">
-                  {fixedSubCategories.map((sub) => (
-                    <button
-                      key={sub}
-                      onClick={() => {
-                        setActiveTab(sub);
-                        setCurrentPage(1);
-                        setView('category');
-                      }}
-                      className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
-                        activeTab === sub ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      ▸ {sub}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
 
-        {/* ✅ 여기부터 자유 게시판 3개 버튼 추가 */}
-        <div className="pt-4 border-t border-gray-200 mt-4 space-y-2">
-          {extraBoards.map((board) => (
-            <button
-              key={board}
-              onClick={() => {
-                setSelectedCategory(board);
-                setActiveTab(""); // 서브카테고리 없음
-                setView("category");
-                setCurrentPage(1);
-              }}
-              className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
-                selectedCategory === board ? "bg-green-100 text-green-700" : "text-gray-700 hover:bg-green-50 hover:text-green-600"
-              }`}
-            >
-              {board}
-            </button>
-          ))}
-        </div>
-
+  {/* 자유게시판 3개 추가 */}
+  <div className="pt-4 border-t border-gray-200 mt-4 space-y-2">
+    {extraBoards.map((board) => (
+      <button
+        key={board}
+        onClick={() => {
+          setSelectedCategory(board);
+          setActiveTab("");
+          setView("category");
+          setCurrentPage(1);
+        }}
+        className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
+          selectedCategory === board ? "bg-green-100 text-green-700" : "text-gray-700 hover:bg-green-50 hover:text-green-600"
+        }`}
+      >
+        {board}
+      </button>
+    ))}
+  </div>
+</aside>
 
       <div className="flex-1 p-6">
         <header className="flex justify-end mb-4">
