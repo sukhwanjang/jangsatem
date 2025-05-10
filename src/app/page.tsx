@@ -134,6 +134,7 @@ export default function Home() {
                       onClick={() => {
                         setActiveTab(sub);
                         setCurrentPage(1);
+                        setView('category');
                       }}
                       className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
                         activeTab === sub ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
