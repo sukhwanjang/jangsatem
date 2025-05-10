@@ -10,14 +10,6 @@ interface BusinessCard {
   region: string;
 }
 
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  region: string;
-  user_id?: string;
-}
-
 export default function Home() {
   const categories = [
     "간판", "현수막", "배너", "메뉴판", "시트컷팅", "기타 출력물",
@@ -30,15 +22,9 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("간판");
   const [activeTab, setActiveTab] = useState("명함");
   const [openCategory, setOpenCategory] = useState<string | null>("간판");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 18;
 
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
-  const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({ 명함: false, 견적문의: false });
-  const [newPostTitle, setNewPostTitle] = useState("");
-  const [newPostContent, setNewPostContent] = useState("");
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -47,9 +33,6 @@ export default function Home() {
 
       const { data: cards } = await supabase.from("business_cards").select("*");
       if (cards) setBusinessCards(cards);
-
-      const { data: postsData } = await supabase.from("posts").select("*");
-      if (postsData) setPosts(postsData);
     };
     fetchUserAndData();
   }, []);
@@ -58,26 +41,6 @@ export default function Home() {
     const filled: (T | null)[] = [...items];
     while (filled.length < total) filled.push(null);
     return filled;
-  };
-
-  const handleSubmit = async () => {
-    if (!user) return;
-    if (!newPostTitle || !newPostContent) return;
-
-    const { data, error } = await supabase
-      .from("posts")
-      .insert([{ title: newPostTitle, content: newPostContent, region: "지역명", user_id: user.id }]);
-
-    if (!error && data) {
-      setPosts([data[0], ...posts]);
-      setIsWriting((prev) => ({ ...prev, [activeTab]: false }));
-      setNewPostTitle("");
-      setNewPostContent("");
-    }
-  };
-
-  const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
-    return "name" in item;
   };
 
   return (
@@ -95,7 +58,6 @@ export default function Home() {
                   setSelectedCategory(item);
                   setActiveTab("명함");
                   setView('category');
-                  setCurrentPage(1);
                 }}
                 className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
                   selectedCategory === item ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
@@ -108,10 +70,7 @@ export default function Home() {
                   {fixedSubCategories.map((sub) => (
                     <button
                       key={sub}
-                      onClick={() => {
-                        setActiveTab(sub);
-                        setCurrentPage(1);
-                      }}
+                      onClick={() => setActiveTab(sub)}
                       className={`w-full text-left px-2 py-1 rounded text-xs font-medium ${
                         activeTab === sub ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
                       }`}
