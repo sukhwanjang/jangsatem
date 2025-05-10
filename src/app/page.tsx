@@ -99,7 +99,7 @@ const { data, error } = await supabase
     {
       title: newPostTitle,
       content: newPostContent,
-      region: selectedCategory,
+      region: activeTab || selectedCategory,  // 🔥 여기!
       user_id: user.id,
     }
   ])
