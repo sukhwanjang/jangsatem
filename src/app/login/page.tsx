@@ -48,6 +48,20 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+
+      // 이메일 중복 확인
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        setError('이미 등록된 이메일입니다.');
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
