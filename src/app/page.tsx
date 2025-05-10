@@ -77,9 +77,8 @@ const paginatedPosts = fillEmptyCards(
   itemsPerPage
 );
 
-  const totalPages = Math.ceil(
-    (activeTab === "명함" ? businessCards.length : posts.length) / itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
+
 
  const handleSubmit = async () => {
   if (!user) {
