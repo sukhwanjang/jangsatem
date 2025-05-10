@@ -42,7 +42,7 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
-  const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({ 명함: false, 견적문의: false });
+  const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({});
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
 
@@ -291,7 +291,10 @@ const paginatedPosts = fillEmptyCards(
               <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
               {user && (
                 <button
-                  onClick={() => setIsWriting((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }))}
+                  onClick={() => setIsWriting((prev) => ({
+  ...prev,
+  [selectedCategory]: !prev[selectedCategory]
+}))}
                   className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                 >
                   {isWriting[activeTab] ? "취소" : "글쓰기"}
@@ -299,26 +302,29 @@ const paginatedPosts = fillEmptyCards(
               )}
             </header>
 
-            {isWriting[activeTab] && (
-              <div className="bg-gray-50 p-4 mb-4 rounded border">
-                <input
-                  type="text"
-                  placeholder="제목을 입력하세요"
-                  value={newPostTitle}
-                  onChange={(e) => setNewPostTitle(e.target.value)}
-                  className="block w-full mb-2 border rounded p-2"
-                />
-                <textarea
-                  placeholder="내용을 입력하세요"
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  className="block w-full mb-2 border rounded p-2 h-24"
-                />
-                <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  제출
-                </button>
-              </div>
-            )}
+            {isWriting[selectedCategory] && (
+  <div className="bg-gray-50 p-4 mb-4 rounded border">
+    <input
+      type="text"
+      placeholder="제목을 입력하세요"
+      value={newPostTitle}
+      onChange={(e) => setNewPostTitle(e.target.value)}
+      className="block w-full mb-2 border rounded p-2"
+    />
+    <textarea
+      placeholder="내용을 입력하세요"
+      value={newPostContent}
+      onChange={(e) => setNewPostContent(e.target.value)}
+      className="block w-full mb-2 border rounded p-2 h-24"
+    />
+    <button
+      onClick={handleSubmit}
+      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+    >
+      제출
+    </button>
+  </div>
+)}
 
             <div className="grid grid-cols-6 gap-4">
               {(activeTab === "명함" ? paginatedCards : paginatedPosts).map((item, index) => {
