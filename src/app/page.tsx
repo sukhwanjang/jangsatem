@@ -44,7 +44,7 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
   const [user, setUser] = useState<User | null>(null);
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({});
   const [newPostTitle, setNewPostTitle] = useState("");
-  const [newPostContent, setNewPostContent] = useState("");
+  const [newPostContent, setNewPostContent] = useState<string | File>("");
 
   useEffect(() => {
   const fetchUserAndData = async () => {
@@ -86,10 +86,10 @@ const paginatedPosts = fillEmptyCards(
     return;
   }
 
-  if (newPostTitle.trim().length < 2 || newPostContent.trim().length < 5) {
-    alert("제목은 2자 이상, 내용은 5자 이상 입력해주세요.");
-    return;
-  }
+  if (typeof newPostContent !== "string" || newPostContent.trim().length < 5) {
+  alert("내용은 5자 이상 입력해주세요.");
+  return;
+}
 
   console.log("🔐 user.id =", user?.id);
 
@@ -321,29 +321,102 @@ const paginatedPosts = fillEmptyCards(
               )}
             </header>
 
-            {isWriting[selectedCategory] && (
+           {isWriting[selectedCategory] && (
   <div className="bg-gray-50 p-4 mb-4 rounded border">
-    <input
-      type="text"
-      placeholder="제목을 입력하세요"
-      value={newPostTitle}
-      onChange={(e) => setNewPostTitle(e.target.value)}
-      className="block w-full mb-2 border rounded p-2"
-    />
-    <textarea
-      placeholder="내용을 입력하세요"
-      value={newPostContent}
-      onChange={(e) => setNewPostContent(e.target.value)}
-      className="block w-full mb-2 border rounded p-2 h-24"
-    />
-    <button
-      onClick={handleSubmit}
-      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-    >
-      제출
-    </button>
+    {activeTab === "명함" ? (
+      <>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    setNewPostContent(file as File); // ← as File 붙여야 오류 안 납니다
+  }
+}}
+          className="mb-2"
+        />
+        <button
+          onClick={async () => {
+            if (!user) {
+              alert("로그인 후 작성 가능합니다.");
+              return;
+            }
+            if (!newPostContent) {
+              alert("이미지를 선택해주세요.");
+              return;
+            }
+
+            const file = newPostContent as File;
+            const filePath = `${user.id}_${Date.now()}_${file.name}`;
+            const { error: uploadError } = await supabase.storage
+              .from("businesscard")
+              .upload(filePath, file);
+
+            if (uploadError) {
+              alert("이미지 업로드 실패: " + uploadError.message);
+              return;
+            }
+
+            const { data: publicUrl } = supabase.storage
+              .from("businesscard")
+              .getPublicUrl(filePath);
+
+            const { error: insertError } = await supabase
+              .from("posts")
+              .insert([
+                {
+                  title: "명함 이미지",
+                  content: publicUrl.publicUrl,
+                  region: activeTab,
+                  user_id: user.id,
+                },
+              ]);
+
+            if (insertError) {
+              alert("등록 실패: " + insertError.message);
+              return;
+            }
+
+            const { data: refreshedPosts } = await supabase
+              .from("posts")
+              .select("*")
+              .order("created_at", { ascending: false });
+            setPosts(refreshedPosts || []);
+            setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
+            setNewPostContent("");
+          }}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          이미지 등록
+        </button>
+      </>
+    ) : (
+      <>
+        <input
+          type="text"
+          placeholder="제목을 입력하세요"
+          value={newPostTitle}
+          onChange={(e) => setNewPostTitle(e.target.value)}
+          className="block w-full mb-2 border rounded p-2"
+        />
+        <textarea
+  placeholder="내용을 입력하세요"
+  value={typeof newPostContent === "string" ? newPostContent : ""}
+  onChange={(e) => setNewPostContent(e.target.value)}
+  className="block w-full mb-2 border rounded p-2 h-24"
+/>
+        <button
+          onClick={handleSubmit}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          제출
+        </button>
+      </>
+    )}
   </div>
 )}
+
 
           <div className="grid grid-cols-6 gap-4">
   {paginatedPosts.map((item, index) => {
