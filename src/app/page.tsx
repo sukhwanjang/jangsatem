@@ -184,15 +184,15 @@ export default function Home() {
             </div>
 
             <section>
-  <h2 className="text-lg font-semibold mb-4">💼 입점 대기 중인 홍보 업체</h2>
-  <div className="grid grid-cols-5 gap-3">
+  <h2 className="text-base font-semibold mb-3">💼 입점 대기 중인 홍보 업체</h2>
+  <div className="grid grid-cols-5 gap-2">
     {fillEmptyCards(businessCards.slice(0, 10), 10).map((card, i) => (
       <a
         key={i}
         href={card?.link_url || "#"}
         target="_blank"
         rel="noopener noreferrer"
-        className="aspect-square border rounded-md p-1 text-center shadow-sm hover:shadow-md transition bg-white block"
+        className="aspect-square border rounded-sm p-0.5 text-center shadow-sm hover:shadow-md transition bg-white block"
       >
         {card ? (
           <>
@@ -200,15 +200,15 @@ export default function Home() {
               <img
                 src={card.image_url}
                 alt={card.name}
-                className="w-full h-[60%] object-cover rounded mb-1"
+                className="w-full h-[50%] object-cover rounded mb-0.5"
               />
             ) : (
-              <div className="w-full h-[60%] bg-gray-100 rounded mb-1 flex items-center justify-center text-gray-300 text-[10px]">
+              <div className="w-full h-[50%] bg-gray-100 rounded mb-0.5 flex items-center justify-center text-gray-300 text-[9px]">
                 이미지 없음
               </div>
             )}
-            <p className="font-semibold text-xs truncate">{card.name}</p>
-            <p className="text-[10px] text-gray-500">{card.region}</p>
+            <p className="font-medium text-[10px] truncate">{card.name}</p>
+            <p className="text-[9px] text-gray-500">{card.region}</p>
           </>
         ) : (
           <div className="w-full h-full bg-gray-100 rounded" />
