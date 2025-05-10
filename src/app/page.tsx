@@ -69,7 +69,9 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
     return filled;
   };
 
-  const filteredPosts = posts.filter(post => post.region === selectedCategory);
+  const filteredPosts = posts.filter(
+  (post) => post.region === (activeTab || selectedCategory)
+);
 const paginatedPosts = fillEmptyCards(
   filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
   itemsPerPage
