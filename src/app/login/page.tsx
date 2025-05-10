@@ -7,6 +7,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [region, setRegion] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -26,7 +28,21 @@ export default function LoginPage() {
       if (error) setError(error.message);
       else router.replace('/');
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      if (!username || !region) {
+        setError('ID와 지역을 입력해주세요.');
+        setLoading(false);
+        return;
+      }
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+            region
+          }
+        }
+      });
       if (error) setError(error.message);
       else alert('회원가입 성공! 이메일을 확인하세요.');
     }
@@ -42,6 +58,25 @@ export default function LoginPage() {
         </h1>
 
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+
+        {mode === 'signup' && (
+          <>
+            <input
+              type="text"
+              placeholder="ID"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="사는 지역"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </>
+        )}
 
         <input
           type="email"
