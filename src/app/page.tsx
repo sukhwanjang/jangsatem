@@ -98,7 +98,7 @@ const paginatedPosts = fillEmptyCards(
     .from("posts")
     .insert([
       {
-        title: newPostTitle,
+        title: newPostTitle, //
         content: newPostContent,
         region: selectedCategory,
         user_id: user.id,
