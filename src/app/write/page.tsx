@@ -1,10 +1,14 @@
 'use client';
 import { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // ✅ 여기 수정
 import { supabase } from "src/lib/supabase";
 
 export default function WritePage() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // ✅ 여기도
+  const category = searchParams.get('category') || '자유게시판'; // ✅ URL 쿼리에서 받아옴
+  const tab = searchParams.get('tab') || '';
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
@@ -22,19 +26,25 @@ export default function WritePage() {
 
     const { error } = await supabase
       .from('posts')
-      .insert([{ title, content, region: '자유게시판', user_id: user.id }]);
+      .insert([{ 
+        title, 
+        content, 
+        region: category, // ✅ 여기서 "자유게시판" 고정 → category 동적 값
+        user_id: user.id 
+      }]);
 
     if (error) {
       alert("등록 실패: " + error.message);
       return;
     }
 
-    router.push('/'); // 완료 후 홈으로 이동
+    router.push('/'); // 등록 후 메인으로 이동
   };
 
   return (
     <main className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">✍ 글쓰기</h1>
+      <p className="text-sm text-gray-600 mb-2">🗂 게시판: <strong>{category}</strong></p>
       <input
         type="text"
         placeholder="제목"
