@@ -1,7 +1,10 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  swcMinify: true, // 또는 아예 없애도 됨
   reactStrictMode: true,
-  // 다른 설정들...
-}
+  swcMinify: true, // ✅ 그냥 true로만 써야 함 (객체 ❌)
+  images: {
+    domains: ['your-project-id.supabase.co'], // ✅ supabase public URL 도메인 넣어야 함
+  },
+};
 
 export default nextConfig;
