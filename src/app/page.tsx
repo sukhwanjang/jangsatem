@@ -186,7 +186,7 @@ export default function Home() {
             <section>
   <h2 className="text-base font-semibold mb-3">💼 입점 대기 중인 홍보 업체</h2>
   <div className="flex flex-wrap gap-2 justify-start">
-    {fillEmptyCards(businessCards.slice(0, 57), 57).map((card, i) => (
+    {fillEmptyCards(businessCards.slice(0, 63), 63).map((card, i) => (
       <a
         key={i}
         href={card?.link_url || "#"}
