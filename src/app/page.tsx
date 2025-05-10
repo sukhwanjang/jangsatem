@@ -81,34 +81,45 @@ const paginatedPosts = fillEmptyCards(
     (activeTab === "명함" ? businessCards.length : posts.length) / itemsPerPage
   );
 
-  const handleSubmit = async () => {
-    if (!user) {
-      alert("로그인 후 작성 가능합니다.");
-      return;
-    }
+ const handleSubmit = async () => {
+  if (!user) {
+    alert("로그인 후 작성 가능합니다.");
+    return;
+  }
 
-    if (!newPostTitle || !newPostContent) {
-      alert("제목과 내용을 입력해주세요!");
-      return;
-    }
+  if (!newPostTitle || !newPostContent) {
+    alert("제목과 내용을 입력해주세요!");
+    return;
+  }
 
-    const { data, error } = await supabase
-  .from("posts")
-  .insert([{ 
-    title: newPostTitle, 
-    content: newPostContent, 
-    region: selectedCategory,  // ✅ 이거 핵심
-    user_id: user.id 
-  }]);
+  console.log("🔐 user.id =", user.id);  // ✅ auth.uid()와 같아야 함
 
+  const { data, error } = await supabase
+    .from("posts")
+    .insert([
+      {
+        title: newPostTitle,
+        content: newPostContent,
+        region: selectedCategory,
+        user_id: user.id,
+      }
+    ]);
 
-    if (!error && data) {
-      setPosts([data[0], ...posts]);
-      setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
-      setNewPostTitle("");
-      setNewPostContent("");
-    }
-  };
+  console.log("📦 Insert 결과:", { data, error });
+
+  if (error) {
+    alert("등록 실패: " + error.message);
+    return;
+  }
+
+  if (data) {
+    const { data: refreshedPosts } = await supabase.from("posts").select("*");
+    setPosts(refreshedPosts || []);
+    setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
+    setNewPostTitle("");
+    setNewPostContent("");
+  }
+};
 
   const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
     return "name" in item;
