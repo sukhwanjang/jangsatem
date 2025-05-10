@@ -95,16 +95,16 @@ const paginatedPosts = fillEmptyCards(
   console.log("🔐 user.id =", user.id);  // ✅ auth.uid()와 같아야 함
 
   const { data, error } = await supabase
-    .from("posts")
-    .insert([
-      {
-        title: newPostTitle, //
-        content: newPostContent,
-        region: selectedCategory,
-        user_id: user.id,
-      }
-    ]);
-
+  .from("posts")
+  .insert([
+    {
+      title: newPostTitle,
+      content: newPostContent,
+      region: selectedCategory,
+      user_id: user.id,
+    }
+  ])
+  .select();  // ✅ 이렇게만 하면 data 반환됨
   console.log("📦 Insert 결과:", { data, error });
 
   if (error) {
