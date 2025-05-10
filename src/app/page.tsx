@@ -309,16 +309,13 @@ const paginatedPosts = fillEmptyCards(
             <header className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
               {user && (
-                <button
-                  onClick={() => setIsWriting((prev) => ({
-  ...prev,
-  [selectedCategory]: !prev[selectedCategory]
-}))}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                >
-                  {isWriting[selectedCategory] ? "취소" : "글쓰기"} {/* ✅ 글쓰기 버튼 */}
-                </button>
-              )}
+  <button
+    onClick={() => router.push(`/write?category=${selectedCategory}&tab=${activeTab}`)}  // ✅ 이 줄만 수정
+    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+  >
+    글쓰기
+  </button>
+)}
             </header>
 
            {isWriting[selectedCategory] && (
