@@ -66,7 +66,7 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
     return filled;
   };
 
-  const paginatedCards = fillEmptyCards(
+  const paginatedCards = fillEmptyCards(//
     businessCards.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
     itemsPerPage
   );
