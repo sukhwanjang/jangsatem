@@ -47,19 +47,19 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
   const [newPostContent, setNewPostContent] = useState("");
 
   useEffect(() => {
-    const fetchUserAndData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+  const fetchUserAndData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log("✅ 현재 로그인 유저:", user); // ✅ 추가
+    setUser(user);
 
-      const { data: cards } = await supabase.from("business_cards").select("*");
-      if (cards) setBusinessCards(cards);
+    const { data: cards } = await supabase.from("business_cards").select("*");
+    if (cards) setBusinessCards(cards);
 
-      const { data: postsData } = await supabase.from("posts").select("*");
-      if (postsData) setPosts(postsData);
-    };
-    fetchUserAndData();
-  }, []);
-
+    const { data: postsData } = await supabase.from("posts").select("*");
+    if (postsData) setPosts(postsData);
+  };
+  fetchUserAndData();
+}, []);
   const fillEmptyCards = <T,>(items: T[], total: number): (T | null)[] => {
     const filled: (T | null)[] = [...items];
     while (filled.length < total) filled.push(null);
