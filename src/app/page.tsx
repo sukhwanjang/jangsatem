@@ -78,8 +78,8 @@ const paginatedPosts = fillEmptyCards(
 );
 
   const totalPages = Math.ceil(
-  filteredPosts.length / itemsPerPage
-);
+    (activeTab === "명함" ? businessCards.length : posts.length) / itemsPerPage
+  );
 
  const handleSubmit = async () => {
   if (!user) {
@@ -342,27 +342,27 @@ const { data, error } = await supabase
   </div>
 )}
 
-            <div className="grid grid-cols-6 gap-4">
-              {(fixedSubCategories.includes(activeTab) ? paginatedCards : paginatedPosts).map((item, index) => {
-                if (!item) {
-                  return (
-                    <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-                      <div className="w-full h-36 flex items-center justify-center text-gray-200">빈칸</div>
-                    </div>
-                  );
-                }
+          <div className="grid grid-cols-6 gap-4">
+  {paginatedPosts.map((item, index) => {
+    if (!item) {
+      return (
+        <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
+          <div className="w-full h-36 flex items-center justify-center text-gray-200">빈칸</div>
+        </div>
+      );
+    }
 
-                return (
-                  <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-                    <div className="w-full h-28 bg-gray-100 mb-2 flex items-center justify-center text-xs text-gray-400">이미지 없음</div>
-                    <p className="font-semibold text-sm mb-1">
-                      {isBusinessCard(item) ? item.name : item.title}
-                    </p>
-                    <p className="text-xs text-gray-500">{item.region}</p>
-                  </div>
-                );
-              })}
-            </div>
+    return (
+      <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
+        <div className="w-full h-28 bg-gray-100 mb-2 flex items-center justify-center text-xs text-gray-400">이미지 없음</div>
+        <p className="font-semibold text-sm mb-1">
+          {isBusinessCard(item) ? item.name : item.title}
+        </p>
+        <p className="text-xs text-gray-500">{item.region}</p>
+      </div>
+    );
+  })}
+</div>
 
             <div className="flex justify-center mt-6 space-x-2">
               {Array.from({ length: totalPages }, (_, i) => (
