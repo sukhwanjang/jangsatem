@@ -50,7 +50,7 @@ export default function LoginPage() {
       }
 
       // 이메일 중복 확인
-      const { data: existingEmail, error: emailCheckError } = await supabase
+      const { data: existingEmail } = await supabase
         .from('auth.users')
         .select('email')
         .eq('email', email)
@@ -63,7 +63,7 @@ export default function LoginPage() {
       }
 
       // 아이디 중복 확인
-      const { data: existingUsername, error: usernameCheckError } = await supabase
+      const { data: existingUsername } = await supabase
         .from('users')
         .select('username')
         .eq('username', username)
