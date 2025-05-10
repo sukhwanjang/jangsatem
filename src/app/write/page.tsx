@@ -7,8 +7,6 @@ export default function WritePage() {
   const router = useRouter();
   const searchParams = useSearchParams(); // ✅ 반드시 함수 안에서 사용
   const category = searchParams.get('category') || '자유게시판';
-  const tab = searchParams.get('tab') || '';
-
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
