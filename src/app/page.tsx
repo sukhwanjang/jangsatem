@@ -78,8 +78,8 @@ const paginatedPosts = fillEmptyCards(
 );
 
   const totalPages = Math.ceil(
-    (activeTab === "명함" ? businessCards.length : posts.length) / itemsPerPage
-  );
+  filteredPosts.length / itemsPerPage
+);
 
  const handleSubmit = async () => {
   if (!user) {
@@ -92,7 +92,7 @@ const paginatedPosts = fillEmptyCards(
     return;
   }
 
-  console.log("🔐 user.id =", user.id);  // ✅ auth.uid()와 같아야 함
+  console.log("🔐 user.id =", user?.id);
 
 const { data, error } = await supabase
   .from("posts")
