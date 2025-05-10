@@ -71,10 +71,12 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
     itemsPerPage
   );
 
-  const paginatedPosts = fillEmptyCards(
-    posts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
-    itemsPerPage
-  );
+  const filteredPosts = posts.filter(post => post.region === selectedCategory);
+
+const paginatedPosts = fillEmptyCards(
+  filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+  itemsPerPage
+);
 
   const totalPages = Math.ceil(
     (activeTab === "명함" ? businessCards.length : posts.length) / itemsPerPage
