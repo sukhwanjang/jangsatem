@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js"; // ✅ 타입 추가
+import { User } from "@supabase/supabase-js";
 
 interface BusinessCard {
   id: number;
@@ -24,6 +25,7 @@ export default function Home() {
   ];
   const fixedSubCategories = ["명함", "견적문의"];
 
+  const router = useRouter();
   const [view, setView] = useState<'main' | 'category'>('main');
   const [selectedCategory, setSelectedCategory] = useState("간판");
   const [activeTab, setActiveTab] = useState("명함");
@@ -33,7 +35,7 @@ export default function Home() {
 
   const [businessCards, setBusinessCards] = useState<BusinessCard[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [user, setUser] = useState<User | null>(null); // ✅ 여기 수정됨
+  const [user, setUser] = useState<User | null>(null);
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({ 명함: false, 견적문의: false });
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
@@ -160,15 +162,7 @@ export default function Home() {
             </button>
           ) : (
             <button
-              onClick={async () => {
-                const email = prompt("이메일 입력");
-                const password = prompt("비밀번호 입력");
-                if (email && password) {
-                  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                  if (error) alert("로그인 실패");
-                  else setUser(data.user);
-                }
-              }}
+              onClick={() => router.push('/login')}
               className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
             >
               로그인
