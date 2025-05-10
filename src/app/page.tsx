@@ -75,15 +75,8 @@ export default function Home() {
   );
 
   const handleSubmit = async () => {
-    if (!user) {
-      alert("로그인 후 작성 가능합니다.");
-      return;
-    }
-
-    if (!newPostTitle || !newPostContent) {
-      alert("제목과 내용을 입력해주세요!");
-      return;
-    }
+    if (!user) return;
+    if (!newPostTitle || !newPostContent) return;
 
     const { data, error } = await supabase
       .from("posts")
@@ -198,9 +191,7 @@ export default function Home() {
             </section>
           </>
         ) : (
-          <>
-            ... {/* 기존 카테고리 뷰 그대로 유지 */}
-          </>
+          <div className="text-center text-gray-400">카테고리 보기 기능 준비 중...</div>
         )}
       </div>
     </main>
