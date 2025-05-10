@@ -1,10 +1,8 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-  swcMinify: true, // ✅ 그냥 true로만 써야 함 (객체 ❌)
-  images: {
-    domains: ['your-project-id.supabase.co'], // ✅ supabase public URL 도메인 넣어야 함
-  },
+  swcMinify: true, // ✅ 경고 없이 허용되는 형식
 };
 
 export default nextConfig;
