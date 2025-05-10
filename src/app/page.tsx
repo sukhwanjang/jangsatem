@@ -49,13 +49,16 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
   useEffect(() => {
   const fetchUserAndData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    console.log("✅ 현재 로그인 유저:", user); // ✅ 추가
+    console.log("✅ 현재 로그인 유저:", user);
     setUser(user);
 
     const { data: cards } = await supabase.from("business_cards").select("*");
     if (cards) setBusinessCards(cards);
 
-    const { data: postsData } = await supabase.from("posts").select("*");
+    const { data: postsData } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false }); // ✅ 최신순 정렬
     if (postsData) setPosts(postsData);
   };
   fetchUserAndData();
@@ -81,24 +84,25 @@ const paginatedPosts = fillEmptyCards(
     return;
   }
 
-  if (!newPostTitle || !newPostContent) {
-    alert("제목과 내용을 입력해주세요!");
+  if (newPostTitle.trim().length < 2 || newPostContent.trim().length < 5) {
+    alert("제목은 2자 이상, 내용은 5자 이상 입력해주세요.");
     return;
   }
 
   console.log("🔐 user.id =", user?.id);
 
-const { data, error } = await supabase
-  .from("posts")
-  .insert([
-    {
-      title: newPostTitle,
-      content: newPostContent,
-      region: activeTab || selectedCategory,  // 🔥 여기!
-      user_id: user.id,
-    }
-  ])
-  .select(); // ✅ data 받아올 수 있도록 추가
+  const { data, error } = await supabase
+    .from("posts")
+    .insert([
+      {
+        title: newPostTitle.trim(),
+        content: newPostContent.trim(),
+        region: activeTab || selectedCategory,
+        user_id: user.id,
+      },
+    ])
+    .select();
+
   console.log("📦 Insert 결과:", { data, error });
 
   if (error) {
@@ -107,7 +111,10 @@ const { data, error } = await supabase
   }
 
   if (data) {
-    const { data: refreshedPosts } = await supabase.from("posts").select("*");
+    const { data: refreshedPosts } = await supabase
+      .from("posts")
+      .select("*")
+      .order("created_at", { ascending: false }); // ✅ 최신순 정렬 추가
     setPosts(refreshedPosts || []);
     setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
     setNewPostTitle("");
