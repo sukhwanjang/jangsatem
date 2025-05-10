@@ -332,7 +332,7 @@ const paginatedPosts = fillEmptyCards(
 )}
 
             <div className="grid grid-cols-6 gap-4">
-              {(activeTab === "명함" ? paginatedCards : paginatedPosts).map((item, index) => {
+              {(fixedSubCategories.includes(activeTab) ? paginatedCards : paginatedPosts).map((item, index) => {
                 if (!item) {
                   return (
                     <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
