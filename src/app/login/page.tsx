@@ -57,21 +57,34 @@ export default function LoginPage() {
         return;
       }
 
-      // 🔍 이메일 중복 확인
-      const { data: existingUser } = await supabase
-  .from('users')
-  .select('email')
-  .eq('email', email.trim())
-  .maybeSingle();
+      // ✅ 이메일 중복 확인
+      const { data: existingEmail } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', email.trim())
+        .maybeSingle();
 
-      if (existingUser) {
+      if (existingEmail) {
         setError('이미 등록된 이메일입니다.');
         setLoading(false);
         return;
       }
 
-      // 🔐 Supabase 인증 계정 생성
-      const { error: signUpError } = await supabase.auth.signUp({
+      // ✅ ID 중복 확인
+      const { data: existingUsername } = await supabase
+        .from('users')
+        .select('username')
+        .eq('username', username.trim())
+        .maybeSingle();
+
+      if (existingUsername) {
+        setError('이미 사용 중인 ID입니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 🔐 supabase auth 계정 생성
+      const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
@@ -83,13 +96,13 @@ export default function LoginPage() {
         }
       });
 
-      if (signUpError) {
-        setError(signUpError.message);
+      if (error) {
+        setError(error.message);
         setLoading(false);
         return;
       }
 
-      // ✅ 추가 정보 DB 저장
+      // ✅ users 테이블 insert
       await supabase.from('users').insert([
         { email: email.trim(), username, region, age }
       ]);
@@ -127,7 +140,6 @@ export default function LoginPage() {
               className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
             <div className="mt-4 border-t pt-4">
               <label className="flex items-center space-x-2">
                 <input type="checkbox" checked={agreeAge} onChange={() => setAgreeAge(!agreeAge)} />
