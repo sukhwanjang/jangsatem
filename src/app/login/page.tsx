@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password.trim(),
+        password: password.trim()
       });
       if (error) setError('로그인 실패: ' + error.message);
       else router.replace('/');
@@ -54,69 +54,58 @@ export default function LoginPage() {
         return;
       }
 
-      // ID 중복 확인
       const { data: existingUsername } = await supabase
         .from('Users')
         .select('id')
         .eq('username', username.trim())
         .maybeSingle();
-
       if (existingUsername) {
         setError('이미 사용 중인 ID입니다.');
         setLoading(false);
         return;
       }
 
-      // 이메일 중복 확인
       const { data: existingEmail } = await supabase
         .from('Users')
         .select('id')
         .eq('email', email.trim())
         .maybeSingle();
-
       if (existingEmail) {
-        setError('이미 등록된 이메일입니다.');
+        setError('이미 사용 중인 이메일입니다.');
         setLoading(false);
         return;
       }
 
-      // 회원가입
-const { error: signUpError } = await supabase.auth.signUp({
-  email: email.trim(),
-  password: password.trim()
-});
-if (signUpError) {
-  setError('회원가입 실패: ' + signUpError.message);
-  setLoading(false);
-  return;
-}
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim()
+      });
 
-// 👉 회원가입 직후 로그인 시도해서 user_id 확보
-const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-  email: email.trim(),
-  password: password.trim()
-});
-if (loginError || !loginData.user) {
-  setError('로그인 세션 확인 실패');
-  setLoading(false);
-  return;
-}
-const user_id = loginData.user.id;
+      if (signUpError) {
+        setError('회원가입 실패: ' + signUpError.message);
+        setLoading(false);
+        return;
+      }
 
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
 
-      // Users 테이블 삽입
+      if (loginError || !loginData.user) {
+        setError('로그인 세션 확인 실패');
+        setLoading(false);
+        return;
+      }
+
+      const user_id = loginData.user.id;
+
       const { error: insertError } = await supabase.from('Users').insert([
-        {
-          email: email.trim(),
-          username,
-          region,
-          age,
-          user_id
-        }
+        { email: email.trim(), username, region, age, user_id }
       ]);
 
       if (insertError) {
-        setError('DB 저장 오류: ' + insertError.message);
+        setError(insertError.message);
         setLoading(false);
         return;
       }
