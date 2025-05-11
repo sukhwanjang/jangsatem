@@ -1,14 +1,16 @@
 'use client';
 import { useState } from "react";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase } from "../../lib/supabase";
 
-export default function WritePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const rawCategory = searchParams.get('category') || '자유게시판';
+interface Props {
+  searchParams: { category?: string };
+}
 
-  // 허용된 카테고리만 통과
+export default function WritePage({ searchParams }: Props) {
+  const router = useRouter();
+  const rawCategory = searchParams.category || '자유게시판';
+
   const allowedCategories = ['자유게시판', '유머게시판', '내가게자랑'];
   const category = allowedCategories.includes(rawCategory) ? rawCategory : '자유게시판';
 
@@ -55,7 +57,6 @@ export default function WritePage() {
   return (
     <main className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">✍ 글쓰기 ({category})</h1>
-
       <input
         type="text"
         placeholder="제목"
@@ -63,14 +64,12 @@ export default function WritePage() {
         onChange={(e) => setTitle(e.target.value)}
         className="w-full border mb-2 p-2 rounded"
       />
-
       <textarea
         placeholder="내용"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="w-full border mb-2 p-2 rounded h-40"
       />
-
       <div className="flex gap-2">
         <button 
           onClick={handleSubmit} 
