@@ -36,12 +36,14 @@ export default function WriteClient({ searchParams }: Props) {
       return;
     }
 
-    const { error } = await supabase.from('posts').insert([{
-      title: title.trim(),
-      content: content.trim(),
-      region: category,
-      user_id: user.id,
-    }]);
+    const { error } = await supabase
+      .from('posts')
+      .insert([{
+        title: title.trim(),
+        content: content.trim(),
+        region: category,
+        user_id: user.id
+      }]);
 
     if (error) {
       alert('등록 실패: ' + error.message);

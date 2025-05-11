@@ -1,7 +1,5 @@
 import { Suspense } from 'react';
-import dynamic from 'next/dynamic';
-
-const WriteClient = dynamic(() => import('@/app/write/WriteClient'), { ssr: false });
+import WriteClient from './WriteClient';
 
 interface Props {
   searchParams: { category?: string };
