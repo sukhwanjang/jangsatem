@@ -117,6 +117,11 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  const handleConfirm = () => {
+    setSuccessMessage('');
+    router.replace('/');
+  };
+
   const allAgreed = agreeAge && agreeTerms;
 
   return (
@@ -193,7 +198,7 @@ export default function LoginPage() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}>
               <p className="text-xl font-semibold text-blue-700 mb-3">{successMessage}</p>
-              <button onClick={() => setSuccessMessage('')} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              <button onClick={handleConfirm} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                 확인
               </button>
             </motion.div>
