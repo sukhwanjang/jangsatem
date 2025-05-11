@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password.trim()
+        password: password.trim(),
       });
       if (error) setError('로그인 실패: ' + error.message);
       else router.replace('/');
@@ -78,7 +78,7 @@ export default function LoginPage() {
 
       const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
-        password: password.trim()
+        password: password.trim(),
       });
 
       if (signUpError) {
@@ -89,7 +89,7 @@ export default function LoginPage() {
 
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password.trim()
+        password: password.trim(),
       });
 
       if (loginError || !loginData.user) {
@@ -101,7 +101,7 @@ export default function LoginPage() {
       const user_id = loginData.user.id;
 
       const { error: insertError } = await supabase.from('Users').insert([
-        { email: email.trim(), username, region, age, user_id }
+        { email: email.trim(), username, region, age, user_id },
       ]);
 
       if (insertError) {
@@ -111,7 +111,6 @@ export default function LoginPage() {
       }
 
       setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
-      setTimeout(() => router.replace('/'), 2000);
     }
 
     setLoading(false);
@@ -121,13 +120,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl">
+      <div className="w-full max-w-md p-8 bg-white rounded-2xl shadow-xl relative">
         <h1 className="text-2xl font-bold text-center text-blue-700 mb-6">
           {mode === 'login' ? '로그인' : '회원가입'}
         </h1>
 
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-        {successMessage && <p className="text-green-600 text-center font-semibold mb-4">{successMessage}</p>}
 
         {mode === 'signup' && (
           <>
@@ -178,6 +176,23 @@ export default function LoginPage() {
           )}
         </div>
       </div>
+
+      {/* ✅ 회원가입 성공 팝업 */}
+      {successMessage && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-2xl w-96 text-center">
+            <h2 className="text-xl font-bold text-blue-700 mb-3">👋 장사템에 오신 걸 환영합니다!</h2>
+            <p className="text-gray-700 text-sm mb-4">
+              소상공인의 모든 고민, 여기서 해결하세요. <br />
+              간판부터 장비, 시공 인력까지… <br />
+              <strong>장사템</strong>과 함께하면 시작이 쉬워집니다.
+            </p>
+            <button onClick={() => { setSuccessMessage(''); router.replace('/'); }} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
