@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface Props {
-  searchParams: { category?: string };
+  searchParams?: { category?: string }; // ✅ 이걸 꼭 넣어야 page.tsx에서 props 전달 시 에러 안 남
 }
 
 export default function WriteClient({ searchParams }: Props) {
@@ -42,7 +42,7 @@ export default function WriteClient({ searchParams }: Props) {
         title: title.trim(),
         content: content.trim(),
         region: category,
-        user_id: user.id
+        user_id: user.id,
       }]);
 
     if (error) {
