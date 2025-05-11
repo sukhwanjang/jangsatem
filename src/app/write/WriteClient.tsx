@@ -23,15 +23,8 @@ export default function WriteClient({ searchParams }: Props) {
       ? searchParams.tab[0]
       : undefined;
 
-  const allowedCategories = ['자유게시판', '유머게시판', '내가게자랑'];
-  const allowedTabs = ['명함', '견적문의'];
-
-  const region =
-    allowedTabs.includes(rawTab || '')
-      ? rawTab!
-      : allowedCategories.includes(rawCategory || '')
-        ? rawCategory!
-        : '자유게시판';
+  // 🔥 핵심: region 우선순위 tab → category → '자유게시판'
+  const region = rawTab || rawCategory || '자유게시판';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -69,7 +62,7 @@ export default function WriteClient({ searchParams }: Props) {
       return;
     }
 
-    alert('등록 완료되었습니다.');
+    alert(`등록 완료되었습니다. (${region})`);
     router.push('/');
   };
 
