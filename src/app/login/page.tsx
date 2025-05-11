@@ -41,53 +41,62 @@ export default function LoginPage() {
         router.replace('/');
       }
     } else {
-  if (!username || !region || !age || !email || !password || !confirmPassword) {
-    setError('모든 항목을 입력해주세요.');
-    setLoading(false);
-    return;
-  }
-  if (password !== confirmPassword) {
-    setError('비밀번호가 일치하지 않습니다.');
-    setLoading(false);
-    return;
-  }
-  if (!agreeAge || !agreeTerms) {
-    setError('필수 동의 항목에 체크해주세요.');
-    setLoading(false);
-    return;
-  }
-
-  // 🔽 Supabase auth에 먼저 회원가입 요청
-  const { data, error } = await supabase.auth.signUp({
-    email: email.trim(),
-    password: password.trim(),
-    options: {
-      data: {
-        username,
-        region,
-        age
+      if (!username || !region || !age || !email || !password || !confirmPassword) {
+        setError('모든 항목을 입력해주세요.');
+        setLoading(false);
+        return;
       }
+      if (password !== confirmPassword) {
+        setError('비밀번호가 일치하지 않습니다.');
+        setLoading(false);
+        return;
+      }
+      if (!agreeAge || !agreeTerms) {
+        setError('필수 동의 항목에 체크해주세요.');
+        setLoading(false);
+        return;
+      }
+
+      // 🔍 이메일 중복 확인
+      const { data: existingUser } = await supabase
+  .from('users')
+  .select('email')
+  .eq('email', email.trim())
+  .maybeSingle();
+
+      if (existingUser) {
+        setError('이미 등록된 이메일입니다.');
+        setLoading(false);
+        return;
+      }
+
+      // 🔐 Supabase 인증 계정 생성
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
+        options: {
+          data: {
+            username,
+            region,
+            age
+          }
+        }
+      });
+
+      if (signUpError) {
+        setError(signUpError.message);
+        setLoading(false);
+        return;
+      }
+
+      // ✅ 추가 정보 DB 저장
+      await supabase.from('users').insert([
+        { email: email.trim(), username, region, age }
+      ]);
+
+      setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
+      setTimeout(() => router.replace('/'), 2000);
     }
-  });
-
-  if (error) {
-    if (error.message.includes('already registered')) {
-      setError('이미 등록된 이메일입니다.');
-    } else {
-      setError(error.message);
-    }
-    setLoading(false);
-    return;
-  }
-
-  // ✅ auth 성공 시에만 users 테이블에도 insert
-  await supabase.from('users').insert([
-    { email: email.trim(), username, region, age }
-  ]);
-
-  setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
-  setTimeout(() => router.replace('/'), 2000);
-}
 
     setLoading(false);
   };
