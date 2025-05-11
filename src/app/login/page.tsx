@@ -57,7 +57,7 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ 이메일 중복 확인
+      // 이메일 중복 확인
       const { data: existingEmail } = await supabase
         .from('"Users"')
         .select('email')
@@ -70,11 +70,11 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ ID 중복 확인
+      // ID (username) 중복 확인
       const { data: existingUsername } = await supabase
         .from('"Users"')
-        .select('username')
-        .eq('username', username.trim())
+        .select('name')
+        .eq('name', username.trim())
         .maybeSingle();
 
       if (existingUsername) {
@@ -83,28 +83,33 @@ export default function LoginPage() {
         return;
       }
 
-      // 🔐 supabase auth 계정 생성
-      const { error } = await supabase.auth.signUp({
+      // Supabase Auth 계정 생성
+      const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
           data: {
-            username,
+            name: username,
             region,
             age
           }
         }
       });
 
-      if (error) {
-        setError(error.message);
+      if (signUpError) {
+        setError(signUpError.message);
         setLoading(false);
         return;
       }
 
-      // ✅ Users 테이블에도 추가
+      // Users 테이블에도 추가
       await supabase.from('"Users"').insert([
-        { email: email.trim(), username, region, age }
+        {
+          email: email.trim(),
+          name: username,
+          region,
+          age
+        }
       ]);
 
       setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
