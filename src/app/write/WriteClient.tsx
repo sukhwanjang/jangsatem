@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-// ✅ Next.js의 searchParams 타입과 완전히 호환되도록 수정
 interface Props {
   searchParams?: Record<string, string | string[] | undefined>;
 }
@@ -12,17 +11,27 @@ interface Props {
 export default function WriteClient({ searchParams }: Props) {
   const router = useRouter();
 
-  // ✅ category 값 추출 (string 또는 string[] 대응)
   const rawCategory = typeof searchParams?.category === 'string'
     ? searchParams.category
     : Array.isArray(searchParams?.category)
       ? searchParams.category[0]
       : undefined;
 
+  const rawTab = typeof searchParams?.tab === 'string'
+    ? searchParams.tab
+    : Array.isArray(searchParams?.tab)
+      ? searchParams.tab[0]
+      : undefined;
+
   const allowedCategories = ['자유게시판', '유머게시판', '내가게자랑'];
-  const category = allowedCategories.includes(rawCategory || '')
-    ? rawCategory!
-    : '자유게시판';
+  const allowedTabs = ['명함', '견적문의'];
+
+  const region =
+    allowedTabs.includes(rawTab || '')
+      ? rawTab!
+      : allowedCategories.includes(rawCategory || '')
+        ? rawCategory!
+        : '자유게시판';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -50,7 +59,7 @@ export default function WriteClient({ searchParams }: Props) {
       .insert([{
         title: title.trim(),
         content: content.trim(),
-        region: category,
+        region: region,
         user_id: user.id,
       }]);
 
@@ -66,7 +75,7 @@ export default function WriteClient({ searchParams }: Props) {
 
   return (
     <main className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">✍ 글쓰기 ({category})</h1>
+      <h1 className="text-2xl font-bold mb-4">✍ 글쓰기 ({region})</h1>
       <input
         type="text"
         placeholder="제목"
