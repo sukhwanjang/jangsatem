@@ -57,7 +57,7 @@ export default function LoginPage() {
         return;
       }
 
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
@@ -79,7 +79,6 @@ export default function LoginPage() {
         return;
       }
 
-      // 추가 정보 users 테이블에도 저장
       await supabase.from('users').insert([
         { email: email.trim(), username, region, age }
       ]);
