@@ -1,15 +1,29 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-export default function WriteClient() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface Props {
+  searchParams?: Record<string, string | string[] | undefined>;
+}
 
-  const rawCategory = searchParams.get('category');
-  const rawTab = searchParams.get('tab');
+export default function WriteClient({ searchParams }: Props) {
+  const router = useRouter();
+
+  const rawCategory = typeof searchParams?.category === 'string'
+    ? searchParams.category
+    : Array.isArray(searchParams?.category)
+      ? searchParams.category[0]
+      : undefined;
+
+  const rawTab = typeof searchParams?.tab === 'string'
+    ? searchParams.tab
+    : Array.isArray(searchParams?.tab)
+      ? searchParams.tab[0]
+      : undefined;
+
+  // 🔥 핵심: region 우선순위 tab → category → '자유게시판'
   const region = rawTab || rawCategory || '자유게시판';
 
   const [title, setTitle] = useState('');
