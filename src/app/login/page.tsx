@@ -25,13 +25,21 @@ export default function LoginPage() {
   }, [router]);
 
   const handleSubmit = async () => {
+    if (loading) return;
     setLoading(true);
     setError('');
+    setSuccessMessage('');
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-      else router.replace('/');
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        router.replace('/');
+      }
     } else {
       if (!username || !region || !age || !email || !password || !confirmPassword) {
         setError('모든 항목을 입력해주세요.');
@@ -49,35 +57,9 @@ export default function LoginPage() {
         return;
       }
 
-      // 이메일 중복 확인
-      const { data: existingEmail } = await supabase
-        .from('auth.users')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (existingEmail) {
-        setError('이미 등록된 이메일입니다.');
-        setLoading(false);
-        return;
-      }
-
-      // 아이디 중복 확인
-      const { data: existingUsername } = await supabase
-        .from('users')
-        .select('username')
-        .eq('username', username)
-        .maybeSingle();
-
-      if (existingUsername) {
-        setError('이미 사용 중인 아이디입니다.');
-        setLoading(false);
-        return;
-      }
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: password.trim(),
         options: {
           data: {
             username,
@@ -86,11 +68,24 @@ export default function LoginPage() {
           }
         }
       });
-      if (error) setError(error.message);
-      else {
-        setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
-        setTimeout(() => router.replace('/'), 2000);
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          setError("이미 등록된 이메일입니다.");
+        } else {
+          setError(error.message);
+        }
+        setLoading(false);
+        return;
       }
+
+      // 추가 정보 users 테이블에도 저장
+      await supabase.from('users').insert([
+        { email: email.trim(), username, region, age }
+      ]);
+
+      setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
+      setTimeout(() => router.replace('/'), 2000);
     }
 
     setLoading(false);
@@ -110,48 +105,18 @@ export default function LoginPage() {
 
         {mode === 'signup' && (
           <>
-            <input
-              type="text"
-              placeholder="ID"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="password"
-              placeholder="비밀번호"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="password"
-              placeholder="비밀번호 확인"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              placeholder="나이"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="text"
-              placeholder="사는 지역"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="email"
-              placeholder="이메일"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" placeholder="ID" value={username} onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="password" placeholder="비밀번호 확인" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="text" placeholder="나이" value={age} onChange={(e) => setAge(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="text" placeholder="사는 지역" value={region} onChange={(e) => setRegion(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
             <div className="mt-4 border-t pt-4">
               <label className="flex items-center space-x-2">
@@ -168,28 +133,17 @@ export default function LoginPage() {
 
         {mode === 'login' && (
           <>
-            <input
-              type="email"
-              placeholder="이메일"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <input
-              type="password"
-              placeholder="비밀번호"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mb-5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 mb-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 mb-5 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </>
         )}
 
         <button
           onClick={handleSubmit}
           disabled={loading || (mode === 'signup' && !allAgreed)}
-          className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md text-sm transition ${loading || (mode === 'signup' && !allAgreed) ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
+          className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md text-sm transition ${loading || (mode === 'signup' && !allAgreed) ? 'opacity-50 cursor-not-allowed' : ''}`}>
           {loading ? '처리 중...' : mode === 'login' ? '로그인' : '동의하고 가입하기'}
         </button>
 
@@ -197,22 +151,12 @@ export default function LoginPage() {
           {mode === 'login' ? (
             <p className="text-sm text-gray-500">
               계정이 없으신가요?{' '}
-              <button
-                onClick={() => setMode('signup')}
-                className="text-blue-600 hover:underline"
-              >
-                회원가입
-              </button>
+              <button onClick={() => setMode('signup')} className="text-blue-600 hover:underline">회원가입</button>
             </p>
           ) : (
             <p className="text-sm text-gray-500">
               이미 계정이 있으신가요?{' '}
-              <button
-                onClick={() => setMode('login')}
-                className="text-blue-600 hover:underline"
-              >
-                로그인
-              </button>
+              <button onClick={() => setMode('login')} className="text-blue-600 hover:underline">로그인</button>
             </p>
           )}
         </div>
