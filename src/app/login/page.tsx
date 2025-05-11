@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password.trim(),
+        password: password.trim()
       });
       if (error) setError(error.message);
       else router.replace('/');
@@ -54,24 +54,22 @@ export default function LoginPage() {
         return;
       }
 
+      // 중복 체크
       const { data: existingUsername } = await supabase
         .from('Users')
         .select('id')
         .eq('username', username.trim())
         .maybeSingle();
-
       if (existingUsername) {
         setError('이미 사용 중인 ID입니다.');
         setLoading(false);
         return;
       }
 
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // 회원가입
+      const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
-        password: password.trim(),
-        options: {
-          data: { username, region, age },
-        },
+        password: password.trim()
       });
 
       if (signUpError) {
@@ -80,16 +78,23 @@ export default function LoginPage() {
         return;
       }
 
-      const user_id = signUpData.user?.id;
+      // ✅ 로그인 후 user_id 획득
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim()
+      });
 
+      if (loginError || !loginData.user) {
+        setError('로그인 실패: ' + (loginError?.message || ''));
+        setLoading(false);
+        return;
+      }
+
+      const user_id = loginData.user.id;
+
+      // ✅ Users 테이블 삽입 (이제 auth.uid() = user_id 조건 만족)
       const { error: insertError } = await supabase.from('Users').insert([
-        {
-          email: email.trim(),
-          username,
-          region,
-          age,
-          user_id, // 반드시 삽입
-        },
+        { email: email.trim(), username, region, age, user_id }
       ]);
 
       if (insertError) {
