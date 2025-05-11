@@ -4,16 +4,25 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+// ✅ Next.js의 searchParams 타입과 완전히 호환되도록 수정
 interface Props {
-  searchParams?: { category?: string }; // ✅ 이걸 꼭 넣어야 page.tsx에서 props 전달 시 에러 안 남
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 export default function WriteClient({ searchParams }: Props) {
   const router = useRouter();
-  const rawCategory = searchParams?.category || '자유게시판';
+
+  // ✅ category 값 추출 (string 또는 string[] 대응)
+  const rawCategory = typeof searchParams?.category === 'string'
+    ? searchParams.category
+    : Array.isArray(searchParams?.category)
+      ? searchParams.category[0]
+      : undefined;
 
   const allowedCategories = ['자유게시판', '유머게시판', '내가게자랑'];
-  const category = allowedCategories.includes(rawCategory) ? rawCategory : '자유게시판';
+  const category = allowedCategories.includes(rawCategory || '')
+    ? rawCategory!
+    : '자유게시판';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
