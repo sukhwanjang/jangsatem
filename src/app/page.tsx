@@ -2,7 +2,7 @@
 import Image from 'next/image'; // ✅ next/image import는 최상단 필수
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-import { supabase } from "src/lib/supabase";
+import { supabase } from '@/lib/supabase';
 import { User } from "@supabase/supabase-js";
 
 interface BusinessCard {
