@@ -70,7 +70,7 @@ export default function LoginPage() {
         return;
       }
 
-      // ID 중복 확인
+      // 사용자명 중복 확인
       const { data: existingUsername } = await supabase
         .from('Users')
         .select('username')
@@ -83,8 +83,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Supabase Auth 계정 생성
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError, data: authData } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
@@ -102,13 +101,14 @@ export default function LoginPage() {
         return;
       }
 
-      // Users 테이블에도 insert
+      // users 테이블에도 추가
       await supabase.from('Users').insert([
         {
           email: email.trim(),
           username,
           region,
           age,
+          user_id: authData.user?.id ?? '',
         },
       ]);
 
@@ -129,9 +129,11 @@ export default function LoginPage() {
         </h1>
 
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-        {successMessage && <p className="text-green-600 text-center font-semibold mb-4">{successMessage}</p>}
+        {successMessage && (
+          <p className="text-green-600 text-center font-semibold mb-4">{successMessage}</p>
+        )}
 
-        {mode === 'signup' && (
+        {mode === 'signup' ? (
           <>
             <input type="text" placeholder="ID" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mb-3 border rounded-md text-sm" />
             <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mb-3 border rounded-md text-sm" />
@@ -150,9 +152,7 @@ export default function LoginPage() {
               </label>
             </div>
           </>
-        )}
-
-        {mode === 'login' && (
+        ) : (
           <>
             <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 mb-3 border rounded-md text-sm" />
             <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mb-5 border rounded-md text-sm" />
