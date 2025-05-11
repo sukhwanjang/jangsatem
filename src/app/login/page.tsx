@@ -57,9 +57,9 @@ export default function LoginPage() {
         return;
       }
 
-      // 이메일 중복 확인
+      // ✅ 이메일 중복 확인
       const { data: existingEmail } = await supabase
-        .from('"Users"')
+        .from('Users')
         .select('email')
         .eq('email', email.trim())
         .maybeSingle();
@@ -70,11 +70,11 @@ export default function LoginPage() {
         return;
       }
 
-      // ID (username) 중복 확인
+      // ✅ username 중복 확인 (주의: name → username 으로 수정)
       const { data: existingUsername } = await supabase
-        .from('"Users"')
-        .select('name')
-        .eq('name', username.trim())
+        .from('Users')
+        .select('username')
+        .eq('username', username.trim())
         .maybeSingle();
 
       if (existingUsername) {
@@ -83,13 +83,13 @@ export default function LoginPage() {
         return;
       }
 
-      // Supabase Auth 계정 생성
+      // 🔐 Supabase Auth 계정 생성
       const { error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
           data: {
-            name: username,
+            username,
             region,
             age
           }
@@ -102,11 +102,11 @@ export default function LoginPage() {
         return;
       }
 
-      // Users 테이블에도 추가
-      await supabase.from('"Users"').insert([
+      // ✅ Users 테이블에 정보 추가
+      await supabase.from('Users').insert([
         {
           email: email.trim(),
-          name: username,
+          username,
           region,
           age
         }
