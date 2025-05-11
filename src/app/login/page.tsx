@@ -33,13 +33,10 @@ export default function LoginPage() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password.trim(),
+        password: password.trim()
       });
-      if (error) {
-        setError(error.message);
-      } else {
-        router.replace('/');
-      }
+      if (error) setError(error.message);
+      else router.replace('/');
     } else {
       if (!username || !region || !age || !email || !password || !confirmPassword) {
         setError('모든 항목을 입력해주세요.');
@@ -57,23 +54,10 @@ export default function LoginPage() {
         return;
       }
 
-      // 이메일 중복 확인
-      const { data: existingEmail } = await supabase
-        .from('Users')
-        .select('email')
-        .eq('email', email.trim())
-        .maybeSingle();
-
-      if (existingEmail) {
-        setError('이미 등록된 이메일입니다.');
-        setLoading(false);
-        return;
-      }
-
-      // 사용자명 중복 확인
+      // username 중복 검사
       const { data: existingUsername } = await supabase
         .from('Users')
-        .select('username')
+        .select('id')
         .eq('username', username.trim())
         .maybeSingle();
 
@@ -83,16 +67,13 @@ export default function LoginPage() {
         return;
       }
 
-      const { error: signUpError, data: authData } = await supabase.auth.signUp({
+      // Supabase Auth 가입
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
-          data: {
-            username,
-            region,
-            age,
-          },
-        },
+          data: { username, region, age }
+        }
       });
 
       if (signUpError) {
@@ -101,16 +82,24 @@ export default function LoginPage() {
         return;
       }
 
-      // users 테이블에도 추가
-      await supabase.from('Users').insert([
+      const user_id = signUpData.user?.id;
+
+      // Users 테이블 삽입
+      const { error: insertError } = await supabase.from('Users').insert([
         {
           email: email.trim(),
           username,
           region,
           age,
-          user_id: authData.user?.id ?? '',
-        },
+          user_id
+        }
       ]);
+
+      if (insertError) {
+        setError(insertError.message);
+        setLoading(false);
+        return;
+      }
 
       setSuccessMessage('🎉 회원가입 완료! 장사아이템가득, 장사템입니다!');
       setTimeout(() => router.replace('/'), 2000);
@@ -129,11 +118,9 @@ export default function LoginPage() {
         </h1>
 
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-        {successMessage && (
-          <p className="text-green-600 text-center font-semibold mb-4">{successMessage}</p>
-        )}
+        {successMessage && <p className="text-green-600 text-center font-semibold mb-4">{successMessage}</p>}
 
-        {mode === 'signup' ? (
+        {mode === 'signup' && (
           <>
             <input type="text" placeholder="ID" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full px-4 py-2 mb-3 border rounded-md text-sm" />
             <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mb-3 border rounded-md text-sm" />
@@ -152,7 +139,9 @@ export default function LoginPage() {
               </label>
             </div>
           </>
-        ) : (
+        )}
+
+        {mode === 'login' && (
           <>
             <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2 mb-3 border rounded-md text-sm" />
             <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 mb-5 border rounded-md text-sm" />
@@ -162,8 +151,7 @@ export default function LoginPage() {
         <button
           onClick={handleSubmit}
           disabled={loading || (mode === 'signup' && !allAgreed)}
-          className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md text-sm transition ${loading || (mode === 'signup' && !allAgreed) ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
+          className={`w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md text-sm transition ${loading || (mode === 'signup' && !allAgreed) ? 'opacity-50 cursor-not-allowed' : ''}`}>
           {loading ? '처리 중...' : mode === 'login' ? '로그인' : '동의하고 가입하기'}
         </button>
 
