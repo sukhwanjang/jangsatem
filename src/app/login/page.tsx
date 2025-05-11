@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password.trim()
+        password: password.trim(),
       });
       if (error) setError(error.message);
       else router.replace('/');
@@ -54,7 +54,6 @@ export default function LoginPage() {
         return;
       }
 
-      // username 중복 검사
       const { data: existingUsername } = await supabase
         .from('Users')
         .select('id')
@@ -67,10 +66,12 @@ export default function LoginPage() {
         return;
       }
 
-      // Supabase Auth 가입
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
-        password: password.trim()
+        password: password.trim(),
+        options: {
+          data: { username, region, age },
+        },
       });
 
       if (signUpError) {
@@ -80,21 +81,15 @@ export default function LoginPage() {
       }
 
       const user_id = signUpData.user?.id;
-      if (!user_id) {
-        setError('회원정보 생성 중 오류가 발생했습니다.');
-        setLoading(false);
-        return;
-      }
 
-      // Users 테이블 삽입
       const { error: insertError } = await supabase.from('Users').insert([
         {
-          user_id,
           email: email.trim(),
           username,
           region,
-          age
-        }
+          age,
+          user_id, // 반드시 삽입
+        },
       ]);
 
       if (insertError) {
