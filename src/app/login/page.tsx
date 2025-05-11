@@ -70,10 +70,7 @@ export default function LoginPage() {
       // Supabase Auth 가입
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
-        password: password.trim(),
-        options: {
-          data: { username, region, age }
-        }
+        password: password.trim()
       });
 
       if (signUpError) {
@@ -83,15 +80,20 @@ export default function LoginPage() {
       }
 
       const user_id = signUpData.user?.id;
+      if (!user_id) {
+        setError('회원정보 생성 중 오류가 발생했습니다.');
+        setLoading(false);
+        return;
+      }
 
       // Users 테이블 삽입
       const { error: insertError } = await supabase.from('Users').insert([
         {
+          user_id,
           email: email.trim(),
           username,
           region,
-          age,
-          user_id
+          age
         }
       ]);
 
