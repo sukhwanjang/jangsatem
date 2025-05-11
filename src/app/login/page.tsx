@@ -81,27 +81,28 @@ export default function LoginPage() {
       }
 
       // 회원가입
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password.trim()
-      });
+const { error: signUpError } = await supabase.auth.signUp({
+  email: email.trim(),
+  password: password.trim()
+});
+if (signUpError) {
+  setError('회원가입 실패: ' + signUpError.message);
+  setLoading(false);
+  return;
+}
 
-      if (signUpError) {
-        setError('회원가입 실패: ' + signUpError.message);
-        setLoading(false);
-        return;
-      }
+// 👉 회원가입 직후 로그인 시도해서 user_id 확보
+const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+  email: email.trim(),
+  password: password.trim()
+});
+if (loginError || !loginData.user) {
+  setError('로그인 세션 확인 실패');
+  setLoading(false);
+  return;
+}
+const user_id = loginData.user.id;
 
-      // 세션에서 user_id 확보
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !sessionData.session?.user) {
-        setError('로그인 세션 확인 실패');
-        setLoading(false);
-        return;
-      }
-
-      const user_id = sessionData.session.user.id;
 
       // Users 테이블 삽입
       const { error: insertError } = await supabase.from('Users').insert([
