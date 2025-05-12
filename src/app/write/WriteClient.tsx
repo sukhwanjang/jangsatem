@@ -5,26 +5,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface Props {
-  searchParams?: Record<string, string | string[] | undefined>;
+  region: string;
 }
 
-export default function WriteClient({ searchParams }: Props) {
+export default function WriteClient({ region }: Props) {
   const router = useRouter();
-
-  const rawCategory = typeof searchParams?.category === 'string'
-    ? searchParams.category
-    : Array.isArray(searchParams?.category)
-      ? searchParams.category[0]
-      : undefined;
-
-  const rawTab = typeof searchParams?.tab === 'string'
-    ? searchParams.tab
-    : Array.isArray(searchParams?.tab)
-      ? searchParams.tab[0]
-      : undefined;
-
-  // 🔥 핵심: region 우선순위 tab → category → '자유게시판'
-  const region = rawTab || rawCategory || '자유게시판';
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
