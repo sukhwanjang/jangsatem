@@ -315,11 +315,15 @@ const paginatedPosts = fillEmptyCards(
               <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
               {user && (
   <button
-onClick={() => router.push(`/write/${activeTab || selectedCategory}`)}
-    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-  >
-    글쓰기
-  </button>
+  onClick={() => {
+    const region = activeTab ? `${selectedCategory}-${activeTab}` : selectedCategory;
+    router.push(`/write/${encodeURIComponent(region)}`);
+  }}
+  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+>
+  글쓰기
+</button>
+
 )}
             </header>
 

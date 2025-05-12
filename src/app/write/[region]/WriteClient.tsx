@@ -36,7 +36,7 @@ export default function WriteClient({ region }: Props) {
       .insert([{
         title: title.trim(),
         content: content.trim(),
-        region: region,
+        region: region, // ✅ URL에서 받은 region이 그대로 저장됩니다
         user_id: user.id,
       }]);
 
