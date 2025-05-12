@@ -28,9 +28,6 @@ export default function Home() {
   "스카이", "철거", "전기설비",
   "인테리어", "프렌차이즈"
 ];
-
-const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
-
   const fixedSubCategories = ["명함", "견적문의"];
 
   const router = useRouter();
@@ -71,13 +68,19 @@ const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
     return filled;
   };
 
-  const filteredPosts = posts.filter(
-  (post) => post.region === (activeTab || selectedCategory)
+  const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
+const currentRegion = extraBoards.includes(selectedCategory)
+  ? selectedCategory
+  : `${selectedCategory}-${activeTab}`;
+
+const filteredPosts = posts.filter(
+  (post) => post.region === currentRegion
 );
 const paginatedPosts = fillEmptyCards(
   filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
   itemsPerPage
 );
+
 
   const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
 
@@ -101,7 +104,7 @@ const paginatedPosts = fillEmptyCards(
       {
         title: newPostTitle.trim(),
         content: newPostContent.trim(),
-        region: activeTab || selectedCategory,
+        region: currentRegion,
         user_id: user.id,
       },
     ])
@@ -318,8 +321,6 @@ const paginatedPosts = fillEmptyCards(
       onClick={() => {
         // 글쓰기 경로를 정확히 계산
         let region = "";
-
-        const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
         if (extraBoards.includes(selectedCategory)) {
           region = selectedCategory;
         } else {
