@@ -14,41 +14,47 @@ export default function WriteClient({ region }: Props) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
-    if (loading) return;
-    setLoading(true);
+ const handleSubmit = async () => {
+  if (loading) return;
+  setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      alert('로그인 후 작성 가능합니다.');
-      setLoading(false);
-      return;
-    }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    alert('로그인 후 작성 가능합니다.');
+    setLoading(false);
+    return;
+  }
 
-    if (title.trim().length < 2 || content.trim().length < 5) {
-      alert('제목은 2자 이상, 내용은 5자 이상 입력해주세요.');
-      setLoading(false);
-      return;
-    }
+  if (title.trim().length < 2 || content.trim().length < 5) {
+    alert('제목은 2자 이상, 내용은 5자 이상 입력해주세요.');
+    setLoading(false);
+    return;
+  }
 
-    const { error } = await supabase
-      .from('posts')
-      .insert([{
-        title: title.trim(),
-        content: content.trim(),
-        region: region, // ✅ URL에서 받은 region이 그대로 저장됩니다
-        user_id: user.id,
-      }]);
+  const { error } = await supabase
+    .from('posts')
+    .insert([{
+      title: title.trim(),
+      content: content.trim(),
+      region: region,
+      user_id: user.id,
+    }]);
 
-    if (error) {
-      alert('등록 실패: ' + error.message);
-      setLoading(false);
-      return;
-    }
+  if (error) {
+    alert('등록 실패: ' + error.message);
+    setLoading(false);
+    return;
+  }
 
-    alert(`등록 완료되었습니다. (${region})`);
-    router.push('/');
-  };
+  // ✅ region에서 카테고리와 탭 분리
+  const parts = region.split('-');
+  const category = parts[0];
+  const tab = parts[1] || '';
+
+  alert(`등록 완료되었습니다. (${region})`);
+  router.push(`/?category=${category}&tab=${tab}`);
+};
+
 
   return (
     <main className="p-6 max-w-xl mx-auto">
