@@ -10,7 +10,6 @@ interface Props {
 
 export default function WriteClient({ region }: Props) {
   const router = useRouter();
-
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
