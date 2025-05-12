@@ -48,7 +48,6 @@ export default function Home() {
   useEffect(() => {
   const fetchUserAndData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    console.log("✅ 현재 로그인 유저:", user);
     setUser(user);
 
     const { data: cards } = await supabase.from("business_cards").select("*");
@@ -96,8 +95,6 @@ const paginatedPosts = fillEmptyCards(
   return;
 }
 
-  console.log("🔐 user.id =", user?.id);
-
   const { data, error } = await supabase
     .from("posts")
     .insert([
@@ -110,23 +107,23 @@ const paginatedPosts = fillEmptyCards(
     ])
     .select();
 
-  console.log("📦 Insert 결과:", { data, error });
-
   if (error) {
     alert("등록 실패: " + error.message);
     return;
   }
 
   if (data) {
-    const { data: refreshedPosts } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false }); // ✅ 최신순 정렬 추가
-    setPosts(refreshedPosts || []);
-    setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
-    setNewPostTitle("");
-    setNewPostContent("");
-  }
+  const { data: refreshedPosts } = await supabase
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  setPosts(refreshedPosts || []);
+  setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
+  setNewPostTitle("");
+  setNewPostContent("");
+  setView('category'); // ✅ 현재 게시판 유지하면서 새로고침
+}
 };
 
   const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
