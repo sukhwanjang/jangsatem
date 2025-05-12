@@ -119,16 +119,25 @@ const paginatedPosts = fillEmptyCards(
     .order("created_at", { ascending: false });
 
   setPosts(refreshedPosts || []);
-  setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
-  setNewPostTitle("");
-  setNewPostContent("");
-  setView('category'); // ✅ view를 명시적으로 고정
-  setSelectedCategory(data[0].region.split('-')[0]); // ✅ 카테고리 정확히 유지
-  if (data[0].region.includes('-')) {
-    setActiveTab(data[0].region.split('-')[1]); // ✅ 탭도 복구
-  } else {
-    setActiveTab("");
-  }
+setNewPostContent("");
+
+// ✅ 순서 중요: view, 카테고리, 탭 먼저 설정
+const region = extraBoards.includes(selectedCategory)
+  ? selectedCategory
+  : `${selectedCategory}-${activeTab}`;
+
+setView("category");
+setSelectedCategory(region.split('-')[0]);
+if (region.includes('-')) {
+  setActiveTab(region.split('-')[1]);
+} else {
+  setActiveTab("");
+}
+
+// ✅ 마지막에 글쓰기 폼 닫기
+setIsWriting((prev) => ({ ...prev, [region.split('-')[0]]: false }));
+
+
 }
 };
 
@@ -405,20 +414,27 @@ onClick={async () => {
     .order("created_at", { ascending: false });
 
   setPosts(refreshedPosts || []);
-  setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
   setNewPostContent("");
 
-  const region = extraBoards.includes(selectedCategory)
-    ? selectedCategory
-    : `${selectedCategory}-${activeTab}`;
+// ✅ region 먼저 정확히 설정
+const region = extraBoards.includes(selectedCategory)
+  ? selectedCategory
+  : `${selectedCategory}-${activeTab}`;
 
-  setView("category");
-  setSelectedCategory(region.split('-')[0]);
-  if (region.includes('-')) {
-    setActiveTab(region.split('-')[1]);
-  } else {
-    setActiveTab("");
-  }
+// ✅ region에 맞춰 카테고리, 탭 설정
+setSelectedCategory(region.split('-')[0]);
+if (region.includes('-')) {
+  setActiveTab(region.split('-')[1]);
+} else {
+  setActiveTab("");
+}
+
+// ✅ 뷰 전환 (이게 위 두 설정보다 먼저 오면 오류날 수 있음)
+setView("category");
+
+// ✅ 마지막에 글쓰기 폼 닫기 (정확한 키 사용)
+setIsWriting((prev) => ({ ...prev, [region.split('-')[0]]: false }));
+
 }}
 
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
