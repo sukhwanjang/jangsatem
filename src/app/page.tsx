@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image'; // ✅ next/image import는 최상단 필수
 import { useState, useEffect } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { User } from "@supabase/supabase-js";
 
@@ -126,13 +126,8 @@ const region = extraBoards.includes(selectedCategory)
   ? selectedCategory
   : `${selectedCategory}-${activeTab}`;
 
-setView("category");
-setSelectedCategory(region.split('-')[0]);
-if (region.includes('-')) {
-  setActiveTab(region.split('-')[1]);
-} else {
-  setActiveTab("");
-}
+router.push(`/?category=${region.split('-')[0]}&tab=${region.split('-')[1] || ''}`);
+
 
 // ✅ 마지막에 글쓰기 폼 닫기
 setIsWriting((prev) => ({ ...prev, [region.split('-')[0]]: false }));
