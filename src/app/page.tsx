@@ -433,7 +433,7 @@ if (region.includes('-')) {
 setView("category");
 
 // ✅ 마지막에 글쓰기 폼 닫기 (정확한 키 사용)
-setIsWriting((prev) => ({ ...prev, [region.split('-')[0]]: false }));
+setIsWriting((prev) => ({ ...prev, [region]: false }));
 
 }}
 
