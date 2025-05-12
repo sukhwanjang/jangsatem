@@ -61,7 +61,7 @@ export default function Home() {
   };
   fetchUserAndData();
 }, []);
-  const fillEmptyCards = <T,>(items: T[], total: number): (T | null)[] => {
+const fillEmptyCards = <T extends object>(items: T[], total: number): (T | null)[] => {
     const filled: (T | null)[] = [...items];
     while (filled.length < total) filled.push(null);
     return filled;
@@ -122,7 +122,13 @@ const paginatedPosts = fillEmptyCards(
   setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
   setNewPostTitle("");
   setNewPostContent("");
-  setView('category'); // ✅ 현재 게시판 유지하면서 새로고침
+  setView('category'); // ✅ view를 명시적으로 고정
+  setSelectedCategory(data[0].region.split('-')[0]); // ✅ 카테고리 정확히 유지
+  if (data[0].region.includes('-')) {
+    setActiveTab(data[0].region.split('-')[1]); // ✅ 탭도 복구
+  } else {
+    setActiveTab("");
+  }
 }
 };
 
@@ -350,55 +356,71 @@ const paginatedPosts = fillEmptyCards(
           className="mb-2"
         />
         <button
-          onClick={async () => {
-            if (!user) {
-              alert("로그인 후 작성 가능합니다.");
-              return;
-            }
-            if (!newPostContent) {
-              alert("이미지를 선택해주세요.");
-              return;
-            }
+          // 이미지 등록 버튼 onClick 내부
+onClick={async () => {
+  if (!user) {
+    alert("로그인 후 작성 가능합니다.");
+    return;
+  }
 
-            const file = newPostContent as File;
-            const filePath = `${user.id}_${Date.now()}_${file.name}`;
-            const { error: uploadError } = await supabase.storage
-              .from("businesscard")
-              .upload(filePath, file);
+  if (typeof newPostContent === "string") {
+    alert("이미지를 선택해주세요.");
+    return;
+  }
 
-            if (uploadError) {
-              alert("이미지 업로드 실패: " + uploadError.message);
-              return;
-            }
+  const file = newPostContent;
+  const filePath = `${user.id}_${Date.now()}_${file.name}`;
+  const { error: uploadError } = await supabase.storage
+    .from("businesscard")
+    .upload(filePath, file);
 
-            const { data: publicUrl } = supabase.storage
-              .from("businesscard")
-              .getPublicUrl(filePath);
+  if (uploadError) {
+    alert("이미지 업로드 실패: " + uploadError.message);
+    return;
+  }
 
-            const { error: insertError } = await supabase
-              .from("posts")
-              .insert([
-                {
-                  title: "명함 이미지",
-                  content: publicUrl.publicUrl,
-                  region: activeTab,
-                  user_id: user.id,
-                },
-              ]);
+  const { data: publicUrl } = supabase.storage
+    .from("businesscard")
+    .getPublicUrl(filePath);
 
-            if (insertError) {
-              alert("등록 실패: " + insertError.message);
-              return;
-            }
+  const { error: insertError } = await supabase
+    .from("posts")
+    .insert([
+      {
+        title: "명함 이미지",
+        content: publicUrl.publicUrl,
+        region: activeTab,
+        user_id: user.id,
+      },
+    ]);
 
-            const { data: refreshedPosts } = await supabase
-              .from("posts")
-              .select("*")
-              .order("created_at", { ascending: false });
-            setPosts(refreshedPosts || []);
-            setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
-            setNewPostContent("");
-          }}
+  if (insertError) {
+    alert("등록 실패: " + insertError.message);
+    return;
+  }
+
+  const { data: refreshedPosts } = await supabase
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  setPosts(refreshedPosts || []);
+  setIsWriting((prev) => ({ ...prev, [selectedCategory]: false }));
+  setNewPostContent("");
+
+  const region = extraBoards.includes(selectedCategory)
+    ? selectedCategory
+    : `${selectedCategory}-${activeTab}`;
+
+  setView("category");
+  setSelectedCategory(region.split('-')[0]);
+  if (region.includes('-')) {
+    setActiveTab(region.split('-')[1]);
+  } else {
+    setActiveTab("");
+  }
+}}
+
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           이미지 등록
