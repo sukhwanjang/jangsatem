@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
+import WriteForm from '@/components/WriteForm';
+
 
 interface BusinessCard {
   id: number;
@@ -382,123 +384,25 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
 
 
            {isWriting[selectedCategory] && (
-  <div className="bg-gray-50 p-4 mb-4 rounded border">
-    {activeTab === "명함" ? (
-      <>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    setNewPostContent(file as File); // ← as File 붙여야 오류 안 납니다
-  }
-}}
-          className="mb-2"
-        />
-        <button
-          // 이미지 등록 버튼 onClick 내부
-onClick={async () => {
-  if (!user) {
-    alert("로그인 후 작성 가능합니다.");
-    return;
-  }
-
-  if (typeof newPostContent === "string") {
-    alert("이미지를 선택해주세요.");
-    return;
-  }
-
-  const file = newPostContent;
-  const filePath = `${user.id}_${Date.now()}_${file.name}`;
-  const { error: uploadError } = await supabase.storage
-    .from("businesscard")
-    .upload(filePath, file);
-
-  if (uploadError) {
-    alert("이미지 업로드 실패: " + uploadError.message);
-    return;
-  }
-
-  const { data: publicUrl } = supabase.storage
-    .from("businesscard")
-    .getPublicUrl(filePath);
-
-  const { error: insertError } = await supabase
-    .from("posts")
-    .insert([
-      {
-        title: "명함 이미지",
-        content: publicUrl.publicUrl,
-        region: activeTab,
-        user_id: user.id,
-      },
-    ]);
-
-  if (insertError) {
-    alert("등록 실패: " + insertError.message);
-    return;
-  }
-
-  const { data: refreshedPosts } = await supabase
-    .from("posts")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  setPosts(refreshedPosts || []);
-  setNewPostContent("");
-
-// ✅ region 먼저 정확히 설정
-const region = extraBoards.includes(selectedCategory)
-  ? selectedCategory
-  : `${selectedCategory}-${activeTab}`;
-
-// ✅ region에 맞춰 카테고리, 탭 설정
-setSelectedCategory(region.split('-')[0]);
-if (region.includes('-')) {
-  setActiveTab(region.split('-')[1]);
-} else {
-  setActiveTab("");
-}
-
-// ✅ 뷰 전환 (이게 위 두 설정보다 먼저 오면 오류날 수 있음)
-setView("category");
-
-// ✅ 마지막에 글쓰기 폼 닫기 (정확한 키 사용)
-setIsWriting((prev) => ({ ...prev, [region]: false }));
-
-}}
-
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          이미지 등록
-        </button>
-      </>
-    ) : (
-      <>
-        <input
-          type="text"
-          placeholder="제목을 입력하세요"
-          value={newPostTitle}
-          onChange={(e) => setNewPostTitle(e.target.value)}
-          className="block w-full mb-2 border rounded p-2"
-        />
-        <textarea
-  placeholder="내용을 입력하세요"
-  value={typeof newPostContent === "string" ? newPostContent : ""}
-  onChange={(e) => setNewPostContent(e.target.value)}
-  className="block w-full mb-2 border rounded p-2 h-24"
-/>
-        <button
-          onClick={handleSubmit}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" //
-        >
-          제출
-        </button>
-      </>
-    )}
-  </div>
+  <WriteForm
+    user={user}
+    activeTab={activeTab}
+    selectedCategory={selectedCategory}
+    extraBoards={extraBoards}
+    setPosts={setPosts}
+    setNewPostContent={setNewPostContent}
+    setSelectedCategory={setSelectedCategory}
+    setActiveTab={setActiveTab}
+    setView={setView}
+    setIsWriting={setIsWriting}
+  />  // ← 여기! 반드시 슬래시(`/`)가 들어간 self-closing
 )}
+
+
+<div className="grid grid-cols-6 gap-4">
+  {/* 글 목록 렌더링 */}
+</div>
+
 
 
           <div className="grid grid-cols-6 gap-4">
