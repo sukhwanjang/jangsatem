@@ -234,20 +234,25 @@ export default function HomeClient() {
           )}
         </header>
 
-        {view === 'main' ? (
-          <>
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
-              <div className="w-full h-64 bg-gradient-to-r from-blue-200 to-blue-100 flex items-center justify-center rounded-xl shadow-inner">
-  <Image
-    src="https://via.placeholder.com/600x150.png?text=테스트+로고" // ✅ 테스트용 이미지 주소
-    alt="메인 이미지"
-    width={600}
-    height={150}
-    className="object-contain rounded"
-  />
+       {/* ✅ 상단 공통 이미지 (main이든 category든 항상 보여주기) */}
+<div className="mb-8">
+  <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
+  <div className="w-full h-64 bg-gradient-to-r from-blue-200 to-blue-100 flex items-center justify-center rounded-xl shadow-inner">
+    <Image
+      src="https://placehold.co/600x150?text=테스트+로고"
+      alt="메인 이미지"
+      width={600}
+      height={150}
+      className="object-contain rounded"
+    />
+  </div>
 </div>
-            </div>
+
+{/* 👇 아래부터 기존 조건 분기 */}
+{view === 'main' ? (
+  <>
+    {/* 메인 화면 내용 */}
+
 ...
 
 <section>
