@@ -239,8 +239,14 @@ export default function HomeClient() {
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
               <div className="w-full h-64 bg-gradient-to-r from-blue-200 to-blue-100 flex items-center justify-center rounded-xl shadow-inner">
-                <p className="text-2xl font-semibold text-blue-800">여기에 대기업스러운 메인 이미지 또는 프로모션 삽입 가능</p>
-              </div>
+  <Image
+    src="https://via.placeholder.com/600x150.png?text=테스트+로고" // ✅ 테스트용 이미지 주소
+    alt="메인 이미지"
+    width={600}
+    height={150}
+    className="object-contain rounded"
+  />
+</div>
             </div>
 ...
 
