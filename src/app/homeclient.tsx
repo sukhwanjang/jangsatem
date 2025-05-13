@@ -325,6 +325,26 @@ export default function HomeClient() {
           </>
         ) : (
           <>
+          {/* ✅ 선택된 카테고리에 해당하는 로고 보여주기 */}
+{view === 'category' && (() => {
+  const region = extraBoards.includes(selectedCategory)
+    ? selectedCategory
+    : `${selectedCategory}-${activeTab}`;
+  const topLogo = businessCards.find(card => card.region === region && card.image_url);
+
+  return topLogo ? (
+    <div className="mb-6">
+      <Image
+        src={topLogo.image_url!}
+        alt="카테고리 로고"
+        width={300}
+        height={100}
+        className="mx-auto mb-4 object-contain"
+      />
+    </div>
+  ) : null;
+})()}
+
             <header className="flex justify-between items-center mb-4">
   <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
   {user && (
