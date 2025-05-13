@@ -162,7 +162,7 @@ export default function HomeClient() {
             setView('category');
             setCurrentPage(1);
           }}
-          className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
+className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition ${
             selectedCategory === item ? "bg-blue-100 text-blue-700" : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
           }`}
         >
@@ -237,7 +237,7 @@ export default function HomeClient() {
        {/* ✅ 상단 공통 이미지 (main이든 category든 항상 보여주기) */}
 <div className="mb-8">
   <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
-  <div className="w-full h-64 bg-gradient-to-r from-blue-200 to-blue-100 flex items-center justify-center rounded-xl shadow-inner">
+<div className="w-full h-52 bg-white border border-gray-200 flex items-center justify-center rounded-lg shadow">
     <Image
       src="https://placehold.co/600x150?text=테스트+로고"
       alt="메인 이미지"
@@ -511,7 +511,10 @@ setIsWriting((prev) => ({ ...prev, [region]: false }));
 
     return (
       <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-        <div className="w-full h-28 bg-gray-100 mb-2 flex items-center justify-center text-xs text-gray-400">이미지 없음</div>
+        <div className="w-full h-28 bg-gray-100 mb-2 flex items-center justify-center text-sm text-gray-400 rounded">
+  No Image
+</div>
+
         <p className="font-semibold text-sm mb-1">
           {isBusinessCard(item) ? item.name : item.title}
         </p>
