@@ -239,12 +239,14 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
   <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
 <div className="w-full h-52 bg-white border border-gray-200 flex items-center justify-center rounded-lg shadow">
     <Image
-      src="https://placehold.co/600x150?text=테스트+로고"
-      alt="메인 이미지"
-      width={600}
-      height={150}
-      className="object-contain rounded"
-    />
+  src="https://placehold.co/1200x300?text=메인+배너"
+  alt="메인 이미지"
+  layout="responsive"
+  width={1200}
+  height={300}
+  className="object-cover rounded"
+/>
+
   </div>
 </div>
 
@@ -510,10 +512,11 @@ setIsWriting((prev) => ({ ...prev, [region]: false }));
     }
 
     return (
-      <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-        <div className="w-full h-28 bg-gray-100 mb-2 flex items-center justify-center text-sm text-gray-400 rounded">
-  No Image
+<div key={index} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg transition-all text-left space-y-2">
+        <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
+  이미지 없음
 </div>
+
 
         <p className="font-semibold text-sm mb-1">
           {isBusinessCard(item) ? item.name : item.title}
@@ -529,9 +532,12 @@ setIsWriting((prev) => ({ ...prev, [region]: false }));
                 <button
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 text-sm rounded border ${
-                    currentPage === i + 1 ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
-                  }`}
+                 className={`w-8 h-8 rounded-full text-sm font-semibold border text-center ${
+  currentPage === i + 1
+    ? "bg-blue-600 text-white border-blue-600"
+    : "bg-white text-gray-600 border-gray-300 hover:bg-blue-100"
+}`}
+
                 >
                   {i + 1}
                 </button>
