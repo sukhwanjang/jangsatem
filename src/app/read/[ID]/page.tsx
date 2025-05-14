@@ -22,7 +22,12 @@ interface Comment {
 
 export default function ReadPage() {
   const params = useParams();
-  const idParam = typeof params.id === 'string' ? Number(params.id) : NaN;
+  const rawId = params?.id;
+  const idParam = Array.isArray(rawId)
+    ? Number(rawId[0])
+    : typeof rawId === 'string'
+      ? Number(rawId)
+      : NaN;
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -31,17 +36,21 @@ export default function ReadPage() {
   const [hasLiked, setHasLiked] = useState(false);
   const [error, setError] = useState('');
 
-  // 게시글 및 관련 데이터 불러오기
   useEffect(() => {
-    if (isNaN(idParam)) {
+    if (!idParam || isNaN(idParam)) {
       setError('잘못된 게시글 ID입니다.');
       return;
     }
 
     const fetchPost = async () => {
-      const { data, error } = await supabase.from('posts').select('*').eq('id', idParam).single();
-      if (!data || error) {
-        setError('게시글을 찾을 수 없습니다.');
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', idParam)
+        .single();
+
+      if (error || !data) {
+        setError('잘못된 게시글 ID입니다.');
       } else {
         setPost(data);
       }
@@ -53,6 +62,7 @@ export default function ReadPage() {
         .select('*')
         .eq('post_id', idParam)
         .order('created_at', { ascending: true });
+
       setComments(data || []);
     };
 
@@ -61,6 +71,7 @@ export default function ReadPage() {
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', idParam);
+
       setLikes(count || 0);
     };
 
@@ -71,18 +82,22 @@ export default function ReadPage() {
 
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
+
     const { error } = await supabase.from('comments').insert({
       post_id: idParam,
       content: newComment,
     });
 
     if (!error) {
-      setComments((prev) => [...prev, {
-        id: Date.now(),
-        post_id: idParam,
-        content: newComment,
-        created_at: new Date().toISOString(),
-      }]);
+      setComments((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          post_id: idParam,
+          content: newComment,
+          created_at: new Date().toISOString(),
+        },
+      ]);
       setNewComment('');
     }
   };
@@ -101,31 +116,29 @@ export default function ReadPage() {
   };
 
   if (error) {
-    return <div className="text-center text-red-500 py-10">{error}</div>;
+    return <div className="text-center text-red-500 p-10">{error}</div>;
   }
 
   if (!post) {
-    return <div className="text-center text-gray-500 py-10">불러오는 중...</div>;
+    return <div className="text-center p-10">불러오는 중...</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="mb-4 text-sm text-gray-500">
-        {post.region}
+        {post.region} &gt; {post.title}
       </div>
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
       {post.image_url && (
         <img
           src={post.image_url}
-          alt="게시글 이미지"
-          className="w-full max-h-96 object-contain mb-4 rounded border"
+          alt="Post image"
+          className="w-full max-h-96 object-contain mb-4 rounded-lg border"
         />
       )}
 
-      <div className="whitespace-pre-line text-gray-800 mb-6">
-        {post.content}
-      </div>
+      <div className="text-gray-800 whitespace-pre-line mb-6">{post.content}</div>
 
       <div className="flex items-center gap-3 mb-8">
         <button
@@ -145,7 +158,10 @@ export default function ReadPage() {
         <h2 className="text-lg font-semibold mb-2">💬 댓글</h2>
         <div className="space-y-3 mb-4">
           {comments.map((comment) => (
-            <div key={comment.id} className="p-3 bg-gray-100 rounded text-sm">
+            <div
+              key={comment.id}
+              className="p-3 bg-gray-50 border rounded text-sm"
+            >
               {comment.content}
             </div>
           ))}
