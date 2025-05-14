@@ -1,16 +1,23 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  region: string;
+  user_id?: string;
+}
 
 interface Props {
   user: User | null;
   activeTab: string;
   selectedCategory: string;
   extraBoards: string[];
-  setPosts: (posts: any[]) => void;
-  setNewPostContent: (file: File | string) => void;
+  setPosts: (posts: Post[]) => void;
+  setNewPostContent: (v: string | File) => void; // ✅ 실제로 사용할 예정
   setSelectedCategory: (v: string) => void;
   setActiveTab: (v: string) => void;
   setView: (v: 'main' | 'category') => void;
@@ -32,6 +39,15 @@ export default function WriteForm({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
+
+  // ✅ 이 부분 추가: 파일 선택 시 setNewPostContent에 전달
+  useEffect(() => {
+    if (file) {
+      setNewPostContent(file);
+    } else {
+      setNewPostContent('');
+    }
+  }, [file, setNewPostContent]);
 
   const handleSubmit = async () => {
     if (!user) {
@@ -59,14 +75,12 @@ export default function WriteForm({
         .from('businesscard')
         .getPublicUrl(filePath);
 
-      const { error: insertError } = await supabase.from('posts').insert([
-        {
-          title: '명함 이미지',
-          content: publicUrl.publicUrl,
-          region: activeTab,
-          user_id: user.id,
-        },
-      ]);
+      const { error: insertError } = await supabase.from('posts').insert([{
+        title: '명함 이미지',
+        content: publicUrl.publicUrl,
+        region: activeTab,
+        user_id: user.id,
+      }]);
 
       if (insertError) {
         alert('등록 실패: ' + insertError.message);
@@ -78,14 +92,12 @@ export default function WriteForm({
         return;
       }
 
-      const { error: insertError } = await supabase.from('posts').insert([
-        {
-          title,
-          content,
-          region: `${selectedCategory}-${activeTab}`,
-          user_id: user.id,
-        },
-      ]);
+      const { error: insertError } = await supabase.from('posts').insert([{
+        title,
+        content,
+        region: `${selectedCategory}-${activeTab}`,
+        user_id: user.id,
+      }]);
 
       if (insertError) {
         alert('등록 실패: ' + insertError.message);

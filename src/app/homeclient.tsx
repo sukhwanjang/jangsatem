@@ -42,8 +42,10 @@ export default function HomeClient() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({});
-  const [newPostTitle, setNewPostTitle] = useState("");
-  const [newPostContent, setNewPostContent] = useState<string | File>("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [newPostContent, setNewPostContent] = useState<string | File>(""); // ✅ 바로 여기에 추가
+
+
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -96,51 +98,6 @@ export default function HomeClient() {
     itemsPerPage
   );
   const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
-
-  const handleSubmit = async () => {
-    if (!user) {
-      alert("로그인 후 작성 가능합니다.");
-      return;
-    }
-
-    if (typeof newPostContent !== "string" || newPostContent.trim().length < 5) {
-      alert("내용은 5자 이상 입력해주세요.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("posts")
-      .insert([
-        {
-          title: newPostTitle.trim(),
-          content: newPostContent.trim(),
-          region: currentRegion,
-          user_id: user.id,
-        },
-      ])
-      .select();
-
-    if (error) {
-      alert("등록 실패: " + error.message);
-      return;
-    }
-
-    if (data) {
-      const { data: refreshedPosts } = await supabase
-        .from("posts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      setPosts(refreshedPosts || []);
-      setNewPostContent("");
-
-      const region = extraBoards.includes(selectedCategory)
-        ? selectedCategory
-        : `${selectedCategory}-${activeTab}`;
-
-      setIsWriting((prev) => ({ ...prev, [region.split('-')[0]]: false }));
-    }
-  };
 
   const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
     return "name" in item;
@@ -385,17 +342,19 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
 
            {isWriting[selectedCategory] && (
   <WriteForm
-    user={user}
-    activeTab={activeTab}
-    selectedCategory={selectedCategory}
-    extraBoards={extraBoards}
-    setPosts={setPosts}
-    setNewPostContent={setNewPostContent}
-    setSelectedCategory={setSelectedCategory}
-    setActiveTab={setActiveTab}
-    setView={setView}
-    setIsWriting={setIsWriting}
-  />  // ← 여기! 반드시 슬래시(`/`)가 들어간 self-closing
+  user={user}
+  activeTab={activeTab}
+  selectedCategory={selectedCategory}
+  extraBoards={extraBoards}
+  setPosts={setPosts}
+  setNewPostContent={setNewPostContent}  // ✅ 이 줄이 누락됨
+  setSelectedCategory={setSelectedCategory}
+  setActiveTab={setActiveTab}
+  setView={setView}
+  setIsWriting={setIsWriting}
+/>
+
+  // ← 여기! 반드시 슬래시(`/`)가 들어간 self-closing
 )}
 
 
