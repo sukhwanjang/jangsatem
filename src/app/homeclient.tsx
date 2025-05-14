@@ -174,23 +174,24 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
       <div className="flex-1 p-6">
         <header className="flex justify-end mb-4">
           {user ? (
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut();
-                setUser(null);
-              }}
-              className="px-3 py-1 bg-gray-300 text-sm rounded hover:bg-gray-400"
-            >
-              로그아웃
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/login')}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-            >
-              로그인
-            </button>
-          )}
+  <button
+    onClick={async () => {
+      await supabase.auth.signOut();
+      location.reload(); // ✅ 새로고침으로 상태 확실하게 초기화
+    }}
+    className="px-3 py-1 bg-gray-300 text-sm rounded hover:bg-gray-400"
+  >
+    로그아웃
+  </button>
+) : (
+  <button
+    onClick={() => router.push('/login')}
+    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+  >
+    로그인
+  </button>
+)}
+
         </header>
 
        {/* ✅ 상단 공통 이미지 (main이든 category든 항상 보여주기) */}
