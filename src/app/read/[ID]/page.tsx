@@ -28,7 +28,6 @@ export default function ReadPage() {
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
 
-  // 게시글, 댓글, 좋아요 조회
   useEffect(() => {
     if (!id) return;
 
@@ -38,7 +37,11 @@ export default function ReadPage() {
     };
 
     const fetchComments = async () => {
-      const { data } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at', { ascending: true });
+      const { data } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('post_id', id)
+        .order('created_at', { ascending: true });
       setComments(data || []);
     };
 
@@ -64,7 +67,15 @@ export default function ReadPage() {
     });
 
     if (!error) {
-      setComments((prev) => [...prev, { id: Date.now(), post_id: Number(id), content: newComment, created_at: new Date().toISOString() }]);
+      setComments((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          post_id: Number(id),
+          content: newComment,
+          created_at: new Date().toISOString(),
+        },
+      ]);
       setNewComment('');
     }
   };
@@ -92,19 +103,23 @@ export default function ReadPage() {
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
       {post.image_url && (
-        <img src={post.image_url} alt="post image" className="w-full max-h-96 object-contain mb-4 rounded-lg border" />
+        <img
+          src={post.image_url}
+          alt="post image"
+          className="w-full max-h-96 object-contain mb-4 rounded-lg border"
+        />
       )}
 
-      <div className="text-gray-800 whitespace-pre-line mb-6">
-        {post.content}
-      </div>
+      <div className="text-gray-800 whitespace-pre-line mb-6">{post.content}</div>
 
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={handleLike}
           disabled={hasLiked}
           className={`px-4 py-1 rounded text-sm font-medium transition ${
-            hasLiked ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'
+            hasLiked
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
           }`}
         >
           👍 추천 {likes}
