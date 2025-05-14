@@ -21,11 +21,8 @@ interface Comment {
 }
 
 export default function ReadPage() {
-  const rawParams = useParams();
-  const rawId = rawParams?.id;
-
-  const postId = Array.isArray(rawId) ? rawId[0] : rawId;
-  const numericId = postId ? parseInt(postId, 10) : NaN;
+  const { id } = useParams();
+  const parsedId = typeof id === 'string' ? parseInt(id) : Array.isArray(id) ? parseInt(id[0]) : NaN;
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -35,14 +32,14 @@ export default function ReadPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!postId || isNaN(numericId)) {
+    if (isNaN(parsedId)) {
       setError('잘못된 게시글 ID입니다.');
       return;
     }
 
     const fetchPost = async () => {
-      const { data, error } = await supabase.from('posts').select('*').eq('id', numericId).single();
-      if (error || !data) {
+      const { data, error } = await supabase.from('posts').select('*').eq('id', parsedId).single();
+      if (!data || error) {
         setError('게시글을 찾을 수 없습니다.');
         return;
       }
@@ -53,7 +50,7 @@ export default function ReadPage() {
       const { data } = await supabase
         .from('comments')
         .select('*')
-        .eq('post_id', numericId)
+        .eq('post_id', parsedId)
         .order('created_at', { ascending: true });
       setComments(data || []);
     };
@@ -62,27 +59,32 @@ export default function ReadPage() {
       const { count } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
-        .eq('post_id', numericId);
+        .eq('post_id', parsedId);
       setLikes(count || 0);
     };
 
     fetchPost();
     fetchComments();
     fetchLikes();
-  }, [numericId, postId]);
+  }, [parsedId]);
 
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
 
     const { error } = await supabase.from('comments').insert({
-      post_id: numericId,
+      post_id: parsedId,
       content: newComment,
     });
 
     if (!error) {
       setComments((prev) => [
         ...prev,
-        { id: Date.now(), post_id: numericId, content: newComment, created_at: new Date().toISOString() },
+        {
+          id: Date.now(),
+          post_id: parsedId,
+          content: newComment,
+          created_at: new Date().toISOString(),
+        },
       ]);
       setNewComment('');
     }
@@ -92,7 +94,7 @@ export default function ReadPage() {
     if (hasLiked) return;
 
     const { error } = await supabase.from('likes').insert({
-      post_id: numericId,
+      post_id: parsedId,
     });
 
     if (!error) {
