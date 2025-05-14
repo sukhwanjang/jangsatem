@@ -340,22 +340,21 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
 </header>
 
 
-           {isWriting[selectedCategory] && (
+{isWriting[selectedCategory] && (
   <WriteForm
-  user={user}
-  activeTab={activeTab}
-  selectedCategory={selectedCategory}
-  extraBoards={extraBoards}
-  setPosts={setPosts}
-  setNewPostContent={setNewPostContent}  // ✅ 이 줄이 누락됨
-  setSelectedCategory={setSelectedCategory}
-  setActiveTab={setActiveTab}
-  setView={setView}
-  setIsWriting={setIsWriting}
-/>
-
-  // ← 여기! 반드시 슬래시(`/`)가 들어간 self-closing
+    user={user}
+    activeTab={activeTab}
+    selectedCategory={selectedCategory}
+    extraBoards={extraBoards}
+    setPosts={setPosts}
+    setNewPostContent={setNewPostContent}
+    setSelectedCategory={setSelectedCategory}
+    setActiveTab={setActiveTab}
+    setView={setView}
+    setIsWriting={setIsWriting}
+  />
 )}
+
 
 
 <div className="grid grid-cols-6 gap-4">
