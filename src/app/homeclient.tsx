@@ -21,6 +21,7 @@ interface Post {
   content: string;
   region: string;
   user_id?: string;
+ image_url?: string;
 }
 
 export default function HomeClient() {
@@ -368,15 +369,25 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
 
     return (
 <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg transition-all text-left space-y-2">
-        <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
-  이미지 없음
-</div>
+        {!isBusinessCard(item) && item.image_url ? (
+  <Image
+    src={item.image_url}
+    alt={item.title}
+    width={300}
+    height={128}
+    className="w-full h-32 object-cover rounded-lg"
+  />
+) : (
+  <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
+    이미지 없음
+  </div>
+)}
 
+<p className="font-semibold text-sm mb-1">
+  {isBusinessCard(item) ? item.name : item.title}
+</p>
+<p className="text-xs text-gray-500">{item.region}</p>
 
-        <p className="font-semibold text-sm mb-1">
-          {isBusinessCard(item) ? item.name : item.title}
-        </p>
-        <p className="text-xs text-gray-500">{item.region}</p>
       </div>
     );
   })}
