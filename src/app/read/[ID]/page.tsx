@@ -21,38 +21,38 @@ interface Comment {
 }
 
 export default function ReadPage() {
-  const params = useParams();
-  const id = params?.id;
-  const numericId = Number(id);
-
+  const { id } = useParams();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 게시글, 댓글, 좋아요 조회
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : NaN;
+
   useEffect(() => {
-    if (!numericId || isNaN(numericId)) return;
+    if (isNaN(numericId)) {
+      setError('잘못된 게시글 ID입니다.');
+      return;
+    }
 
     const fetchPost = async () => {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', numericId)
-        .single();
-
-      if (!error) setPost(data);
+      const { data, error } = await supabase.from('posts').select('*').eq('id', numericId).single();
+      if (error || !data) {
+        setError('게시글을 찾을 수 없습니다.');
+        return;
+      }
+      setPost(data);
     };
 
     const fetchComments = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('comments')
         .select('*')
         .eq('post_id', numericId)
         .order('created_at', { ascending: true });
-
-      if (!error) setComments(data || []);
+      setComments(data || []);
     };
 
     const fetchLikes = async () => {
@@ -60,7 +60,6 @@ export default function ReadPage() {
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', numericId);
-
       setLikes(count || 0);
     };
 
@@ -80,12 +79,7 @@ export default function ReadPage() {
     if (!error) {
       setComments((prev) => [
         ...prev,
-        {
-          id: Date.now(),
-          post_id: numericId,
-          content: newComment,
-          created_at: new Date().toISOString(),
-        },
+        { id: Date.now(), post_id: numericId, content: newComment, created_at: new Date().toISOString() },
       ]);
       setNewComment('');
     }
@@ -104,6 +98,7 @@ export default function ReadPage() {
     }
   };
 
+  if (error) return <div className="p-10 text-center text-red-500">{error}</div>;
   if (!post) return <div className="p-10 text-center">불러오는 중...</div>;
 
   return (
@@ -128,9 +123,7 @@ export default function ReadPage() {
           onClick={handleLike}
           disabled={hasLiked}
           className={`px-4 py-1 rounded text-sm font-medium transition ${
-            hasLiked
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
+            hasLiked ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'
           }`}
         >
           👍 추천 {likes}
