@@ -198,14 +198,6 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
 <div className="mb-8">
   <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
 <div className="w-full h-52 bg-white border border-gray-200 flex items-center justify-center rounded-lg shadow">
-    <Image
-  src="https://placehold.co/1200x300?text=메인+배너"
-  alt="메인 이미지"
-  layout="responsive"
-  width={1200}
-  height={300}
-   className="object-cover rounded z-0"
-/>
 
   </div>
 </div>
