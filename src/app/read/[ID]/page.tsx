@@ -22,49 +22,58 @@ interface Comment {
 
 export default function ReadPage() {
   const params = useParams();
-  const id = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : null;
+  const id = params?.id;
+  const numericId = Number(id);
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   // 게시글, 댓글, 좋아요 조회
   useEffect(() => {
-    if (!id) return;
+    if (!numericId || isNaN(numericId)) return;
 
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchPost = async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('id', numericId)
+        .single();
 
-      const { data: postData } = await supabase.from('posts').select('*').eq('id', id).single();
-      setPost(postData);
+      if (!error) setPost(data);
+    };
 
-      const { data: commentData } = await supabase
+    const fetchComments = async () => {
+      const { data, error } = await supabase
         .from('comments')
         .select('*')
-        .eq('post_id', id)
+        .eq('post_id', numericId)
         .order('created_at', { ascending: true });
-      setComments(commentData || []);
 
+      if (!error) setComments(data || []);
+    };
+
+    const fetchLikes = async () => {
       const { count } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
-        .eq('post_id', id);
-      setLikes(count || 0);
+        .eq('post_id', numericId);
 
-      setLoading(false);
+      setLikes(count || 0);
     };
 
-    fetchData();
-  }, [id]);
+    fetchPost();
+    fetchComments();
+    fetchLikes();
+  }, [numericId]);
 
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
 
     const { error } = await supabase.from('comments').insert({
-      post_id: id,
+      post_id: numericId,
       content: newComment,
     });
 
@@ -73,7 +82,7 @@ export default function ReadPage() {
         ...prev,
         {
           id: Date.now(),
-          post_id: Number(id),
+          post_id: numericId,
           content: newComment,
           created_at: new Date().toISOString(),
         },
@@ -85,14 +94,17 @@ export default function ReadPage() {
   const handleLike = async () => {
     if (hasLiked) return;
 
-    const { error } = await supabase.from('likes').insert({ post_id: id });
+    const { error } = await supabase.from('likes').insert({
+      post_id: numericId,
+    });
+
     if (!error) {
       setLikes((prev) => prev + 1);
       setHasLiked(true);
     }
   };
 
-  if (loading || !post) return <div className="p-10 text-center">불러오는 중...</div>;
+  if (!post) return <div className="p-10 text-center">불러오는 중...</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-6">
@@ -102,19 +114,23 @@ export default function ReadPage() {
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
       {post.image_url && (
-        <img src={post.image_url} alt="post image" className="w-full max-h-96 object-contain mb-4 rounded-lg border" />
+        <img
+          src={post.image_url}
+          alt="post image"
+          className="w-full max-h-96 object-contain mb-4 rounded-lg border"
+        />
       )}
 
-      <div className="text-gray-800 whitespace-pre-line mb-6">
-        {post.content}
-      </div>
+      <div className="text-gray-800 whitespace-pre-line mb-6">{post.content}</div>
 
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={handleLike}
           disabled={hasLiked}
           className={`px-4 py-1 rounded text-sm font-medium transition ${
-            hasLiked ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'
+            hasLiked
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
           }`}
         >
           👍 추천 {likes}
