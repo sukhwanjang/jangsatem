@@ -350,38 +350,42 @@ export default function HomeClient() {
 
           <div className="grid grid-cols-6 gap-4">
   {paginatedPosts.map((item, index) => {
-    if (!item) {
-      return (
-        <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-          <div className="w-full h-36 flex items-center justify-center text-gray-200">빈칸</div>
-        </div>
-      );
-    }
-
+  if (!item) {
     return (
-<div key={index} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg transition-all text-left space-y-2">
-        {!isBusinessCard(item) && item.image_url ? (
-  <Image
-    src={item.image_url}
-    alt={item.title}
-    width={300}
-    height={128}
-    className="w-full h-32 object-cover rounded-lg"
-  />
-) : (
-  <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
-    이미지 없음
-  </div>
-)}
-
-<p className="font-semibold text-sm mb-1">
-  {isBusinessCard(item) ? item.name : item.title}
-</p>
-<p className="text-xs text-gray-500">{item.region}</p>
-
+      <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
+        <div className="w-full h-36 flex items-center justify-center text-gray-200">빈칸</div>
       </div>
     );
-  })}
+  }
+
+  return (
+    <div
+      key={index}
+      onClick={() => router.push(`/read/${item.id}`)}
+      className="cursor-pointer border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg transition-all text-left space-y-2"
+    >
+      {!isBusinessCard(item) && item.image_url ? (
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          width={300}
+          height={128}
+          className="w-full h-32 object-cover rounded-lg"
+        />
+      ) : (
+        <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
+          이미지 없음
+        </div>
+      )}
+
+      <p className="font-semibold text-sm mb-1">
+        {isBusinessCard(item) ? item.name : item.title}
+      </p>
+      <p className="text-xs text-gray-500">{item.region}</p>
+    </div>
+  );
+})}
+
 </div>
 
             <div className="flex justify-center mt-6 space-x-2">
