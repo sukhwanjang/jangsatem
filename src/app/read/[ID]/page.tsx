@@ -21,7 +21,12 @@ interface Comment {
 }
 
 export default function ReadPage() {
-  const { id } = useParams();
+  const rawParams = useParams();
+  const rawId = rawParams?.id;
+
+  const postId = Array.isArray(rawId) ? rawId[0] : rawId;
+  const numericId = postId ? parseInt(postId, 10) : NaN;
+
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -29,10 +34,8 @@ export default function ReadPage() {
   const [hasLiked, setHasLiked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : NaN;
-
   useEffect(() => {
-    if (isNaN(numericId)) {
+    if (!postId || isNaN(numericId)) {
       setError('잘못된 게시글 ID입니다.');
       return;
     }
@@ -66,7 +69,7 @@ export default function ReadPage() {
     fetchPost();
     fetchComments();
     fetchLikes();
-  }, [numericId]);
+  }, [numericId, postId]);
 
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
