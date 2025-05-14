@@ -204,7 +204,7 @@ className={`w-full text-left bg-gray-50 border border-gray-200 rounded-lg px-4 p
   layout="responsive"
   width={1200}
   height={300}
-  className="object-cover rounded"
+   className="object-cover rounded z-0"
 />
 
   </div>
