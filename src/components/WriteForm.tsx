@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 interface Post {
   id: number;
@@ -40,6 +40,7 @@ export default function WriteForm({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (file) {
@@ -51,56 +52,63 @@ export default function WriteForm({
 
   const handleSubmit = async () => {
     if (!user) {
-      alert('로그인 후 작성 가능합니다.');
+      alert('로그인 후 작성해주세요.');
       return;
     }
+
+    setLoading(true);
+
+    const region = extraBoards.includes(selectedCategory)
+      ? selectedCategory
+      : `${selectedCategory}-${activeTab}`;
 
     if (activeTab === '명함') {
       if (!file) {
         alert('이미지를 선택해주세요.');
+        setLoading(false);
         return;
       }
 
       const filePath = `${user.id}_${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('businesscard')
-        .upload(filePath, file);
-
+      const { error: uploadError } = await supabase.storage.from('businesscard').upload(filePath, file);
       if (uploadError) {
         alert('이미지 업로드 실패: ' + uploadError.message);
+        setLoading(false);
         return;
       }
 
-      const { data: publicUrl } = supabase.storage
-        .from('businesscard')
-        .getPublicUrl(filePath);
-
-      const { error: insertError } = await supabase.from('posts').insert([{
-        title: '명함 이미지',
-        content: publicUrl.publicUrl,
-        region: activeTab,
-        user_id: user.id,
-      }]);
-
+      const { data: publicUrl } = supabase.storage.from('businesscard').getPublicUrl(filePath);
+      const { error: insertError } = await supabase.from('posts').insert([
+        {
+          title: '명함 이미지',
+          content: publicUrl.publicUrl,
+          region,
+          user_id: user.id,
+        },
+      ]);
       if (insertError) {
         alert('등록 실패: ' + insertError.message);
+        setLoading(false);
         return;
       }
     } else {
-      if (content.trim().length < 5) {
-        alert('내용은 5자 이상 입력해주세요.');
+      if (title.trim().length < 2 || content.trim().length < 5) {
+        alert('제목은 2자 이상, 내용은 5자 이상 입력해주세요.');
+        setLoading(false);
         return;
       }
 
-      const { error: insertError } = await supabase.from('posts').insert([{
-        title,
-        content,
-        region: `${selectedCategory}-${activeTab}`,
-        user_id: user.id,
-      }]);
-
+      const { error: insertError } = await supabase.from('posts').insert([
+        {
+          title: title.trim(),
+          content: content.trim(),
+          region,
+          user_id: user.id,
+        },
+      ]);
       if (insertError) {
         alert('등록 실패: ' + insertError.message);
+        setLoading(false);
         return;
       }
     }
@@ -112,72 +120,78 @@ export default function WriteForm({
 
     setPosts(refreshedPosts || []);
     setNewPostContent('');
+    setTitle('');
+    setContent('');
+    setFile(null);
+    setLoading(false);
 
-    const region = extraBoards.includes(selectedCategory)
-      ? selectedCategory
-      : `${selectedCategory}-${activeTab}`;
-
-    setSelectedCategory(region.split('-')[0]);
-    if (region.includes('-')) {
-      setActiveTab(region.split('-')[1]);
-    } else {
-      setActiveTab('');
-    }
-
+    const [category, tab] = region.split('-');
+    setSelectedCategory(category);
+    setActiveTab(tab || '');
     setView('category');
     setIsWriting((prev) => ({ ...prev, [region]: false }));
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6 mt-8 space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">글쓰기</h2>
+    <div className="bg-white p-6 rounded-lg shadow max-w-2xl mx-auto mt-10">
+      <h2 className="text-xl font-bold mb-6 text-blue-700">✍ 글쓰기</h2>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">제목</label>
-        <input
-          type="text"
-          placeholder="제목을 입력하세요"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+      {activeTab !== '명함' && (
+        <>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1 text-gray-700">제목</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="제목을 입력하세요"
+              className="w-full px-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">내용</label>
-        <textarea
-          placeholder="내용을 입력하세요"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={6}
-          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1 text-gray-700">내용</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="내용을 입력하세요"
+              rows={6}
+              className="w-full px-4 py-2 border rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </>
+      )}
 
       {activeTab === '명함' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">명함 이미지 업로드</label>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1 text-gray-700">명함 이미지 업로드</label>
           <input
             type="file"
             accept="image/*"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="text-sm"
+            className="w-full text-sm"
           />
         </div>
       )}
 
-      <div className="flex justify-end gap-3 pt-4">
+      <div className="flex justify-end gap-2 mt-6">
         <button
-          onClick={handleSubmit}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
-        >
-          등록하기
-        </button>
-        <button
-          onClick={() => setView('category')}
-          className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400 text-sm"
+          onClick={() => setIsWriting((prev) => {
+            const region = extraBoards.includes(selectedCategory)
+              ? selectedCategory
+              : `${selectedCategory}-${activeTab}`;
+            return { ...prev, [region]: false };
+          })}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md text-sm"
         >
           취소
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm ${loading ? 'opacity-50' : ''}`}
+        >
+          {loading ? '등록 중...' : '등록하기'}
         </button>
       </div>
     </div>
