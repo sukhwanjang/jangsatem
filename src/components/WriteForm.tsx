@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -17,7 +18,7 @@ interface Props {
   selectedCategory: string;
   extraBoards: string[];
   setPosts: (posts: Post[]) => void;
-  setNewPostContent: (v: string | File) => void; // ✅ 실제로 사용할 예정
+  setNewPostContent: (v: string | File) => void;
   setSelectedCategory: (v: string) => void;
   setActiveTab: (v: string) => void;
   setView: (v: 'main' | 'category') => void;
@@ -40,7 +41,6 @@ export default function WriteForm({
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
-  // ✅ 이 부분 추가: 파일 선택 시 setNewPostContent에 전달
   useEffect(() => {
     if (file) {
       setNewPostContent(file);
@@ -129,34 +129,57 @@ export default function WriteForm({
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md space-y-4 max-w-xl mx-auto">
-      <h2 className="text-xl font-bold text-gray-800">✍️ 글쓰기</h2>
-      <input
-        type="text"
-        placeholder="제목을 입력하세요"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full border border-gray-300 rounded p-2 text-sm"
-      />
-      <textarea
-        placeholder="내용을 입력하세요"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={6}
-        className="w-full border border-gray-300 rounded p-2 text-sm"
-      />
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files?.[0] || null)}
-        className="w-full text-sm"
-      />
-      <button
-        onClick={handleSubmit}
-        className="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700"
-      >
-        등록하기
-      </button>
+    <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-xl shadow p-6 mt-8 space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800">글쓰기</h2>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">제목</label>
+        <input
+          type="text"
+          placeholder="제목을 입력하세요"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">내용</label>
+        <textarea
+          placeholder="내용을 입력하세요"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={6}
+          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {activeTab === '명함' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">명함 이미지 업로드</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="text-sm"
+          />
+        </div>
+      )}
+
+      <div className="flex justify-end gap-3 pt-4">
+        <button
+          onClick={handleSubmit}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+        >
+          등록하기
+        </button>
+        <button
+          onClick={() => setView('category')}
+          className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400 text-sm"
+        >
+          취소
+        </button>
+      </div>
     </div>
   );
 }
