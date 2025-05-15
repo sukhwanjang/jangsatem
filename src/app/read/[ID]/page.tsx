@@ -21,9 +21,8 @@ interface Comment {
 }
 
 export default function ReadPage() {
-  const { id } = useParams();
-  const postId = Number(id);
-
+  const params = useParams();
+  const postId = Number(params?.id);
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -31,17 +30,22 @@ export default function ReadPage() {
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 게시글, 댓글, 추천 불러오기
   useEffect(() => {
-    if (!postId || isNaN(postId)) return;
-
     const fetchData = async () => {
-      // 게시글
+      // 게시글 가져오기
       const { data: postData } = await supabase
         .from('posts')
         .select('*')
         .eq('id', postId)
         .single();
+
+      if (!postData) {
+        setPost(null);
+        setLoading(false);
+        return;
+      }
+
+      setPost(postData);
 
       // 댓글
       const { data: commentData } = await supabase
@@ -50,26 +54,24 @@ export default function ReadPage() {
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      // 추천 수
+      // 좋아요 수
       const { count } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
 
-      setPost(postData || null);
       setComments(commentData || []);
       setLikes(count || 0);
       setLoading(false);
     };
 
-    fetchData();
+    if (postId) fetchData();
   }, [postId]);
 
-  // 댓글 작성
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
 
-    const { data, error } = await supabase.from('comments').insert({
+    const { error } = await supabase.from('comments').insert({
       post_id: postId,
       content: newComment,
     });
@@ -88,13 +90,10 @@ export default function ReadPage() {
     }
   };
 
-  // 추천
   const handleLike = async () => {
     if (hasLiked) return;
 
-    const { error } = await supabase.from('likes').insert({
-      post_id: postId,
-    });
+    const { error } = await supabase.from('likes').insert({ post_id: postId });
 
     if (!error) {
       setLikes((prev) => prev + 1);
@@ -102,15 +101,14 @@ export default function ReadPage() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center">불러오는 중...</div>;
-  if (!post) return <div className="p-10 text-center text-red-500">잘못된 게시글 ID입니다.</div>;
+  if (loading) return <div className="text-center mt-20">불러오는 중...</div>;
+  if (!post) return <div className="text-center mt-20 text-red-500">잘못된 게시글 ID입니다.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-3xl mx-auto p-6">
       <div className="mb-4 text-sm text-gray-500">
         {post.region} &gt; {post.title}
       </div>
-
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
       {post.image_url && (
@@ -141,7 +139,10 @@ export default function ReadPage() {
         <h2 className="text-lg font-semibold mb-2">💬 댓글</h2>
         <div className="space-y-3 mb-4">
           {comments.map((comment) => (
-            <div key={comment.id} className="p-3 bg-gray-50 border rounded text-sm">
+            <div
+              key={comment.id}
+              className="p-3 bg-gray-50 border rounded text-sm"
+            >
               {comment.content}
             </div>
           ))}
