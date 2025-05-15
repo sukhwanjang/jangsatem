@@ -51,7 +51,7 @@ export default function ReadPage() {
         return;
       }
 
-      if (data) setPost(data);
+      if (data) setPost(data as Post);
       setLoading(false);
     };
 
@@ -64,6 +64,8 @@ export default function ReadPage() {
 
       if (!error && data) {
         setComments(data as Comment[]);
+      } else {
+        console.error('댓글 불러오기 실패:', error);
       }
     };
 
@@ -74,22 +76,29 @@ export default function ReadPage() {
   const handleCommentSubmit = async () => {
     if (!commentText.trim() || !numericId) return alert("댓글 내용을 입력해주세요.");
 
-    const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return alert("로그인이 필요합니다");
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
 
-    const { data, error } = await supabase.from('comments').insert([
+    if (userError || !user) {
+      console.error('사용자 정보를 가져오지 못했습니다:', userError);
+      return alert("로그인이 필요합니다");
+    }
+
+    const { data: insertData, error: insertError } = await supabase.from('comments').insert([
       {
         post_id: numericId,
         user_id: user.id,
         content: commentText,
       },
-    ]);
+    ]).select();
 
-    if (!error && data && Array.isArray(data)) {
-      setComments((prev) => [...prev, data[0] as Comment]);
+    if (!insertError && insertData && Array.isArray(insertData)) {
+      setComments((prev) => [...prev, insertData[0] as Comment]);
       setCommentText('');
     } else {
-      console.error('댓글 작성 오류:', error);
+      console.error('댓글 작성 오류:', insertError);
       alert('댓글 작성 실패');
     }
   };
