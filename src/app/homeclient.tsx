@@ -360,10 +360,14 @@ export default function HomeClient() {
 
   return (
     <div
-      key={index}
-      onClick={() => router.push(`/read/${item.id}`)}
-      className="cursor-pointer border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg transition-all text-left space-y-2"
-    >
+  key={index}
+ onClick={() => {
+  console.log('🔥 클릭된 게시글 ID:', item.id);
+  router.push(`/read/${Number(item.id)}`);
+}}
+  className="cursor-pointer border ..."
+>
+
       {!isBusinessCard(item) && item.image_url ? (
         <Image
           src={item.image_url}
