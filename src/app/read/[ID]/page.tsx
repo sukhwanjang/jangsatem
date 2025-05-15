@@ -62,7 +62,7 @@ export default function ReadPage() {
         <img
           src={post.image_url}
           alt="post image"
-          className="w-full max-h-96 object-contain rounded-lg border mb-4"
+          className="w-full max-h-96 object-contain rounded-lg border mb-4" //
         />
       )}
       <div className="text-gray-700 whitespace-pre-line mb-10">{post.content}</div>
