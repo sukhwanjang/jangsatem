@@ -77,11 +77,11 @@ export default function ReadPage() {
     if (!commentText.trim() || !numericId) return alert("댓글 내용을 입력해주세요.");
 
     const {
-      data: { user },
+      data: userData,
       error: userError
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    if (userError || !userData?.user) {
       console.error('사용자 정보를 가져오지 못했습니다:', userError);
       return alert("로그인이 필요합니다");
     }
@@ -89,12 +89,12 @@ export default function ReadPage() {
     const { data: insertData, error: insertError } = await supabase.from('comments').insert([
       {
         post_id: numericId,
-        user_id: user.id,
+        user_id: userData.user.id,
         content: commentText,
       },
     ]).select();
 
-    if (!insertError && insertData && Array.isArray(insertData)) {
+    if (!insertError && insertData && Array.isArray(insertData) && insertData.length > 0) {
       setComments((prev) => [...prev, insertData[0] as Comment]);
       setCommentText('');
     } else {
