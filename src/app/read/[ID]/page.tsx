@@ -16,6 +16,7 @@ interface Post {
 interface Comment {
   id: number;
   post_id: number;
+  user_id: string;
   content: string;
   created_at: string;
 }
@@ -27,62 +28,70 @@ export default function ReadPage() {
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState('');
+  const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
-  const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
-    const fetchPostAndComments = async () => {
+    const fetchPost = async () => {
       if (!numericId || isNaN(numericId)) {
+        console.warn("❌ ID가 숫자가 아닙니다.");
         setLoading(false);
         return;
       }
 
-      const { data: postData } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', numericId)
+      const { data, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("id", numericId)
         .single();
 
-      const { data: commentData } = await supabase
+      if (error) {
+        console.error("❌ Supabase 에러:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (data) setPost(data);
+      setLoading(false);
+    };
+
+    const fetchComments = async () => {
+      const { data, error } = await supabase
         .from('comments')
         .select('*')
         .eq('post_id', numericId)
         .order('created_at', { ascending: true });
 
-      const { data: likeData } = await supabase
-        .from('likes')
-        .select('*', { count: 'exact' })
-        .eq('post_id', numericId);
-
-      if (postData) setPost(postData);
-      if (commentData) setComments(commentData);
-      if (likeData) setLikeCount(likeData.length);
-
-      setLoading(false);
+      if (!error && data) {
+        setComments(data as Comment[]);
+      }
     };
 
-    fetchPostAndComments();
+    fetchPost();
+    fetchComments();
   }, [numericId]);
 
   const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return;
+    if (!commentText.trim() || !numericId) return alert("댓글 내용을 입력해주세요.");
 
-    const { data: insertedComment, error } = await supabase
-      .from('comments')
-      .insert({ content: newComment, post_id: numericId })
-      .select()
-      .single();
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return alert("로그인이 필요합니다");
 
-    if (!error && insertedComment) {
-      setComments([...comments, insertedComment]);
-      setNewComment('');
+    const { data, error } = await supabase.from('comments').insert([
+      {
+        post_id: numericId,
+        user_id: user.id,
+        content: commentText,
+      },
+    ]);
+
+    if (!error && data && Array.isArray(data)) {
+      setComments((prev) => [...prev, data[0] as Comment]);
+      setCommentText('');
+    } else {
+      console.error('댓글 작성 오류:', error);
+      alert('댓글 작성 실패');
     }
-  };
-
-  const handleLike = async () => {
-    await supabase.from('likes').insert({ post_id: numericId });
-    setLikeCount((prev) => prev + 1);
   };
 
   if (loading) return <div className="p-10 text-center">불러오는 중...</div>;
@@ -99,35 +108,25 @@ export default function ReadPage() {
           className="w-full max-h-96 object-contain rounded-lg border mb-4"
         />
       )}
-      <div className="text-gray-700 whitespace-pre-line mb-6">{post.content}</div>
+      <div className="text-gray-700 whitespace-pre-line mb-10">{post.content}</div>
 
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={handleLike}
-          className="px-3 py-1 text-sm bg-pink-100 hover:bg-pink-200 text-pink-600 rounded"
-        >
-          ❤️ 좋아요 ({likeCount})
-        </button>
-      </div>
+      <hr className="my-6" />
+      <div className="space-y-4">
+        <h2 className="font-semibold text-lg">💬 댓글</h2>
 
-      <div className="mt-10">
-        <h2 className="text-lg font-bold mb-2">💬 댓글</h2>
-        <div className="space-y-4 mb-4">
-          {comments.map((comment) => (
-            <div key={comment.id} className="p-3 bg-gray-50 border rounded">
-              <div className="text-sm text-gray-800 whitespace-pre-line">{comment.content}</div>
-              <div className="text-xs text-gray-400 mt-1">{new Date(comment.created_at).toLocaleString()}</div>
-            </div>
-          ))}
-        </div>
+        {comments.map((c) => (
+          <div key={c.id} className="bg-gray-50 border p-3 rounded">
+            <div className="text-sm text-gray-800">{c.content}</div>
+            <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</div>
+          </div>
+        ))}
 
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2 mt-4">
           <input
-            type="text"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="댓글을 입력하세요"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
             className="flex-1 border px-3 py-2 rounded text-sm"
+            placeholder="댓글을 입력하세요"
           />
           <button
             onClick={handleCommentSubmit}
