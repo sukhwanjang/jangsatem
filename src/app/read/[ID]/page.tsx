@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface Post {
@@ -14,36 +14,39 @@ interface Post {
 }
 
 export default function ReadPage() {
-  const params = useParams();
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const numericId = Number(id);
+  const pathname = usePathname();
+  const idFromPath = pathname?.split('/').pop(); // 마지막 segment 추출
+  const numericId = Number(idFromPath);
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPost = async () => {
-      console.log('📌 Supabase ID 요청:', numericId);
+      console.log('✅ 최종 추출된 게시글 ID:', numericId);
 
       if (!numericId || isNaN(numericId)) {
-        console.warn('❌ 잘못된 ID 형식입니다');
+        console.warn("❌ ID가 숫자가 아닙니다.");
         setLoading(false);
         return;
       }
 
       const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', numericId)
+        .from("posts")
+        .select("*")
+        .eq("id", numericId)
         .single();
 
       if (error) {
-        console.error('❌ Supabase 에러:', error);
+        console.error("❌ Supabase 에러:", error);
         setLoading(false);
         return;
       }
 
-      if (data) setPost(data);
+      if (data) {
+        setPost(data);
+      }
+
       setLoading(false);
     };
 
