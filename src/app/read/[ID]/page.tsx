@@ -22,7 +22,7 @@ interface Comment {
 
 export default function ReadPage() {
   const { id } = useParams();
-  const postId = Number(id);
+  const postId = Number(id); // 중요: 문자열 ID를 숫자로 변환
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -31,36 +31,33 @@ export default function ReadPage() {
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 게시글, 댓글, 추천 불러오기
+  // 게시글, 댓글, 좋아요 불러오기
   useEffect(() => {
-    if (!postId) return;
+    if (!postId || isNaN(postId)) return;
 
     const fetchData = async () => {
       setLoading(true);
 
-      // 게시글 불러오기
       const { data: postData } = await supabase
         .from('posts')
         .select('*')
         .eq('id', postId)
         .single();
 
-      // 댓글 불러오기
       const { data: commentData } = await supabase
         .from('comments')
         .select('*')
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
 
-      // 좋아요 수 불러오기
-      const { count: likeCount } = await supabase
+      const { count } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
 
       setPost(postData || null);
       setComments(commentData || []);
-      setLikes(likeCount || 0);
+      setLikes(count || 0);
       setLoading(false);
     };
 
@@ -102,34 +99,38 @@ export default function ReadPage() {
     }
   };
 
-  if (loading) {
-    return <div className="p-10 text-center text-gray-500">불러오는 중...</div>;
-  }
-
-  if (!post) {
+  if (!postId || isNaN(postId)) {
     return <div className="p-10 text-center text-red-500">잘못된 게시글 ID입니다.</div>;
   }
 
+  if (loading) {
+    return <div className="p-10 text-center">불러오는 중...</div>;
+  }
+
+  if (!post) {
+    return <div className="p-10 text-center text-red-500">게시글을 찾을 수 없습니다.</div>;
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-4 text-sm text-gray-500">{post.region}</div>
+    <div className="max-w-3xl mx-auto p-6">
+      <div className="mb-2 text-sm text-gray-500">{post.region}</div>
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
       {post.image_url && (
         <img
           src={post.image_url}
-          alt="게시글 이미지"
-          className="w-full max-h-96 object-contain mb-4 rounded border"
+          alt="post"
+          className="w-full max-h-[400px] object-contain rounded-lg border mb-4"
         />
       )}
 
-      <div className="text-gray-800 whitespace-pre-line mb-6">{post.content}</div>
+      <div className="text-gray-800 whitespace-pre-wrap mb-6">{post.content}</div>
 
-      <div className="flex items-center gap-3 mb-10">
+      <div className="mb-8">
         <button
           onClick={handleLike}
           disabled={hasLiked}
-          className={`px-4 py-1 rounded text-sm font-medium transition ${
+          className={`px-4 py-2 rounded text-sm font-medium ${
             hasLiked
               ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
               : 'bg-blue-500 text-white hover:bg-blue-600'
@@ -140,10 +141,10 @@ export default function ReadPage() {
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-3">💬 댓글</h2>
+        <h2 className="text-lg font-semibold mb-2">💬 댓글</h2>
         <div className="space-y-3 mb-4">
           {comments.map((comment) => (
-            <div key={comment.id} className="p-3 bg-gray-50 border rounded text-sm">
+            <div key={comment.id} className="p-3 bg-gray-100 border rounded text-sm">
               {comment.content}
             </div>
           ))}
