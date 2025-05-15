@@ -22,57 +22,53 @@ interface Comment {
 
 export default function ReadPage() {
   const params = useParams();
-  const postId = Number(params?.id);
+  const id = typeof params.id === 'string' ? parseInt(params.id, 10) : NaN;
+
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
-      // 게시글 가져오기
-      const { data: postData } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('id', postId)
-        .single();
+    if (!id || isNaN(id)) {
+      setErrorMessage('잘못된 게시글 ID입니다.');
+      return;
+    }
 
-      if (!postData) {
-        setPost(null);
-        setLoading(false);
+    const fetchPost = async () => {
+      const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
+      if (error || !data) {
+        setErrorMessage('잘못된 게시글 ID입니다.');
         return;
       }
+      setPost(data);
+    };
 
-      setPost(postData);
+    const fetchComments = async () => {
+      const { data } = await supabase.from('comments').select('*').eq('post_id', id).order('created_at', { ascending: true });
+      setComments(data || []);
+    };
 
-      // 댓글
-      const { data: commentData } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-
-      // 좋아요 수
+    const fetchLikes = async () => {
       const { count } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
-        .eq('post_id', postId);
-
-      setComments(commentData || []);
+        .eq('post_id', id);
       setLikes(count || 0);
-      setLoading(false);
     };
 
-    if (postId) fetchData();
-  }, [postId]);
+    fetchPost();
+    fetchComments();
+    fetchLikes();
+  }, [id]);
 
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
 
     const { error } = await supabase.from('comments').insert({
-      post_id: postId,
+      post_id: id,
       content: newComment,
     });
 
@@ -81,7 +77,7 @@ export default function ReadPage() {
         ...prev,
         {
           id: Date.now(),
-          post_id: postId,
+          post_id: id,
           content: newComment,
           created_at: new Date().toISOString(),
         },
@@ -93,7 +89,9 @@ export default function ReadPage() {
   const handleLike = async () => {
     if (hasLiked) return;
 
-    const { error } = await supabase.from('likes').insert({ post_id: postId });
+    const { error } = await supabase.from('likes').insert({
+      post_id: id,
+    });
 
     if (!error) {
       setLikes((prev) => prev + 1);
@@ -101,11 +99,14 @@ export default function ReadPage() {
     }
   };
 
-  if (loading) return <div className="text-center mt-20">불러오는 중...</div>;
-  if (!post) return <div className="text-center mt-20 text-red-500">잘못된 게시글 ID입니다.</div>;
+  if (errorMessage) {
+    return <div className="p-10 text-center text-red-500">{errorMessage}</div>;
+  }
+
+  if (!post) return <div className="p-10 text-center">불러오는 중...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6">
       <div className="mb-4 text-sm text-gray-500">
         {post.region} &gt; {post.title}
       </div>
@@ -119,16 +120,16 @@ export default function ReadPage() {
         />
       )}
 
-      <div className="text-gray-800 whitespace-pre-line mb-6">{post.content}</div>
+      <div className="text-gray-800 whitespace-pre-line mb-6">
+        {post.content}
+      </div>
 
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={handleLike}
           disabled={hasLiked}
           className={`px-4 py-1 rounded text-sm font-medium transition ${
-            hasLiked
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
+            hasLiked ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'
           }`}
         >
           👍 추천 {likes}
@@ -139,10 +140,7 @@ export default function ReadPage() {
         <h2 className="text-lg font-semibold mb-2">💬 댓글</h2>
         <div className="space-y-3 mb-4">
           {comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="p-3 bg-gray-50 border rounded text-sm"
-            >
+            <div key={comment.id} className="p-3 bg-gray-50 border rounded text-sm">
               {comment.content}
             </div>
           ))}
