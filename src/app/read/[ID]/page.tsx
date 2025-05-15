@@ -1,7 +1,7 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface Post {
@@ -21,99 +21,86 @@ interface Comment {
 }
 
 export default function ReadPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const rawId = params?.id;
+  const id = typeof rawId === 'string' ? parseInt(rawId, 10) : Array.isArray(rawId) ? parseInt(rawId[0], 10) : NaN;
+
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    if (!id) {
-      setErrorMsg('잘못된 게시글 ID입니다.');
-      setLoading(false);
-      return;
-    }
+    if (!id || isNaN(id)) return;
 
-    const postId = Number(id);
-    if (isNaN(postId)) {
-      setErrorMsg('게시글 ID가 숫자가 아닙니다.');
-      setLoading(false);
-      return;
-    }
-
-    const fetchAll = async () => {
-      setLoading(true);
-
-      const { data: postData, error: postError } = await supabase
+    const fetchPost = async () => {
+      const { data, error } = await supabase
         .from('posts')
         .select('*')
-        .eq('id', postId)
+        .eq('id', id)
         .single();
 
-      if (postError || !postData) {
-        setErrorMsg('게시글을 찾을 수 없습니다.');
-        setLoading(false);
-        return;
+      if (error || !data) {
+        setPost(null);
+      } else {
+        setPost(data);
       }
 
-      setPost(postData);
-
-      const { data: commentData } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-
-      setComments(commentData || []);
-
-      const { count } = await supabase
-        .from('likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', postId);
-
-      setLikes(count || 0);
       setLoading(false);
     };
 
-    fetchAll();
+    const fetchComments = async () => {
+      const { data } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('post_id', id)
+        .order('created_at', { ascending: true });
+
+      setComments(data || []);
+    };
+
+    const fetchLikes = async () => {
+      const { count } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', id);
+
+      setLikes(count || 0);
+    };
+
+    fetchPost();
+    fetchComments();
+    fetchLikes();
   }, [id]);
 
   const handleCommentSubmit = async () => {
-    const postId = Number(id);
     if (!newComment.trim()) return;
 
     const { error } = await supabase.from('comments').insert({
-      post_id: postId,
+      post_id: id,
       content: newComment,
     });
 
     if (!error) {
-      setComments((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          post_id: postId,
-          content: newComment,
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      setComments(prev => [...prev, {
+        id: Date.now(),
+        post_id: id,
+        content: newComment,
+        created_at: new Date().toISOString(),
+      }]);
       setNewComment('');
     }
   };
 
   const handleLike = async () => {
-    const postId = Number(id);
     if (hasLiked) return;
 
-    const { error } = await supabase.from('likes').insert({
-      post_id: postId,
-    });
+    const { error } = await supabase.from('likes').insert({ post_id: id });
 
     if (!error) {
-      setLikes((prev) => prev + 1);
+      setLikes(prev => prev + 1);
       setHasLiked(true);
     }
   };
@@ -122,28 +109,17 @@ export default function ReadPage() {
     return <div className="p-10 text-center">불러오는 중...</div>;
   }
 
-  if (errorMsg) {
-    return <div className="p-10 text-center text-red-500">{errorMsg}</div>;
-  }
-
   if (!post) {
-    return <div className="p-10 text-center text-red-500">게시글 데이터가 없습니다.</div>;
+    return <div className="p-10 text-center text-red-500">잘못된 게시글 ID입니다.</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-4 text-sm text-gray-500">
-        {post.region} &gt; {post.title}
-      </div>
-
+      <div className="mb-4 text-sm text-gray-500">{post.region} &gt; {post.title}</div>
       <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
 
       {post.image_url && (
-        <img
-          src={post.image_url}
-          alt="post"
-          className="w-full max-h-96 object-contain mb-4 rounded-lg border"
-        />
+        <img src={post.image_url} alt="Post" className="w-full max-h-96 object-contain mb-4 rounded-lg border" />
       )}
 
       <div className="text-gray-800 whitespace-pre-line mb-6">{post.content}</div>
@@ -164,7 +140,6 @@ export default function ReadPage() {
 
       <div className="mt-10">
         <h2 className="text-lg font-semibold mb-2">💬 댓글</h2>
-
         <div className="space-y-3 mb-4">
           {comments.map((comment) => (
             <div key={comment.id} className="p-3 bg-gray-50 border rounded text-sm">
