@@ -86,20 +86,23 @@ export default function ReadPage() {
       return alert("로그인이 필요합니다");
     }
 
-    const { data: insertData, error: insertError } = await supabase.from('comments').insert([
-      {
-        post_id: numericId,
-        user_id: userData.user.id,
-        content: commentText,
-      },
-    ]).select();
+    const { data: insertData, error: insertError } = await supabase
+      .from('comments')
+      .insert([
+        {
+          post_id: numericId,
+          user_id: userData.user.id,
+          content: commentText,
+        },
+      ])
+      .select();
 
     if (!insertError && insertData && Array.isArray(insertData) && insertData.length > 0) {
       setComments((prev) => [...prev, insertData[0] as Comment]);
       setCommentText('');
     } else {
       console.error('댓글 작성 오류:', insertError);
-      alert('댓글 작성 실패');
+      alert('댓글 작성 실패: ' + insertError?.message);
     }
   };
 
