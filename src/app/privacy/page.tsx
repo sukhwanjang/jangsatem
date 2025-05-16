@@ -1,4 +1,5 @@
 // src/app/privacy/page.tsx
+
 export default function PrivacyPage() {
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
@@ -18,7 +19,7 @@ export default function PrivacyPage() {
       <p className="mb-4">원칙적으로 외부에 제공하지 않으며, 법령에 따라 예외적으로 제공될 수 있습니다.</p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">5. 문의</h2>
-      <p>문의: shkj1174@gmail.com</p>
+      <p>문의: <a href="mailto:shkj1174@gmail.com" className="text-blue-600 underline">shkj1174@gmail.com</a></p>
     </div>
   );
 }

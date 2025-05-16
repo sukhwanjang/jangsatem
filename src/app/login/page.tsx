@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
-  const [userExists, setUserExists] = useState<boolean>(true);
+  const [userExists, setUserExists] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
