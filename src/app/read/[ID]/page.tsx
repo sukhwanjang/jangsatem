@@ -21,6 +21,14 @@ interface Comment {
   created_at: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface Like {
+  id: number;
+  post_id: number;
+  user_id: string;
+  created_at: string;
+}
+
 export default function ReadPage() {
   const pathname = usePathname();
   const idFromPath = pathname?.split('/').pop();
@@ -29,60 +37,72 @@ export default function ReadPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState('');
+  const [likeCount, setLikeCount] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchData = async () => {
       if (!numericId || isNaN(numericId)) {
         console.warn("❌ ID가 숫자가 아닙니다.");
         setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase
+      const { data: postData, error: postError } = await supabase
         .from("posts")
         .select("*")
         .eq("id", numericId)
         .single();
 
-      if (error) {
-        console.error("❌ Supabase 에러:", error);
+      if (postError || !postData) {
+        console.error("❌ 게시글 불러오기 실패:", postError);
         setLoading(false);
         return;
       }
 
-      if (data) setPost(data as Post);
-      setLoading(false);
-    };
+      setPost(postData as Post);
 
-    const fetchComments = async () => {
-      const { data, error } = await supabase
+      const { data: commentData } = await supabase
         .from('comments')
         .select('*')
         .eq('post_id', numericId)
         .order('created_at', { ascending: true });
 
-      if (!error && data) {
-        setComments(data as Comment[]);
-      } else {
-        console.error('댓글 불러오기 실패:', error);
+      if (commentData) setComments(commentData as Comment[]);
+
+      const { data: likeData, error: likeError } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('post_id', numericId);
+
+      if (!likeError && likeData) {
+        setLikeCount(likeData.length);
+
+        const {
+          data: { user }
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const liked = likeData.some((like) => like.user_id === user.id);
+          setHasLiked(liked);
+        }
       }
+
+      setLoading(false);
     };
 
-    fetchPost();
-    fetchComments();
+    fetchData();
   }, [numericId]);
 
   const handleCommentSubmit = async () => {
     if (!commentText.trim() || !numericId) return alert("댓글 내용을 입력해주세요.");
 
     const {
-      data: userData,
-      error: userError
+      data: { user }
     } = await supabase.auth.getUser();
 
-    if (userError || !userData?.user) {
-      console.error('사용자 정보를 가져오지 못했습니다:', userError);
+    if (!user) {
       return alert("로그인이 필요합니다");
     }
 
@@ -91,18 +111,45 @@ export default function ReadPage() {
       .insert([
         {
           post_id: numericId,
-          user_id: userData.user.id,
+          user_id: user.id,
           content: commentText,
         },
       ])
       .select();
 
-    if (!insertError && insertData && Array.isArray(insertData) && insertData.length > 0) {
+    if (!insertError && insertData && insertData.length > 0) {
       setComments((prev) => [...prev, insertData[0] as Comment]);
       setCommentText('');
     } else {
-      console.error('댓글 작성 오류:', insertError);
+      console.error('댓글 작성 실패:', insertError);
       alert('댓글 작성 실패: ' + insertError?.message);
+    }
+  };
+
+  const handleLike = async () => {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return alert('로그인이 필요합니다');
+    }
+
+    if (hasLiked) {
+      return alert('이미 좋아요를 눌렀습니다');
+    }
+
+    const { data, error } = await supabase
+      .from('likes')
+      .insert([{ post_id: numericId, user_id: user.id }])
+      .select();
+
+    if (!error && data) {
+      setHasLiked(true);
+      setLikeCount((prev) => prev + 1);
+    } else {
+      console.error('좋아요 실패:', error);
+      alert('좋아요 실패');
     }
   };
 
@@ -120,7 +167,19 @@ export default function ReadPage() {
           className="w-full max-h-96 object-contain rounded-lg border mb-4"
         />
       )}
-      <div className="text-gray-700 whitespace-pre-line mb-10">{post.content}</div>
+      <div className="text-gray-700 whitespace-pre-line mb-6">{post.content}</div>
+
+      <div className="flex items-center mb-6 gap-4">
+        <button
+          onClick={handleLike}
+          className={`px-3 py-1 text-sm rounded ${
+            hasLiked ? 'bg-gray-400 text-white' : 'bg-pink-500 text-white hover:bg-pink-600'
+          }`}
+        >
+          ♥ 좋아요
+        </button>
+        <span className="text-sm text-gray-700">좋아요 {likeCount}개</span>
+      </div>
 
       <hr className="my-6" />
       <div className="space-y-4">
