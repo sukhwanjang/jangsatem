@@ -6,22 +6,27 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userExists, setUserExists] = useState(true);
   const [nickname, setNickname] = useState('');
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userExists, setUserExists] = useState<boolean>(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const user = data.user;
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        const { data: existingUser } = await supabase
+
+        const { data: existingUser, error } = await supabase
           .from('Users')
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
+
+        if (error) {
+          console.error('Error checking user:', error.message);
+        }
 
         if (!existingUser) {
           setUserExists(false);
@@ -29,13 +34,18 @@ export default function LoginPage() {
           router.replace('/');
         }
       }
-    });
+    };
+
+    checkUser();
   }, [router]);
 
-  // provider는 실제 타입이 좁혀져 있어서 'naver' 추가 시 any로 우회 필요
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSocialLogin = async (provider: any) => {
-    await supabase.auth.signInWithOAuth({ provider });
+  const handleLogin = async (provider: 'google' | 'kakao') => {
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${location.origin}/login`
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -47,9 +57,9 @@ export default function LoginPage() {
     const { error } = await supabase.from('Users').insert([
       {
         user_id: userId,
-        nickname,
-        age,
-        region,
+        username: nickname,
+        age: parseInt(age),
+        region: region,
       },
     ]);
 
@@ -69,22 +79,16 @@ export default function LoginPage() {
         {userExists ? (
           <>
             <button
-              onClick={() => handleSocialLogin('google')}
+              onClick={() => handleLogin('google')}
               className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded mb-3"
             >
               구글로 로그인
             </button>
             <button
-              onClick={() => handleSocialLogin('kakao')}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 rounded mb-3"
+              onClick={() => handleLogin('kakao')}
+              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black py-2 rounded"
             >
               카카오로 로그인
-            </button>
-            <button
-              onClick={() => handleSocialLogin('naver')}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded"
-            >
-              네이버로 로그인
             </button>
           </>
         ) : (
@@ -98,7 +102,7 @@ export default function LoginPage() {
               className="w-full mb-3 p-2 border rounded"
             />
             <input
-              type="text"
+              type="number"
               placeholder="나이"
               value={age}
               onChange={(e) => setAge(e.target.value)}
