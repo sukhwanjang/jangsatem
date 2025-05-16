@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
-  const [userExists, setUserExists] = useState(true);
+  const [userExists, setUserExists] = useState<boolean>(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -32,9 +32,10 @@ export default function LoginPage() {
     });
   }, [router]);
 
-  const handleSocialLogin = async (provider: 'google' | 'kakao' | 'naver') => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await supabase.auth.signInWithOAuth({ provider: provider as any });
+  // provider는 실제 타입이 좁혀져 있어서 'naver' 추가 시 any로 우회 필요
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSocialLogin = async (provider: any) => {
+    await supabase.auth.signInWithOAuth({ provider });
   };
 
   const handleSave = async () => {
