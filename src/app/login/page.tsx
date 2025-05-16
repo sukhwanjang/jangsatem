@@ -8,10 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
   const [region, setRegion] = useState('');
   const [age, setAge] = useState('');
   const [error, setError] = useState('');
@@ -29,27 +28,31 @@ export default function LoginPage() {
   }, [router]);
 
   const handleSubmit = async () => {
-    console.log("✅ 버튼 클릭됨");
     if (loading) return;
     setLoading(true);
     setError('');
     setSuccessMessage('');
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
-      });
-      if (error) {
-        setError('로그인 실패: ' + error.message);
-      } else {
-        router.replace('/');
+      const { data, error } = await supabase
+        .from('Users')
+        .select('*')
+        .eq('username', username.trim())
+        .eq('password', password.trim()) // ❗ 추후 bcrypt로 암호화 적용 추천
+        .maybeSingle();
+
+      if (error || !data) {
+        setError('ID 또는 비밀번호가 일치하지 않습니다.');
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      setSuccessMessage(`${data.username}님 환영합니다!`);
       return;
     }
 
-    if (!username || !region || !age || !email || !password || !confirmPassword) {
+    // 회원가입
+    if (!username || !region || !age || !password || !confirmPassword) {
       setError('모든 항목을 입력해주세요.');
       setLoading(false);
       return;
@@ -70,58 +73,30 @@ export default function LoginPage() {
       .select('id')
       .eq('username', username.trim())
       .maybeSingle();
+
     if (userCheck) {
       setError('이미 사용 중인 ID입니다.');
       setLoading(false);
       return;
     }
 
-    const { data: emailCheck } = await supabase
-      .from('Users')
-      .select('id')
-      .eq('email', email.trim())
-      .maybeSingle();
-    if (emailCheck) {
-      setError('이미 사용 중인 이메일입니다.');
-      setLoading(false);
-      return;
-    }
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password: password.trim(),
-    });
-
-    if (signUpError) {
-      setError('회원가입 실패: ' + signUpError.message);
-      setLoading(false);
-      return;
-    }
-
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password: password.trim(),
-    });
-
-    if (loginError || !loginData.user) {
-      setError('로그인 세션 확인 실패');
-      setLoading(false);
-      return;
-    }
-
-    const user_id = loginData.user.id;
-
     const { error: insertError } = await supabase.from('Users').insert([
-      { email: email.trim(), username, region, age, user_id },
+      {
+        username: username.trim(),
+        password: password.trim(), // ❗ 실제 서비스에선 암호화 필요
+        region,
+        age,
+      },
     ]);
 
     if (insertError) {
-      setError(insertError.message);
+      setError('회원가입 실패: ' + insertError.message);
       setLoading(false);
       return;
     }
 
-    setSuccessMessage('🎉 장사템 방문을 환영합니다!');
+    setSuccessMessage('🎉 회원가입 성공! 로그인 해주세요.');
+    setMode('login');
     setLoading(false);
   };
 
@@ -148,7 +123,6 @@ export default function LoginPage() {
             <input type="password" placeholder="비밀번호 확인" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full mb-3 p-2 border rounded text-sm" />
             <input type="text" placeholder="나이" value={age} onChange={(e) => setAge(e.target.value)} className="w-full mb-3 p-2 border rounded text-sm" />
             <input type="text" placeholder="사는 지역" value={region} onChange={(e) => setRegion(e.target.value)} className="w-full mb-3 p-2 border rounded text-sm" />
-            <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full mb-3 p-2 border rounded text-sm" />
             <div className="mt-4 text-sm text-gray-700 space-y-2">
               <label className="flex items-center">
                 <input type="checkbox" checked={agreeAge} onChange={() => setAgreeAge(!agreeAge)} className="mr-2" />
@@ -164,7 +138,7 @@ export default function LoginPage() {
 
         {mode === 'login' && (
           <>
-            <input type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full mb-3 p-2 border rounded text-sm" />
+            <input type="text" placeholder="ID" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full mb-3 p-2 border rounded text-sm" />
             <input type="password" placeholder="비밀번호" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full mb-5 p-2 border rounded text-sm" />
           </>
         )}
