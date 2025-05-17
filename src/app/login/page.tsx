@@ -15,7 +15,6 @@ export default function LoginPage() {
   // 세션 복구 또는 유저 확인
   const checkUser = async () => {
     try {
-      // 세션 수동 복구 시도
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error('❌ getSession error:', sessionError.message);
@@ -34,7 +33,7 @@ export default function LoginPage() {
 
       setUserId(user.id);
 
-      // 반드시 대소문자 정확히(Users)
+      // 반드시 실제 DB 테이블명(Users, 대소문자 주의!)
       const { data: existingUser, error } = await supabase
         .from('Users')
         .select('id')
@@ -51,7 +50,7 @@ export default function LoginPage() {
         setUserExists(false);
       } else {
         setUserExists(true);
-        router.replace('/');
+        router.replace('/'); // 무조건 메인으로 이동
       }
     } catch (err) {
       console.error('💥 checkUser 실행 중 예외 발생:', (err as any)?.message || err);
@@ -66,10 +65,11 @@ export default function LoginPage() {
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
     try {
+      // 무조건 메인(/)으로 리디렉트
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${location.origin}/login`,
+          redirectTo: `${location.origin}/`,
         },
       });
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
           username: nickname,
           age: safeAge,
           region,
-          email: user?.email || '',  // ← 여기서 자동 저장!
+          email: user?.email || '',  // ← email 자동 저장!
         },
       ]);
 
