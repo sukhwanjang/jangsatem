@@ -12,41 +12,34 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  // #access_token=... 있으면 자동으로 메인 이동 (해시 정리)
+  // 해시 정리 후 메인 이동
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
       window.location.hash.startsWith('#access_token=')
     ) {
-      router.replace('/');
+      router.replace('/login'); // 이 페이지 새로고침 → 아래 useEffect로 세션 확인
     }
   }, [router]);
 
-  // 세션 복구 또는 유저 확인
+  // 추가 정보 입력 확인
   const checkUser = async () => {
     try {
-      const { error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.error('❌ getSession error:', sessionError.message);
-      }
-
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
         console.error('❌ getUser error:', userError.message);
         return;
       }
-
       if (!user) {
-        console.warn('⚠️ 유저 없음 (비로그인 상태)');
+        setUserExists(true);
         return;
       }
-
       setUserId(user.id);
 
-      // nickname, age, region 값까지 체크
-      const { data: existingUser, error } = await supabase
-        .from('Users')
-        .select('id, nickname, age, region')
+      // 추가 정보 저장용 테이블명 예시: 'user_profiles'
+      const { data: existing, error } = await supabase
+        .from('user_profiles')
+        .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -55,91 +48,69 @@ export default function LoginPage() {
         alert('사용자 확인 에러: ' + error.message);
         return;
       }
-
-      if (
-        !existingUser ||
-        !existingUser.nickname ||
-        !existingUser.age ||
-        !existingUser.region
-      ) {
-        setUserExists(false);
+      if (!existing) {
+        setUserExists(false); // 추가 정보 입력창 보여줌
       } else {
         setUserExists(true);
         router.replace('/');
       }
     } catch (err) {
-      console.error('💥 checkUser 실행 중 예외 발생:', (err as any)?.message || err);
-      alert('checkUser 에러: ' + ((err as any)?.message || err));
+      console.error('💥 checkUser 예외:', err);
     }
   };
 
   useEffect(() => {
     checkUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
+  // 소셜 로그인
   const handleLogin = async (provider: 'google' | 'kakao') => {
     try {
-      // 실제 배포 도메인
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: "https://장사템.com/login", // 실제 운영 도메인으로!
+          redirectTo: typeof window !== 'undefined'
+            ? window.location.origin + '/login'
+            : undefined,
         },
       });
-
       if (error) {
-        console.error('❌ OAuth 로그인 오류:', error.message);
         alert('로그인 오류: ' + error.message);
       }
     } catch (err: any) {
-      console.error('💥 handleLogin 예외:', err?.message || err);
-      alert('OAuth 에러: ' + (err?.message || err));
+      alert('OAuth 예외: ' + (err?.message || err));
     }
   };
 
+  // 추가 정보 저장
   const handleSave = async () => {
-    try {
-      if (!nickname || !age || !region || !userId) {
-        alert('모든 정보를 입력해주세요.');
-        return;
-      }
-
-      const safeAge = Number(age);
-      if (isNaN(safeAge)) {
-        alert('나이는 숫자여야 합니다.');
-        return;
-      }
-
-      // 로그인된 유저 정보(email 포함) 가져오기
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        alert('유저 정보 확인 실패: ' + userError.message);
-        return;
-      }
-
-      // ★ onConflict: 'user_id' (string)
-      const { error } = await supabase.from('Users').upsert(
-        [{
-          user_id: userId,
-          nickname,
-          age: safeAge,
-          region,
-          email: user?.email || '',
-        }],
-        { onConflict: 'user_id' }
-      );
-
-      if (error) {
-        console.error('❌ 정보 저장 실패:', error.message, error.details || '', error.hint || '');
-        alert('저장 실패: ' + error.message + (error.details ? '\n' + error.details : '') + (error.hint ? '\n' + error.hint : ''));
-      } else {
-        alert('정보가 저장되었습니다.');
-        checkUser();
-      }
-    } catch (err: any) {
-      console.error('💥 handleSave 예외:', err?.message || err);
-      alert('정보 저장 예외: ' + (err?.message || err));
+    if (!nickname || !age || !region || !userId) {
+      alert('모든 정보를 입력해주세요.');
+      return;
+    }
+    const safeAge = Number(age);
+    if (isNaN(safeAge)) {
+      alert('나이는 숫자여야 합니다.');
+      return;
+    }
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError) {
+      alert('유저 정보 확인 실패: ' + userError.message);
+      return;
+    }
+    const { error } = await supabase.from('user_profiles').insert([{
+      user_id: userId,
+      nickname,
+      age: safeAge,
+      region,
+      email: user?.email || '',
+    }]);
+    if (error) {
+      alert('저장 실패: ' + error.message);
+    } else {
+      alert('정보 저장 완료!');
+      setUserExists(true);
+      router.replace('/');
     }
   };
 
@@ -147,7 +118,6 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow">
         <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">장사템 로그인</h1>
-
         {userExists ? (
           <>
             <button
@@ -170,21 +140,21 @@ export default function LoginPage() {
               type="text"
               placeholder="닉네임"
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={e => setNickname(e.target.value)}
               className="w-full mb-3 p-2 border rounded"
             />
             <input
               type="number"
               placeholder="나이"
               value={age}
-              onChange={(e) => setAge(e.target.value)}
+              onChange={e => setAge(e.target.value)}
               className="w-full mb-3 p-2 border rounded"
             />
             <input
               type="text"
               placeholder="사는 지역"
               value={region}
-              onChange={(e) => setRegion(e.target.value)}
+              onChange={e => setRegion(e.target.value)}
               className="w-full mb-4 p-2 border rounded"
             />
             <button
