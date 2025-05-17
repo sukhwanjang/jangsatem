@@ -25,7 +25,7 @@ export default function LoginPage() {
   // 세션 복구 또는 유저 확인
   const checkUser = async () => {
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { error: sessionError } = await supabase.auth.getSession();
       if (sessionError) {
         console.error('❌ getSession error:', sessionError.message);
       }
@@ -43,10 +43,10 @@ export default function LoginPage() {
 
       setUserId(user.id);
 
-      // 실제 운영 테이블명(Users, 대소문자 구분)
+      // nickname, age, region 값까지 체크
       const { data: existingUser, error } = await supabase
         .from('Users')
-        .select('id')
+        .select('id, nickname, age, region')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -56,11 +56,16 @@ export default function LoginPage() {
         return;
       }
 
-      if (!existingUser) {
+      if (
+        !existingUser ||
+        !existingUser.nickname ||
+        !existingUser.age ||
+        !existingUser.region
+      ) {
         setUserExists(false);
       } else {
         setUserExists(true);
-        router.replace('/'); // 무조건 메인으로 이동
+        router.replace('/');
       }
     } catch (err) {
       console.error('💥 checkUser 실행 중 예외 발생:', (err as any)?.message || err);
@@ -70,15 +75,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     checkUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
     try {
-      // **운영 도메인 고정**
+      // 실제 배포 도메인
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: "https://장사템.com/login",
+          redirectTo: "https://장사템.com/login", // 실제 운영 도메인으로!
         },
       });
 
@@ -112,15 +118,17 @@ export default function LoginPage() {
         return;
       }
 
-      const { error } = await supabase.from('Users').insert([
-        {
+      // ★ onConflict: 'user_id' (string)
+      const { error } = await supabase.from('Users').upsert(
+        [{
           user_id: userId,
-          username: nickname,
+          nickname,
           age: safeAge,
           region,
           email: user?.email || '',
-        },
-      ]);
+        }],
+        { onConflict: 'user_id' }
+      );
 
       if (error) {
         console.error('❌ 정보 저장 실패:', error.message, error.details || '', error.hint || '');
