@@ -16,38 +16,42 @@ export default function LoginPage() {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError) {
-      console.error('Auth error:', userError.message);
+      console.error('🔴 Auth error:', userError.message);
       return;
     }
 
     if (!user) {
-      console.log('No authenticated user found');
+      console.log('⚠️ No authenticated user found');
       return;
     }
+
+    console.log('✅ Supabase 로그인된 유저:', user);
 
     setUserId(user.id);
 
     const { data: existingUser, error } = await supabase
-      .from('Users') // 정확한 테이블명
+      .from('Users')
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (error) {
-      console.error('User check error:', error.message);
+      console.error('🔴 User check error:', error.message);
       return;
     }
 
     if (!existingUser) {
-      setUserExists(false); // 사용자 정보 입력 폼 보여줌
+      console.log('🟡 신규 유저, 정보 입력 필요');
+      setUserExists(false);
     } else {
+      console.log('✅ 기존 유저, 홈으로 이동');
       router.replace('/');
     }
   };
 
   useEffect(() => {
     checkUser();
-  }, [router]);
+  }, []);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -56,7 +60,8 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/login`,
       },
     });
-    if (error) console.error('OAuth error:', error.message);
+
+    if (error) console.error('🔴 OAuth login error:', error.message);
   };
 
   const handleSave = async () => {
@@ -65,22 +70,30 @@ export default function LoginPage() {
       return;
     }
 
+    const numericAge = parseInt(age, 10);
+    if (isNaN(numericAge)) {
+      alert('나이는 숫자여야 합니다.');
+      return;
+    }
+
     const { error } = await supabase.from('Users').insert([
       {
         user_id: userId,
         username: nickname,
-        age: parseInt(age),
+        age: numericAge,
         region: region,
       },
     ]);
 
     if (error) {
-      console.error('Insert error:', error.message);
+      console.error('🔴 Insert error:', error.message);
       alert('정보 저장 실패: ' + error.message);
     } else {
       alert('정보가 저장되었습니다.');
-      // 👇 insert 후 다시 유저 체크 (로그인 redirect)
-      checkUser();
+      // ✅ 약간의 지연 후 홈 이동
+      setTimeout(() => {
+        router.replace('/');
+      }, 500);
     }
   };
 
