@@ -19,13 +19,13 @@ export default function LoginPage() {
         setUserId(user.id);
 
         const { data: existingUser, error } = await supabase
-          .from('Users')
+          .from('User')
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (error) {
-          console.error('Error checking user:', error.message);
+          console.error('User check error:', error.message);
         }
 
         if (!existingUser) {
@@ -40,12 +40,13 @@ export default function LoginPage() {
   }, [router]);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${location.origin}/login`
-      }
+        redirectTo: `${location.origin}/login`,
+      },
     });
+    if (error) console.error('OAuth error:', error.message);
   };
 
   const handleSave = async () => {
@@ -54,7 +55,7 @@ export default function LoginPage() {
       return;
     }
 
-    const { error } = await supabase.from('Users').insert([
+    const { error } = await supabase.from('User').insert([
       {
         user_id: userId,
         username: nickname,
@@ -64,6 +65,7 @@ export default function LoginPage() {
     ]);
 
     if (error) {
+      console.error('Insert error:', error.message);
       alert('저장 실패: ' + error.message);
     } else {
       alert('정보가 저장되었습니다.');
