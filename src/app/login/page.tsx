@@ -12,19 +12,20 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  // 해시 정리 후 메인 이동
+  // 로그인 후 #access_token 해시 있으면 메인으로
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
       window.location.hash.startsWith('#access_token=')
     ) {
-      router.replace('/login'); // 이 페이지 새로고침 → 아래 useEffect로 세션 확인
+      router.replace('/');
     }
   }, [router]);
 
-  // 추가 정보 입력 확인
+  // 소셜로그인 성공 후 추가 정보 필요 여부 확인
   const checkUser = async () => {
     try {
+      // 현재 유저 정보 가져오기 (auth.users)
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
         console.error('❌ getUser error:', userError.message);
@@ -34,11 +35,12 @@ export default function LoginPage() {
         setUserExists(true);
         return;
       }
+
       setUserId(user.id);
 
-      // 추가 정보 저장용 테이블명 예시: 'user_profiles'
-      const { data: existing, error } = await supabase
-        .from('user_profiles')
+      // 1. 내가 만든 Users 테이블에 이미 user_id로 레코드 있는지 확인
+      const { data: existingUser, error } = await supabase
+        .from('Users') // 꼭 실제 테이블명과 일치(대소문자 주의)!
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -48,14 +50,16 @@ export default function LoginPage() {
         alert('사용자 확인 에러: ' + error.message);
         return;
       }
-      if (!existing) {
-        setUserExists(false); // 추가 정보 입력창 보여줌
+
+      // 2. 없으면 입력폼, 있으면 바로 메인
+      if (!existingUser) {
+        setUserExists(false);
       } else {
         setUserExists(true);
         router.replace('/');
       }
-    } catch (err) {
-      console.error('💥 checkUser 예외:', err);
+    } catch (err: any) {
+      console.error('💥 checkUser 예외:', err?.message || err);
     }
   };
 
@@ -69,6 +73,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
+          // 운영/개발에 맞게 도메인 넣기!
           redirectTo: typeof window !== 'undefined'
             ? window.location.origin + '/login'
             : undefined,
@@ -84,33 +89,39 @@ export default function LoginPage() {
 
   // 추가 정보 저장
   const handleSave = async () => {
-    if (!nickname || !age || !region || !userId) {
-      alert('모든 정보를 입력해주세요.');
-      return;
-    }
-    const safeAge = Number(age);
-    if (isNaN(safeAge)) {
-      alert('나이는 숫자여야 합니다.');
-      return;
-    }
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError) {
-      alert('유저 정보 확인 실패: ' + userError.message);
-      return;
-    }
-    const { error } = await supabase.from('user_profiles').insert([{
-      user_id: userId,
-      nickname,
-      age: safeAge,
-      region,
-      email: user?.email || '',
-    }]);
-    if (error) {
-      alert('저장 실패: ' + error.message);
-    } else {
-      alert('정보 저장 완료!');
-      setUserExists(true);
-      router.replace('/');
+    try {
+      if (!nickname || !age || !region || !userId) {
+        alert('모든 정보를 입력해주세요.');
+        return;
+      }
+      const safeAge = Number(age);
+      if (isNaN(safeAge)) {
+        alert('나이는 숫자여야 합니다.');
+        return;
+      }
+
+      // 현재 로그인된 유저 이메일도 같이 저장(권장)
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        alert('유저 정보 확인 실패: ' + userError.message);
+        return;
+      }
+
+      const { error } = await supabase.from('Users').insert([{
+        user_id: userId,
+        username: nickname,
+        age: safeAge,
+        region,
+        email: user?.email || '',
+      }]);
+      if (error) {
+        alert('저장 실패: ' + error.message);
+      } else {
+        alert('정보가 저장되었습니다!');
+        checkUser();
+      }
+    } catch (err: any) {
+      alert('저장 예외: ' + (err?.message || err));
     }
   };
 
@@ -140,21 +151,21 @@ export default function LoginPage() {
               type="text"
               placeholder="닉네임"
               value={nickname}
-              onChange={e => setNickname(e.target.value)}
+              onChange={(e) => setNickname(e.target.value)}
               className="w-full mb-3 p-2 border rounded"
             />
             <input
               type="number"
               placeholder="나이"
               value={age}
-              onChange={e => setAge(e.target.value)}
+              onChange={(e) => setAge(e.target.value)}
               className="w-full mb-3 p-2 border rounded"
             />
             <input
               type="text"
               placeholder="사는 지역"
               value={region}
-              onChange={e => setRegion(e.target.value)}
+              onChange={(e) => setRegion(e.target.value)}
               className="w-full mb-4 p-2 border rounded"
             />
             <button
