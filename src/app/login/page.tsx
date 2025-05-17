@@ -38,14 +38,16 @@ export default function LoginPage() {
       console.log('✅ 로그인된 사용자:', user);
       setUserId(user.id);
 
+      // 실제 테이블명에 맞춰주세요! (보통 소문자 users)
       const { data: existingUser, error } = await supabase
-        .from('Users')
+        .from('users')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (error) {
         console.error('❌ 사용자 확인 중 Supabase 에러:', error.message);
+        alert('사용자 확인 에러: ' + error.message);
         return;
       }
 
@@ -54,21 +56,22 @@ export default function LoginPage() {
         setUserExists(false);
       } else {
         console.log('✅ 기존 유저 → 홈으로 이동');
+        setUserExists(true);
         router.replace('/');
       }
     } catch (err) {
-      console.error('💥 checkUser 실행 중 예외 발생:', err);
+      console.error('💥 checkUser 실행 중 예외 발생:', (err as any)?.message || err);
+      alert('checkUser 에러: ' + ((err as any)?.message || err));
     }
   };
 
   useEffect(() => {
     checkUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
     try {
-      console.log(`🔐 ${provider} 로그인 시도`);
-
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -77,10 +80,13 @@ export default function LoginPage() {
       });
 
       if (error) {
+        // details 삭제 (타입 에러 방지)
         console.error('❌ OAuth 로그인 오류:', error.message);
+        alert('로그인 오류: ' + error.message);
       }
-    } catch (err) {
-      console.error('💥 handleLogin 예외 발생:', err);
+    } catch (err: any) {
+      console.error('💥 handleLogin 예외:', err?.message || err);
+      alert('OAuth 에러: ' + (err?.message || err));
     }
   };
 
@@ -91,24 +97,32 @@ export default function LoginPage() {
         return;
       }
 
-      const { error } = await supabase.from('Users').insert([
+      const safeAge = Number(age);
+      if (isNaN(safeAge)) {
+        alert('나이는 숫자여야 합니다.');
+        return;
+      }
+
+      // 실제 테이블명에 맞춰주세요! (보통 소문자 users)
+      const { error } = await supabase.from('users').insert([
         {
           user_id: userId,
           username: nickname,
-          age: parseInt(age),
+          age: safeAge,
           region,
         },
       ]);
 
       if (error) {
-        console.error('❌ 정보 저장 실패:', error.message);
-        alert('저장 실패: ' + error.message);
+        console.error('❌ 정보 저장 실패:', error.message, error.details || '', error.hint || '');
+        alert('저장 실패: ' + error.message + (error.details ? '\n' + error.details : '') + (error.hint ? '\n' + error.hint : ''));
       } else {
         alert('정보가 저장되었습니다.');
         checkUser();
       }
-    } catch (err) {
-      console.error('💥 handleSave 예외 발생:', err);
+    } catch (err: any) {
+      console.error('💥 handleSave 예외:', err?.message || err);
+      alert('정보 저장 예외: ' + (err?.message || err));
     }
   };
 
