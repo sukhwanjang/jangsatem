@@ -12,23 +12,22 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  // 로그인 후 #access_token 해시 있으면 메인으로
+  // 로그인 후 해시 리디렉션 방지
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
       window.location.hash.startsWith('#access_token=')
     ) {
-      router.replace('/');
+      router.replace('/login'); // 반드시 /login으로 리디렉션
     }
   }, [router]);
 
-  // 소셜로그인 성공 후 추가 정보 필요 여부 확인
+  // 소셜 로그인 후 추가 정보 필요 여부 체크
   const checkUser = async () => {
     try {
-      // 현재 유저 정보 가져오기 (auth.users)
+      // supabase 유저
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
-        console.error('❌ getUser error:', userError.message);
         return;
       }
       if (!user) {
@@ -38,28 +37,26 @@ export default function LoginPage() {
 
       setUserId(user.id);
 
-      // 1. 내가 만든 Users 테이블에 이미 user_id로 레코드 있는지 확인
+      // Users 테이블에 이미 등록된 사용자 확인 (user_id 기준)
       const { data: existingUser, error } = await supabase
-        .from('Users') // 꼭 실제 테이블명과 일치(대소문자 주의)!
+        .from('Users')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (error) {
-        console.error('❌ 사용자 확인 중 Supabase 에러:', error.message);
         alert('사용자 확인 에러: ' + error.message);
         return;
       }
 
-      // 2. 없으면 입력폼, 있으면 바로 메인
       if (!existingUser) {
-        setUserExists(false);
+        setUserExists(false); // 추가정보 입력창 띄움
       } else {
-        setUserExists(true);
+        setUserExists(true); // 바로 메인으로
         router.replace('/');
       }
     } catch (err: any) {
-      console.error('💥 checkUser 예외:', err?.message || err);
+      alert('checkUser 에러: ' + (err?.message || err));
     }
   };
 
@@ -67,23 +64,19 @@ export default function LoginPage() {
     checkUser();
   }, [router]);
 
-  // 소셜 로그인
+  // 소셜 로그인 실행
   const handleLogin = async (provider: 'google' | 'kakao') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          // 운영/개발에 맞게 도메인 넣기!
           redirectTo: typeof window !== 'undefined'
             ? window.location.origin + '/login'
             : undefined,
         },
       });
-      if (error) {
-        alert('로그인 오류: ' + error.message);
-      }
     } catch (err: any) {
-      alert('OAuth 예외: ' + (err?.message || err));
+      alert('OAuth 에러: ' + (err?.message || err));
     }
   };
 
@@ -99,17 +92,17 @@ export default function LoginPage() {
         alert('나이는 숫자여야 합니다.');
         return;
       }
-
-      // 현재 로그인된 유저 이메일도 같이 저장(권장)
+      // supabase 유저 정보 가져오기
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) {
         alert('유저 정보 확인 실패: ' + userError.message);
         return;
       }
-
+      // insert (nickname/username 둘 다 입력)
       const { error } = await supabase.from('Users').insert([{
         user_id: userId,
         username: nickname,
+        nickname,
         age: safeAge,
         region,
         email: user?.email || '',
