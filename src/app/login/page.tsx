@@ -14,35 +14,33 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      const { data, error: userError } = await supabase.auth.getUser();
 
-      if (authError) {
-        console.error('Auth Error:', authError.message);
+      if (userError) {
+        console.error('인증 정보 불러오기 실패:', userError.message);
         return;
       }
 
-      if (user) {
-        setUserId(user.id);
+      const user = data.user;
+      if (!user) return;
 
-        const { data: existingUser, error } = await supabase
-          .from('Users')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      setUserId(user.id);
 
-        if (error) {
-          console.error('User check error:', error.message);
-          return;
-        }
+      const { data: existingUser, error } = await supabase
+        .from('Users')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        if (!existingUser) {
-          setUserExists(false);
-        } else {
-          router.replace('/');
-        }
+      if (error) {
+        console.error('Users 테이블 조회 실패:', error.message);
+        return;
+      }
+
+      if (!existingUser) {
+        setUserExists(false);
+      } else {
+        router.replace('/');
       }
     };
 
@@ -56,7 +54,7 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/login`,
       },
     });
-    if (error) console.error('OAuth error:', error.message);
+    if (error) console.error('소셜 로그인 실패:', error.message);
   };
 
   const handleSave = async () => {
@@ -75,7 +73,7 @@ export default function LoginPage() {
     ]);
 
     if (error) {
-      console.error('Insert error:', error.message);
+      console.error('회원 정보 저장 실패:', error.message);
       alert('저장 실패: ' + error.message);
     } else {
       alert('정보가 저장되었습니다.');
