@@ -17,12 +17,34 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
+  const [forceShowForm, setForceShowForm] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         setIsLoading(true);
         console.log('🔍 사용자 인증 상태 확인 중...');
+        console.log('💡 register 페이지 접근: ', window.location.href);  // URL 확인
+        
+        // 리디렉션 정보 확인
+        const redirectInfo = localStorage.getItem('jangsatem_redirect');
+        const redirectTime = localStorage.getItem('jangsatem_redirect_time');
+        const now = new Date().getTime();
+        const redirectAge = redirectTime ? now - parseInt(redirectTime) : null;
+        
+        console.log('🔄 리디렉션 정보:', { redirectInfo, redirectTime, redirectAge });
+        
+        // 최근 10초 이내에 리디렉션 정보가 저장되었고, 'register'인 경우
+        if (redirectInfo === 'register' && redirectAge && redirectAge < 10000) {
+          console.log('✅ 리디렉션 정보 확인됨 - 새 사용자로 판단');
+          
+          // 리디렉션 정보 초기화
+          localStorage.removeItem('jangsatem_redirect');
+          localStorage.removeItem('jangsatem_redirect_time');
+          
+          // 폼 강제 표시 설정
+          setForceShowForm(true);
+        }
         
         // 세션 확인 먼저 수행
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -33,6 +55,8 @@ function RegisterForm() {
           setIsLoading(false);
           return;
         }
+        
+        console.log('💡 세션 정보:', JSON.stringify(sessionData));  // 세션 정보 출력
         
         if (!sessionData.session) {
           console.log('⚠️ 활성 세션 없음, 로그인 페이지로 이동');
@@ -75,6 +99,13 @@ function RegisterForm() {
         setUserId(user.id);
         setUserEmail(user.email || null);
         setDebugInfo(prev => ({...prev, user: { id: user.id, email: user.email }}));
+        
+        // 리디렉션 정보로 이미 폼을 표시하기로 한 경우 DB 확인 생략
+        if (forceShowForm) {
+          console.log('🔄 리디렉션 정보에 따라 폼 강제 표시');
+          setIsLoading(false);
+          return;
+        }
         
         // 테이블 정보 확인 시도
         try {
@@ -149,7 +180,7 @@ function RegisterForm() {
     };
     
     checkAuth();
-  }, [router]);
+  }, [router, forceShowForm]);
 
   // 추가 정보 저장
   const handleSave = async () => {
@@ -169,6 +200,16 @@ function RegisterForm() {
       console.log('💾 추가정보 저장 시도:', { nickname, age, region, userId });
       setDebugInfo(prev => ({...prev, saveAttempt: { nickname, age, region, userId }}));
       
+      // 저장 전 세션 유효성 다시 확인
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('❌ 저장 전 인증 확인 실패:', userError.message);
+        setError('인증 세션이 만료되었습니다. 다시 로그인 후 시도해주세요.');
+        setIsLoading(false);
+        return;
+      }
+      
       // 트랜잭션 방식으로 양쪽 테이블에 모두 저장 시도
       let saveSuccess = false;
       let saveError = null;
@@ -183,6 +224,8 @@ function RegisterForm() {
         created_at: new Date().toISOString(),
       };
       
+      console.log('📋 저장할 데이터:', userData);
+      
       // 1. 소문자 'users' 테이블에 저장 시도
       const { error: insertError } = await supabase
         .from('users')
@@ -195,28 +238,52 @@ function RegisterForm() {
         console.error('❌ users 테이블 저장 실패:', insertError);
         setDebugInfo(prev => ({...prev, usersInsertError: insertError}));
         
-        // 2. 실패하면 대문자 'Users' 테이블에 저장 시도
-        const { error: insertCapsError } = await supabase
-          .from('Users')
-          .insert([userData]);
-        
-        if (!insertCapsError) {
-          saveSuccess = true;
-          console.log('✅ 사용자 정보 저장 성공 (대문자 테이블)');
+        // 오류가 RPC 오류이거나 테이블이 없는 경우, 대문자 테이블 시도
+        if (insertError.code === 'PGRST116' || insertError.message.includes('does not exist')) {
+          console.log('⚠️ 소문자 테이블 없음, 대문자 테이블 시도');
+          
+          // 2. 실패하면 대문자 'Users' 테이블에 저장 시도
+          const { error: insertCapsError } = await supabase
+            .from('Users')
+            .insert([userData]);
+          
+          if (!insertCapsError) {
+            saveSuccess = true;
+            console.log('✅ 사용자 정보 저장 성공 (대문자 테이블)');
+          } else {
+            saveError = insertCapsError;
+            console.error('❌ Users 테이블(대문자) 저장 실패:', insertCapsError);
+            setDebugInfo(prev => ({...prev, UsersInsertError: insertCapsError}));
+          }
         } else {
-          saveError = insertCapsError;
-          console.error('❌ Users 테이블(대문자) 저장 실패:', insertCapsError);
-          setDebugInfo(prev => ({...prev, UsersInsertError: insertCapsError}));
+          saveError = insertError;
         }
       }
       
       if (!saveSuccess) {
+        // DB 저장 실패 시, 테이블에 대한 정보를 추가 디버깅
+        try {
+          const { data: tables } = await supabase.rpc('get_tables');
+          console.log('📊 사용 가능한 테이블 목록:', tables);
+          setDebugInfo(prev => ({...prev, availableTables: tables}));
+        } catch (e) {
+          console.error('테이블 목록 조회 실패:', e);
+        }
+        
         setError('저장 실패: ' + (saveError?.message || '알 수 없는 오류'));
         setIsLoading(false);
         return;
       }
       
       alert('정보가 저장되었습니다!');
+      
+      // 성공적으로 저장한 후 사용자 정보 세션에 저장
+      try {
+        await supabase.auth.refreshSession();
+        console.log('✅ 세션 리프레시 완료');
+      } catch (e) {
+        console.error('세션 리프레시 실패:', e);
+      }
       
       // 메인 페이지로 이동
       router.replace('/');
@@ -233,12 +300,20 @@ function RegisterForm() {
         <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">추가 정보 입력</h1>
         
         {/* 디버그 버튼 */}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex">
           <button 
             onClick={() => setShowDebug(!showDebug)}
-            className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+            className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded mr-1"
           >
             디버그
+          </button>
+          
+          <button 
+            onClick={() => setForceShowForm(true)}
+            className="text-xs bg-blue-200 hover:bg-blue-300 px-2 py-1 rounded"
+            title="폼 강제 표시"
+          >
+            폼 표시
           </button>
         </div>
         
@@ -246,17 +321,32 @@ function RegisterForm() {
         {showDebug && (
           <div className="mb-4 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
             <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            <div className="mt-1">폼 강제 표시: {forceShowForm ? '활성화' : '비활성화'}</div>
           </div>
         )}
+        
+        {/* 상태 디버그 정보 */}
+        <div className="mb-4 text-xs text-gray-400">
+          <div>로딩 상태: {isLoading ? '로딩 중' : '완료'}</div>
+          <div>에러 상태: {error ? '에러 있음' : '정상'}</div>
+          <div>사용자 ID: {userId || '없음'}</div>
+          <div>이메일: {userEmail || '없음'}</div>
+        </div>
         
         {isLoading ? (
           <div className="text-center py-4">
             <div className="mb-2">처리 중...</div>
             <div className="w-8 h-8 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin mx-auto"></div>
           </div>
-        ) : error ? (
+        ) : error && !forceShowForm ? (
           <div className="p-4 bg-red-50 text-red-600 rounded mb-4">
             {error}
+            <button 
+              onClick={() => setForceShowForm(true)}
+              className="w-full mt-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm py-1 rounded"
+            >
+              그래도 입력폼 표시하기
+            </button>
           </div>
         ) : (
           <>

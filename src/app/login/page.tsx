@@ -11,6 +11,40 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
+  const [redirectingTo, setRedirectingTo] = useState<string | null>(null);
+
+  // 리디렉션 함수 분리
+  const redirectToRegister = () => {
+    console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동 시도');
+    setRedirectingTo('/register');
+    
+    // 1. localStorage를 통한 강제 리디렉션 정보 저장
+    localStorage.setItem('jangsatem_redirect', 'register');
+    localStorage.setItem('jangsatem_redirect_time', new Date().getTime().toString());
+    
+    // 2. 타이머 기반 리디렉션
+    setTimeout(() => {
+      console.log('⏱️ 리디렉션 타이머 완료');
+      router.push('/register');
+    }, 2000);
+    
+    // 3. 추가 백업으로 직접 window.location 사용
+    setTimeout(() => {
+      if (window.location.pathname !== '/register') {
+        console.log('🔄 라우터 방식 실패, window.location으로 리디렉션 시도');
+        window.location.href = '/register';
+      }
+    }, 3000);
+  };
+  
+  const redirectToHome = () => {
+    console.log('🏠 기존 사용자: 메인으로 이동');
+    setRedirectingTo('/');
+    
+    setTimeout(() => {
+      router.replace('/');
+    }, 1000);
+  };
 
   // 로그인 후 #access_token 해시 있으면 처리
   useEffect(() => {
@@ -203,15 +237,9 @@ function LoginForm() {
         }
         
         if (!userRecord) {
-          console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동');
-          setTimeout(() => {
-            router.push('/register');
-          }, 500);
+          redirectToRegister();
         } else {
-          console.log('🏠 기존 사용자: 메인으로 이동');
-          setTimeout(() => {
-            router.replace('/');
-          }, 500);
+          redirectToHome();
         }
       } catch (err) {
         console.error('💥 DB 조회 중 예외 발생:', err);
@@ -283,6 +311,7 @@ function LoginForm() {
         {showDebug && (
           <div className="mb-4 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
             <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            {redirectingTo && <div className="mt-1 text-green-600">리디렉션 중: {redirectingTo}</div>}
           </div>
         )}
         
