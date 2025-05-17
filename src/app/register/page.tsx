@@ -15,6 +15,8 @@ function RegisterForm() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -44,17 +46,55 @@ function RegisterForm() {
         console.log('✅ 인증된 유저:', user.id, user.email);
         setUserId(user.id);
         setUserEmail(user.email || null);
+        setDebugInfo(prev => ({...prev, user: { id: user.id, email: user.email }}));
         
-        // 이미 추가 정보가 등록되어 있는지 확인
+        // 테이블 정보 확인 시도
+        try {
+          const { data: tables } = await supabase.rpc('get_tables');
+          setDebugInfo(prev => ({...prev, tables}));
+          console.log('📊 테이블 목록:', tables);
+        } catch (e) {
+          console.log('테이블 목록 조회 실패');
+        }
+        
+        // 이미 추가 정보가 등록되어 있는지 확인 - 소문자 테이블 먼저 시도
         const { data: existingUser, error: dbError } = await supabase
           .from('users')
-          .select('id')
+          .select('id, username, user_id')
           .eq('user_id', user.id)
           .maybeSingle();
+        
+        console.log('📝 users 테이블 조회 결과:', existingUser, dbError);
+        setDebugInfo(prev => ({...prev, usersQuery: { data: existingUser, error: dbError }}));
           
         if (dbError) {
-          console.error('❌ 사용자 정보 조회 에러:', dbError.message);
-          setError('사용자 정보 확인 중 오류가 발생했습니다.');
+          console.error('❌ users 테이블 조회 에러:', dbError.message);
+          
+          // 대문자 테이블 시도
+          const { data: existingUserCaps, error: dbErrorCaps } = await supabase
+            .from('Users')
+            .select('id, username, user_id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          console.log('📝 Users 테이블(대문자) 조회 결과:', existingUserCaps, dbErrorCaps);
+          setDebugInfo(prev => ({...prev, UsersQuery: { data: existingUserCaps, error: dbErrorCaps }}));
+          
+          if (dbErrorCaps) {
+            setError('사용자 정보 확인 중 오류가 발생했습니다. 테이블을 확인해주세요.');
+            setIsLoading(false);
+            return;
+          }
+          
+          if (existingUserCaps) {
+            setError('이미 추가 정보가 등록되어 있습니다. 메인 페이지로 이동합니다.');
+            setTimeout(() => {
+              router.replace('/');
+            }, 2000);
+            return;
+          }
+          
+          // 기존 정보 없음, 계속 진행
           setIsLoading(false);
           return;
         }
@@ -95,7 +135,9 @@ function RegisterForm() {
       
       setIsLoading(true);
       console.log('💾 추가정보 저장 시도:', { nickname, age, region, userId });
+      setDebugInfo(prev => ({...prev, saveAttempt: { nickname, age, region, userId }}));
       
+      // 소문자 테이블에 저장 시도
       const { error: insertError } = await supabase.from('users').insert([{
         user_id: userId,
         username: nickname,
@@ -104,14 +146,36 @@ function RegisterForm() {
         email: userEmail || '',
       }]);
       
+      // 소문자 테이블 저장 실패하면 대문자 테이블 시도
       if (insertError) {
-        console.error('❌ DB 저장 실패:', insertError.message, insertError.code, insertError.details);
-        setError('저장 실패: ' + insertError.message);
-        setIsLoading(false);
+        console.error('❌ users 테이블 저장 실패:', insertError);
+        setDebugInfo(prev => ({...prev, usersInsertError: insertError}));
+        
+        const { error: insertCapsError } = await supabase.from('Users').insert([{
+          user_id: userId,
+          username: nickname,
+          age: safeAge,
+          region,
+          email: userEmail || '',
+        }]);
+        
+        if (insertCapsError) {
+          console.error('❌ Users 테이블(대문자) 저장 실패:', insertCapsError);
+          setDebugInfo(prev => ({...prev, UsersInsertError: insertCapsError}));
+          setError('저장 실패: ' + insertCapsError.message);
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('✅ 사용자 정보 저장 성공 (대문자 테이블)');
+        alert('정보가 저장되었습니다!');
+        
+        // 메인 페이지로 이동
+        router.replace('/');
         return;
       }
       
-      console.log('✅ 사용자 정보 저장 성공');
+      console.log('✅ 사용자 정보 저장 성공 (소문자 테이블)');
       alert('정보가 저장되었습니다!');
       
       // 메인 페이지로 이동
@@ -125,8 +189,25 @@ function RegisterForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow relative">
         <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">추가 정보 입력</h1>
+        
+        {/* 디버그 버튼 */}
+        <div className="absolute top-2 right-2">
+          <button 
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+          >
+            디버그
+          </button>
+        </div>
+        
+        {/* 디버그 정보 */}
+        {showDebug && (
+          <div className="mb-4 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+          </div>
+        )}
         
         {isLoading ? (
           <div className="text-center py-4">

@@ -9,6 +9,8 @@ function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
 
   // 로그인 후 #access_token 해시 있으면 처리
   useEffect(() => {
@@ -24,6 +26,7 @@ function LoginForm() {
         window.location.hash.startsWith('#access_token=')
       ) {
         console.log('🔑 소셜 로그인 성공: 액세스 토큰 확인됨');
+        setDebugInfo(prev => ({...prev, hash: '액세스 토큰 확인됨'}));
         
         // URL에서 해시 제거 (새로고침 방지)
         window.history.replaceState(null, '', window.location.pathname);
@@ -34,7 +37,7 @@ function LoginForm() {
         // 충분한 시간 대기 후 사용자 정보 확인
         setTimeout(() => {
           checkUserAndRedirect();
-        }, 1500);
+        }, 2500);
         return;
       }
       
@@ -77,30 +80,86 @@ function LoginForm() {
       }
       
       console.log('✅ 로그인된 유저:', user.id, user.email);
+      setDebugInfo(prev => ({...prev, user: { id: user.id, email: user.email }}));
       
-      // 추가 정보 등록 여부 확인
-      const { data: existingUser, error: dbError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      localStorage.removeItem('auth_in_progress');
-      
-      if (dbError) {
-        console.error('❌ DB 조회 에러:', dbError.message);
-        setErrorMessage('사용자 정보 확인 중 오류가 발생했습니다.');
-        setIsLoading(false);
-        return;
+      // 사용 가능한 테이블 정보 확인 (디버깅용)
+      try {
+        const { data: tables } = await supabase.rpc('get_tables');
+        console.log('📊 사용 가능한 테이블:', tables);
+        setDebugInfo(prev => ({...prev, tables}));
+      } catch (e) {
+        console.log('테이블 목록 조회 실패:', e);
       }
       
-      // 추가 정보가 없으면 register 페이지로, 있으면 메인으로
-      if (!existingUser) {
-        console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동');
-        router.replace('/register');
-      } else {
-        console.log('🏠 기존 사용자: 메인으로 이동');
-        router.replace('/');
+      // 추가 정보 등록 여부 확인
+      try {
+        // 대소문자 주의! 첫 번째 시도 - 소문자 'users'로 시도
+        const { data: existingUser, error: dbError } = await supabase
+          .from('users')
+          .select('id, username, user_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        console.log('📝 users 테이블 조회 결과:', existingUser, dbError);
+        setDebugInfo(prev => ({...prev, usersQuery: { data: existingUser, error: dbError }}));
+        
+        if (dbError) {
+          console.error('❌ users 테이블 조회 에러:', dbError.message, dbError.code);
+          
+          // 두 번째 시도 - 'Users' 대문자 테이블 시도
+          const { data: existingUserCaps, error: dbErrorCaps } = await supabase
+            .from('Users')
+            .select('id, username, user_id')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+            console.log('📝 Users 테이블(대문자) 조회 결과:', existingUserCaps, dbErrorCaps);
+            setDebugInfo(prev => ({...prev, UsersQuery: { data: existingUserCaps, error: dbErrorCaps }}));
+            
+            if (dbErrorCaps) {
+              setErrorMessage('사용자 정보 확인 중 오류가 발생했습니다. 테이블을 확인해주세요.');
+              setIsLoading(false);
+              localStorage.removeItem('auth_in_progress');
+              return;
+            }
+            
+            // 대문자 테이블에서 결과 있으면 사용
+            if (!existingUserCaps) {
+              console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동');
+              localStorage.removeItem('auth_in_progress');
+              setTimeout(() => {
+                router.push('/register');
+              }, 500);
+            } else {
+              console.log('🏠 기존 사용자: 메인으로 이동');
+              localStorage.removeItem('auth_in_progress');
+              setTimeout(() => {
+                router.replace('/');
+              }, 500);
+            }
+            return;
+        }
+        
+        localStorage.removeItem('auth_in_progress');
+        
+        // 소문자 테이블에서 결과 있으면 처리
+        if (!existingUser) {
+          console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동');
+          setTimeout(() => {
+            router.push('/register');
+          }, 500);
+        } else {
+          console.log('🏠 기존 사용자: 메인으로 이동');
+          setTimeout(() => {
+            router.replace('/');
+          }, 500);
+        }
+      } catch (err) {
+        console.error('💥 DB 조회 중 예외 발생:', err);
+        setDebugInfo(prev => ({...prev, dbError: err}));
+        setErrorMessage('데이터베이스 조회 중 오류가 발생했습니다.');
+        setIsLoading(false);
+        localStorage.removeItem('auth_in_progress');
       }
     } catch (err: any) {
       console.error('💥 인증 확인 예외:', err?.message || err);
@@ -139,8 +198,25 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow">
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow relative">
         <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">장사템 로그인</h1>
+        
+        {/* 디버그 버튼 */}
+        <div className="absolute top-2 right-2">
+          <button 
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
+          >
+            디버그
+          </button>
+        </div>
+        
+        {/* 디버그 정보 */}
+        {showDebug && (
+          <div className="mb-4 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
+            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+          </div>
+        )}
         
         {isLoading ? (
           <div className="text-center py-4">
