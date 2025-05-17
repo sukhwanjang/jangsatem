@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debug, setDebug] = useState<any>(null);
   
   // 로그인 상태 확인 (페이지 로드 시)
   useEffect(() => {
@@ -50,7 +51,15 @@ export default function LoginPage() {
       setIsLoading(true);
       
       // 현재 세션 가져오기
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('세션 가져오기 오류:', sessionError);
+        setError('세션 정보를 가져오는 중 오류가 발생했습니다: ' + sessionError.message);
+        setDebug({ type: 'session_error', error: sessionError });
+        setIsLoading(false);
+        return;
+      }
       
       if (!session) {
         console.log('로그인 세션 없음');
@@ -60,7 +69,15 @@ export default function LoginPage() {
       }
       
       // 사용자 정보 가져오기
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('사용자 정보 가져오기 오류:', userError);
+        setError('사용자 정보를 가져오는 중 오류가 발생했습니다: ' + userError.message);
+        setDebug({ type: 'user_error', error: userError });
+        setIsLoading(false);
+        return;
+      }
       
       if (!user) {
         console.log('사용자 정보 없음');
@@ -73,10 +90,18 @@ export default function LoginPage() {
       
       // 사용자 프로필 정보 확인
       const { data: profile, error: profileError } = await supabase
-        .from('users')
+        .from('Users')  // 대문자 'Users'로 변경
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+      
+      if (profileError) {
+        console.error('프로필 조회 오류:', profileError);
+        setError('프로필 정보를 가져오는 중 오류가 발생했습니다: ' + profileError.message);
+        setDebug({ type: 'profile_error', error: profileError });
+        setIsLoading(false);
+        return;
+      }
       
       localStorage.removeItem('loginRedirect');
       
@@ -103,7 +128,8 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('사용자 확인 오류:', err.message);
       localStorage.removeItem('loginRedirect');
-      setError('인증 확인 중 오류가 발생했습니다');
+      setError('인증 확인 중 오류가 발생했습니다: ' + err.message);
+      setDebug({ type: 'general_error', error: err });
       setIsLoading(false);
     }
   };
@@ -113,12 +139,13 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
       setError(null);
+      setDebug(null);
       
       // 기존 세션 정리
       await clearSession();
       
       // 소셜 로그인 시작
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/login`,
@@ -130,12 +157,18 @@ export default function LoginPage() {
       
       if (error) {
         console.error('로그인 오류:', error.message);
-        setError('로그인 처리 중 오류가 발생했습니다');
+        setError('로그인 처리 중 오류가 발생했습니다: ' + error.message);
+        setDebug({ type: 'login_error', error });
         setIsLoading(false);
+      } else if (data && data.url) {
+        console.log('OAuth URL:', data.url);
+        // 리디렉션 URL이 있으면 이동
+        window.location.href = data.url;
       }
     } catch (err: any) {
       console.error('로그인 예외:', err.message);
-      setError('로그인 시도 중 문제가 발생했습니다');
+      setError('로그인 시도 중 문제가 발생했습니다: ' + err.message);
+      setDebug({ type: 'exception', error: err });
       setIsLoading(false);
     }
   };
@@ -153,13 +186,23 @@ export default function LoginPage() {
         
         {error && (
           <div className="p-4 bg-red-50 text-red-600 rounded mb-4">
-            {error}
+            <div className="mb-2">{error}</div>
             <button 
               onClick={handleResetSession}
               className="w-full mt-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm py-1 rounded"
             >
               세션 초기화 후 다시 시도
             </button>
+            
+            {/* 디버그 정보 */}
+            {debug && (
+              <div className="mt-3 text-xs border-t border-red-200 pt-2">
+                <details>
+                  <summary className="cursor-pointer">오류 상세 정보</summary>
+                  <pre className="mt-2 whitespace-pre-wrap">{JSON.stringify(debug, null, 2)}</pre>
+                </details>
+              </div>
+            )}
           </div>
         )}
         
