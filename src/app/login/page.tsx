@@ -12,6 +12,16 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
+  // (1) 해시(#access_token=...) 있을 때 자동 / 이동
+  useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      window.location.hash.startsWith('#access_token=')
+    ) {
+      router.replace('/');
+    }
+  }, [router]);
+
   // 세션 복구 또는 유저 확인
   const checkUser = async () => {
     try {
