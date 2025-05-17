@@ -14,31 +14,35 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Auth Error:', error.message);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error('Auth error:', userError.message);
         return;
       }
 
-      if (user) {
-        setUserId(user.id);
+      if (!user) {
+        console.log('No authenticated user found');
+        return;
+      }
 
-        const { data: existingUser, error: selectError } = await supabase
-          .from('Users') // ✅ 정확히 대문자 U 사용
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      setUserId(user.id);
 
-        if (selectError) {
-          console.error('User check error:', selectError.message);
-          return;
-        }
+      const { data: existingUser, error } = await supabase
+        .from('Users') // ✅ 정확한 테이블명
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        if (!existingUser) {
-          setUserExists(false);
-        } else {
-          router.replace('/');
-        }
+      if (error) {
+        console.error('User check error:', error.message);
+        return;
+      }
+
+      if (!existingUser) {
+        setUserExists(false); // 사용자 정보 입력 폼 보여줌
+      } else {
+        router.replace('/');
       }
     };
 
@@ -56,31 +60,26 @@ export default function LoginPage() {
   };
 
   const handleSave = async () => {
-    const parsedAge = parseInt(age, 10);
-    if (!nickname || !age || !region || !userId || isNaN(parsedAge)) {
-      alert('모든 정보를 정확히 입력해주세요.');
+    if (!nickname || !age || !region || !userId) {
+      alert('모든 정보를 입력해주세요.');
       return;
     }
 
-    try {
-      const { error } = await supabase.from('Users').insert([
-        {
-          user_id: userId,
-          username: nickname,
-          age: parsedAge,
-          region: region,
-        },
-      ]);
+    const { error } = await supabase.from('Users').insert([
+      {
+        user_id: userId,
+        username: nickname,
+        age: parseInt(age),
+        region: region,
+      },
+    ]);
 
-      if (error) {
-        console.error('Insert error:', error.message);
-        alert('저장 실패: ' + error.message);
-      } else {
-        alert('정보가 저장되었습니다.');
-        router.replace('/');
-      }
-    } catch (err) {
-      console.error('예상치 못한 오류:', err);
+    if (error) {
+      console.error('Insert error:', error.message);
+      alert('정보 저장 실패: ' + error.message);
+    } else {
+      alert('정보가 저장되었습니다.');
+      router.replace('/');
     }
   };
 
