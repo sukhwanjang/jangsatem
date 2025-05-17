@@ -16,21 +16,22 @@ export default function LoginPage() {
     const checkUser = async () => {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
-        console.error('Auth error:', error.message);
+        console.error('Auth Error:', error.message);
         return;
       }
 
       if (user) {
         setUserId(user.id);
 
-        const { data: existingUser, error: checkError } = await supabase
-          .from('Users')
+        const { data: existingUser, error: selectError } = await supabase
+          .from('Users') // ✅ 정확히 대문자 U 사용
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (checkError) {
-          console.error('User check error:', checkError.message);
+        if (selectError) {
+          console.error('User check error:', selectError.message);
+          return;
         }
 
         if (!existingUser) {
@@ -51,36 +52,35 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/login`,
       },
     });
-    if (error) console.error('OAuth login error:', error.message);
+    if (error) console.error('OAuth error:', error.message);
   };
 
   const handleSave = async () => {
-    if (!nickname || !age || !region || !userId) {
-      alert('모든 정보를 입력해주세요.');
-      return;
-    }
-
     const parsedAge = parseInt(age, 10);
-    if (isNaN(parsedAge)) {
-      alert('나이는 숫자로 입력해주세요.');
+    if (!nickname || !age || !region || !userId || isNaN(parsedAge)) {
+      alert('모든 정보를 정확히 입력해주세요.');
       return;
     }
 
-    const { error } = await supabase.from('Users').insert([
-      {
-        user_id: userId,
-        username: nickname,
-        age: parsedAge,
-        region: region,
-      },
-    ]);
+    try {
+      const { error } = await supabase.from('Users').insert([
+        {
+          user_id: userId,
+          username: nickname,
+          age: parsedAge,
+          region: region,
+        },
+      ]);
 
-    if (error) {
-      console.error('Insert error:', error.message);
-      alert('저장 실패: ' + error.message);
-    } else {
-      alert('정보가 저장되었습니다.');
-      router.replace('/');
+      if (error) {
+        console.error('Insert error:', error.message);
+        alert('저장 실패: ' + error.message);
+      } else {
+        alert('정보가 저장되었습니다.');
+        router.replace('/');
+      }
+    } catch (err) {
+      console.error('예상치 못한 오류:', err);
     }
   };
 
