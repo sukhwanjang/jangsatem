@@ -15,11 +15,8 @@ export default function LoginPage() {
   // 세션 복구 또는 유저 확인
   const checkUser = async () => {
     try {
-      console.log('🔍 checkUser 시작');
-
       // 세션 수동 복구 시도
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      console.log('📦 sessionData:', sessionData);
       if (sessionError) {
         console.error('❌ getSession error:', sessionError.message);
       }
@@ -35,12 +32,11 @@ export default function LoginPage() {
         return;
       }
 
-      console.log('✅ 로그인된 사용자:', user);
       setUserId(user.id);
 
-      // 실제 테이블명에 맞춰주세요! (보통 소문자 users)
+      // 반드시 대소문자 정확히(Users)
       const { data: existingUser, error } = await supabase
-        .from('users')
+        .from('Users')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -52,10 +48,8 @@ export default function LoginPage() {
       }
 
       if (!existingUser) {
-        console.log('🆕 신규 유저: 추가정보 필요');
         setUserExists(false);
       } else {
-        console.log('✅ 기존 유저 → 홈으로 이동');
         setUserExists(true);
         router.replace('/');
       }
@@ -80,7 +74,6 @@ export default function LoginPage() {
       });
 
       if (error) {
-        // details 삭제 (타입 에러 방지)
         console.error('❌ OAuth 로그인 오류:', error.message);
         alert('로그인 오류: ' + error.message);
       }
@@ -103,13 +96,20 @@ export default function LoginPage() {
         return;
       }
 
-      // 실제 테이블명에 맞춰주세요! (보통 소문자 users)
-      const { error } = await supabase.from('users').insert([
+      // 로그인된 유저 정보(email 포함) 가져오기
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        alert('유저 정보 확인 실패: ' + userError.message);
+        return;
+      }
+
+      const { error } = await supabase.from('Users').insert([
         {
           user_id: userId,
           username: nickname,
           age: safeAge,
           region,
+          email: user?.email || '',  // ← 여기서 자동 저장!
         },
       ]);
 
