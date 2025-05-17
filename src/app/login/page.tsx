@@ -12,47 +12,41 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  // ✅ 로그인 세션이 리디렉션 후 복원되지 않는 문제 방지
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        console.log('✅ 세션 복원됨');
-        checkUser(); // 세션 복원되면 다시 유저 체크
-      }
-    });
-    return () => data.subscription.unsubscribe();
-  }, []);
-
   const checkUser = async () => {
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      console.error('⚠️ 세션 없음:', sessionError?.message);
+      return;
+    }
 
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      console.error('🚫 인증 오류 또는 유저 없음:', userError?.message);
+      console.error('❌ 사용자 정보 오류:', userError?.message);
       return;
     }
 
     setUserId(user.id);
 
     const { data: existingUser, error } = await supabase
-      .from('Users') // 테이블명 대소문자 주의
+      .from('Users')
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (error) {
-      console.error('❌ 유저 조회 오류:', error.message);
+      console.error('❌ 사용자 존재 확인 오류:', error.message);
       return;
     }
 
     if (!existingUser) {
-      setUserExists(false); // 추가 정보 입력 필요
+      setUserExists(false); // 폼 보여주기
     } else {
-      router.replace('/'); // 홈으로 이동
+      router.replace('/');
     }
   };
 
   useEffect(() => {
-    checkUser(); // 첫 로딩 시 유저 체크
+    checkUser();
   }, []);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
@@ -62,10 +56,7 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/login`,
       },
     });
-
-    if (error) {
-      console.error('❌ OAuth 로그인 오류:', error.message);
-    }
+    if (error) console.error('OAuth 오류:', error.message);
   };
 
   const handleSave = async () => {
@@ -79,16 +70,16 @@ export default function LoginPage() {
         user_id: userId,
         username: nickname,
         age: parseInt(age),
-        region: region,
+        region,
       },
     ]);
 
     if (error) {
-      console.error('❌ 정보 저장 실패:', error.message);
-      alert('정보 저장 실패: ' + error.message);
+      console.error('❌ 사용자 정보 저장 오류:', error.message);
+      alert('저장 실패: ' + error.message);
     } else {
-      alert('✅ 정보 저장 완료');
-      checkUser(); // insert 후 다시 체크해서 리디렉션
+      alert('정보가 저장되었습니다.');
+      checkUser(); // 성공 후 다시 체크
     }
   };
 
