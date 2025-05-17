@@ -13,12 +13,36 @@ export default function RegisterPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isNewUser, setIsNewUser] = useState(false);
   
   // 페이지 로드 시 인증 확인
   useEffect(() => {
     const checkAuth = async () => {
       try {
         console.log('회원가입 페이지 초기화');
+        
+        // 로컬 스토리지에서 리디렉션 정보 확인
+        const redirectStatus = localStorage.getItem('loginRedirect');
+        const storedUserId = localStorage.getItem('auth_user_id');
+        const storedEmail = localStorage.getItem('auth_user_email');
+        
+        console.log('리디렉션 상태:', redirectStatus);
+        
+        // 로컬 스토리지에 저장된 사용자 정보가 있으면 사용
+        if (storedUserId) {
+          console.log('저장된 사용자 ID 발견:', storedUserId);
+          setUserId(storedUserId);
+          if (storedEmail) setUserEmail(storedEmail);
+          
+          // 새 사용자 등록 모드로 설정
+          setIsNewUser(true);
+          setIsLoading(false);
+          
+          // 로컬 스토리지에서 사용 후 삭제
+          localStorage.removeItem('auth_user_id');
+          localStorage.removeItem('auth_user_email');
+          return;
+        }
         
         // 세션 확인
         const { data: { session } } = await supabase.auth.getSession();
@@ -52,13 +76,21 @@ export default function RegisterPage() {
           .maybeSingle();
           
         if (profile) {
-          console.log('이미 회원가입 완료된 사용자');
-          setError('이미 추가 정보가 등록되어 있습니다');
-          setTimeout(() => router.push('/'), 1500);
-          return;
+          // 로컬 스토리지가 없고, 이미 프로필이 있는 경우
+          if (redirectStatus !== 'register') {
+            console.log('이미 회원가입 완료된 사용자');
+            setError('이미 추가 정보가 등록되어 있습니다');
+            setTimeout(() => router.push('/'), 1500);
+            return;
+          }
         }
         
+        // 새 사용자 등록 모드로 설정
+        setIsNewUser(true);
         setIsLoading(false);
+        
+        // 리디렉션 정보 제거
+        localStorage.removeItem('loginRedirect');
       } catch (err: any) {
         console.error('인증 확인 오류:', err.message);
         setError('인증 확인 중 오류가 발생했습니다');
@@ -112,7 +144,7 @@ export default function RegisterPage() {
       }
       
       console.log('회원가입 완료');
-      alert('추가 정보가 저장되었습니다!');
+      alert('추가 정보가 저장되었습니다! 환영합니다 🎉');
       router.push('/');
     } catch (err: any) {
       console.error('저장 실패:', err.message);
@@ -131,14 +163,16 @@ export default function RegisterPage() {
             <div className="mb-2">처리 중...</div>
             <div className="w-8 h-8 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin mx-auto"></div>
           </div>
-        ) : error ? (
+        ) : error && !isNewUser ? (
           <div className="p-4 bg-red-50 text-red-600 rounded mb-4">
             {error}
           </div>
         ) : (
           <>
             <p className="text-center text-gray-600 mb-4">회원가입을 완료하려면 추가 정보를 입력해주세요</p>
-            <div className="mb-1 text-xs text-gray-500">이메일: {userEmail}</div>
+            <div className="mb-1 text-xs text-gray-500">
+              {userEmail ? `이메일: ${userEmail}` : '소셜 계정으로 로그인됨'}
+            </div>
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>

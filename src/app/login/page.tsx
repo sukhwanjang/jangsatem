@@ -35,6 +35,9 @@ export default function LoginPage() {
       // 일반 페이지 로드시 사용자 확인
       if (localStorage.getItem('loginRedirect') !== 'processing') {
         checkUserAndRedirect();
+      } else {
+        setIsLoading(false);
+        localStorage.removeItem('loginRedirect');
       }
     };
     
@@ -44,12 +47,15 @@ export default function LoginPage() {
   // 사용자 상태 확인 및 리디렉션
   const checkUserAndRedirect = async () => {
     try {
+      setIsLoading(true);
+      
       // 현재 세션 가져오기
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         console.log('로그인 세션 없음');
         localStorage.removeItem('loginRedirect');
+        setIsLoading(false);
         return;
       }
       
@@ -59,6 +65,7 @@ export default function LoginPage() {
       if (!user) {
         console.log('사용자 정보 없음');
         localStorage.removeItem('loginRedirect');
+        setIsLoading(false);
         return;
       }
       
@@ -76,17 +83,28 @@ export default function LoginPage() {
       // 프로필이 없으면 회원가입 페이지로 이동
       if (!profile) {
         console.log('추가 정보 필요: 회원가입 페이지로 이동');
+        
+        // 회원가입 페이지로 이동 시 사용자 정보 로컬 스토리지에 저장
         localStorage.setItem('loginRedirect', 'register');
+        localStorage.setItem('auth_user_id', user.id);
+        if (user.email) {
+          localStorage.setItem('auth_user_email', user.email);
+        }
+        
+        // 회원가입 페이지로 이동
         router.push('/register');
       } else {
         // 프로필이 있으면 메인 페이지로
         console.log('기존 사용자: 메인 페이지로 이동');
         router.push('/');
       }
+      
+      setIsLoading(false);
     } catch (err: any) {
       console.error('사용자 확인 오류:', err.message);
       localStorage.removeItem('loginRedirect');
       setError('인증 확인 중 오류가 발생했습니다');
+      setIsLoading(false);
     }
   };
 
@@ -152,6 +170,7 @@ export default function LoginPage() {
           </div>
         ) : (
           <>
+            <p className="text-center text-gray-600 mb-4">소셜 계정으로 로그인하세요</p>
             <button
               onClick={() => handleSocialLogin('google')}
               className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded mb-3"
