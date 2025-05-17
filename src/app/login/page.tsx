@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase, resetSupabaseSession } from '@/lib/supabase';
 
 // 로그인 폼 컴포넌트
 function LoginForm() {
@@ -23,10 +23,11 @@ function LoginForm() {
       // 해시 포함된 URL인 경우 (OAuth 리디렉션 후)
       if (
         typeof window !== 'undefined' &&
-        window.location.hash.startsWith('#access_token=')
+        (window.location.hash.startsWith('#access_token=') || 
+         window.location.hash.includes('type=recovery'))
       ) {
         console.log('🔑 소셜 로그인 성공: 액세스 토큰 확인됨');
-        setDebugInfo(prev => ({...prev, hash: '액세스 토큰 확인됨'}));
+        setDebugInfo(prev => ({...prev, hash: window.location.hash}));
         
         // URL에서 해시 제거 (새로고침 방지)
         window.history.replaceState(null, '', window.location.pathname);
@@ -34,10 +35,29 @@ function LoginForm() {
         // localStorage에 로그인 진행 중 표시
         localStorage.setItem('auth_in_progress', 'true');
         
-        // 충분한 시간 대기 후 사용자 정보 확인
-        setTimeout(() => {
+        try {
+          // 세션 설정 대기
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Supabase가 해시 처리 완료하도록 대기 - Supabase는 URL 해시를 자동 처리
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('⚠️ 세션 가져오기 실패:', error.message);
+            setErrorMessage('세션 처리 중 문제가 발생했습니다: ' + error.message);
+            setIsLoading(false);
+            localStorage.removeItem('auth_in_progress');
+            return;
+          }
+          
+          console.log('✅ 세션 정보 확인:', data.session ? '세션 있음' : '세션 없음');
           checkUserAndRedirect();
-        }, 2500);
+        } catch (err: any) {
+          console.error('💥 OAuth 콜백 처리 예외:', err?.message || err);
+          setErrorMessage('인증 처리 중 오류가 발생했습니다: ' + (err?.message || err));
+          setIsLoading(false);
+          localStorage.removeItem('auth_in_progress');
+        }
         return;
       }
       
@@ -68,15 +88,34 @@ function LoginForm() {
         localStorage.removeItem('auth_error');
         localStorage.removeItem('auth_in_progress');
         
-        // 세션 클리어 시도
-        await supabase.auth.signOut();
+        // 세션 초기화
+        await resetSupabaseSession();
         console.log('세션 클리어됨');
         
         setIsLoading(false);
         return;
       }
       
-      // 현재 로그인된 유저 확인
+      // 현재 로그인된 유저 확인 - 세션 확인 먼저
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ 세션 조회 에러:', sessionError.message);
+        setErrorMessage('세션 조회 중 오류: ' + sessionError.message);
+        setIsLoading(false);
+        localStorage.removeItem('auth_in_progress');
+        return;
+      }
+      
+      // 세션이 없으면 로그인 폼 표시
+      if (!sessionData.session) {
+        console.log('⚠️ 활성 세션 없음');
+        setIsLoading(false);
+        localStorage.removeItem('auth_in_progress');
+        return;
+      }
+      
+      // 사용자 정보 가져오기
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
@@ -106,66 +145,64 @@ function LoginForm() {
       
       // 사용 가능한 테이블 정보 확인 (디버깅용)
       try {
-        const { data: tables } = await supabase.rpc('get_tables');
-        console.log('📊 사용 가능한 테이블:', tables);
-        setDebugInfo(prev => ({...prev, tables}));
+        const { data: tables, error: tablesError } = await supabase.rpc('get_tables');
+        if (tablesError) {
+          console.error('테이블 목록 조회 실패:', tablesError);
+        } else {
+          console.log('📊 사용 가능한 테이블:', tables);
+          setDebugInfo(prev => ({...prev, tables}));
+        }
       } catch (e) {
         console.log('테이블 목록 조회 실패:', e);
       }
       
-      // 추가 정보 등록 여부 확인
+      // 추가 정보 등록 여부 확인 - 트랜잭션 모델로 양쪽 테이블 모두 확인
       try {
-        // 대소문자 주의! 첫 번째 시도 - 소문자 'users'로 시도
-        const { data: existingUser, error: dbError } = await supabase
+        // 먼저 소문자 테이블 확인
+        let userRecord = null;
+        let dbError = null;
+        
+        const { data: existingUser, error: usersError } = await supabase
           .from('users')
           .select('id, username, user_id')
           .eq('user_id', user.id)
           .maybeSingle();
           
-        console.log('📝 users 테이블 조회 결과:', existingUser, dbError);
-        setDebugInfo(prev => ({...prev, usersQuery: { data: existingUser, error: dbError }}));
+        console.log('📝 users 테이블 조회 결과:', existingUser, usersError);
+        setDebugInfo(prev => ({...prev, usersQuery: { data: existingUser, error: usersError }}));
         
-        if (dbError) {
-          console.error('❌ users 테이블 조회 에러:', dbError.message, dbError.code);
-          
-          // 두 번째 시도 - 'Users' 대문자 테이블 시도
-          const { data: existingUserCaps, error: dbErrorCaps } = await supabase
+        // 소문자 테이블 결과가 있으면 저장, 없으면 대문자 테이블 확인
+        if (!usersError && existingUser) {
+          userRecord = existingUser;
+        } else {
+          // 대문자 테이블 시도
+          const { data: existingUserCaps, error: usersErrorCaps } = await supabase
             .from('Users')
             .select('id, username, user_id')
             .eq('user_id', user.id)
             .maybeSingle();
             
-            console.log('📝 Users 테이블(대문자) 조회 결과:', existingUserCaps, dbErrorCaps);
-            setDebugInfo(prev => ({...prev, UsersQuery: { data: existingUserCaps, error: dbErrorCaps }}));
+            console.log('📝 Users 테이블(대문자) 조회 결과:', existingUserCaps, usersErrorCaps);
+            setDebugInfo(prev => ({...prev, UsersQuery: { data: existingUserCaps, error: usersErrorCaps }}));
             
-            if (dbErrorCaps) {
-              setErrorMessage('사용자 정보 확인 중 오류가 발생했습니다. 테이블을 확인해주세요.');
-              setIsLoading(false);
-              localStorage.removeItem('auth_in_progress');
-              return;
-            }
-            
-            // 대문자 테이블에서 결과 있으면 사용
-            if (!existingUserCaps) {
-              console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동');
-              localStorage.removeItem('auth_in_progress');
-              setTimeout(() => {
-                router.push('/register');
-              }, 500);
+            if (!usersErrorCaps) {
+              userRecord = existingUserCaps;
             } else {
-              console.log('🏠 기존 사용자: 메인으로 이동');
-              localStorage.removeItem('auth_in_progress');
-              setTimeout(() => {
-                router.replace('/');
-              }, 500);
+              dbError = usersErrorCaps;
             }
-            return;
         }
         
+        // 결과에 따라 리디렉션 처리
         localStorage.removeItem('auth_in_progress');
         
-        // 소문자 테이블에서 결과 있으면 처리
-        if (!existingUser) {
+        if (dbError) {
+          console.error('❌ 사용자 정보 조회 실패:', dbError);
+          setErrorMessage('사용자 정보 확인 중 오류가 발생했습니다.');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!userRecord) {
           console.log('📝 새 사용자: 추가 정보 입력 페이지로 이동');
           setTimeout(() => {
             router.push('/register');
@@ -198,15 +235,18 @@ function LoginForm() {
       console.log(`🚀 ${provider} 로그인 시도...`);
       
       // JWT 관련 문제 해결을 위해 세션 클리어 시도
-      await supabase.auth.signOut();
+      await resetSupabaseSession();
       console.log('기존 세션 클리어');
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: typeof window !== 'undefined'
-            ? window.location.origin + '/login'
+            ? `${window.location.origin}/login`
             : undefined,
+          queryParams: {
+            prompt: 'consent', // 항상 동의 화면 표시 (캐시된 인증 방지)
+          },
         },
       });
       
@@ -214,6 +254,8 @@ function LoginForm() {
         console.error('❌ 로그인 오류:', error.message);
         alert('로그인 오류: ' + error.message);
         setIsLoading(false);
+      } else {
+        console.log('OAuth 리디렉션 URL:', data?.url);
       }
     } catch (err: any) {
       console.error('💥 OAuth 예외:', err?.message || err);
@@ -261,7 +303,7 @@ function LoginForm() {
                   <button 
                     onClick={async () => {
                       try {
-                        await supabase.auth.signOut();
+                        await resetSupabaseSession();
                         localStorage.removeItem('auth_error');
                         localStorage.removeItem('auth_in_progress');
                         window.location.reload();
@@ -296,17 +338,10 @@ function LoginForm() {
   );
 }
 
-// Suspense로 감싼 메인 컴포넌트
+// 로그인 페이지 컴포넌트
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="mb-2">페이지 로딩 중...</div>
-          <div className="w-8 h-8 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<div>로딩 중...</div>}>
       <LoginForm />
     </Suspense>
   );

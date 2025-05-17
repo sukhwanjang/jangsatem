@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase, resetSupabaseSession } from '@/lib/supabase';
 
 // SearchParams를 사용하는 컴포넌트 분리
 function RegisterForm() {
@@ -24,13 +24,41 @@ function RegisterForm() {
         setIsLoading(true);
         console.log('🔍 사용자 인증 상태 확인 중...');
         
+        // 세션 확인 먼저 수행
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('❌ 세션 조회 에러:', sessionError.message);
+          setError('세션 조회 실패: ' + sessionError.message);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!sessionData.session) {
+          console.log('⚠️ 활성 세션 없음, 로그인 페이지로 이동');
+          setError('로그인이 필요합니다.');
+          setTimeout(() => {
+            router.replace('/login');
+          }, 1500);
+          return;
+        }
+        
         // 현재 인증된 유저 정보 가져오기
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError) {
           console.error('❌ 인증 에러:', userError.message);
+          
+          // JWT 오류인 경우 세션 초기화 시도
+          if (userError.message.includes('JWT')) {
+            await resetSupabaseSession();
+            console.log('JWT 오류로 세션 초기화됨');
+          }
+          
           setError('인증에 실패했습니다. 다시 로그인해주세요.');
-          setIsLoading(false);
+          setTimeout(() => {
+            router.replace('/login');
+          }, 1500);
           return;
         }
         
@@ -39,7 +67,7 @@ function RegisterForm() {
           setError('로그인이 필요합니다.');
           setTimeout(() => {
             router.replace('/login');
-          }, 2000);
+          }, 1500);
           return;
         }
         
@@ -50,61 +78,65 @@ function RegisterForm() {
         
         // 테이블 정보 확인 시도
         try {
-          const { data: tables } = await supabase.rpc('get_tables');
-          setDebugInfo(prev => ({...prev, tables}));
-          console.log('📊 테이블 목록:', tables);
+          const { data: tables, error: tablesError } = await supabase.rpc('get_tables');
+          if (!tablesError) {
+            setDebugInfo(prev => ({...prev, tables}));
+            console.log('📊 테이블 목록:', tables);
+          }
         } catch (e) {
           console.log('테이블 목록 조회 실패');
         }
         
-        // 이미 추가 정보가 등록되어 있는지 확인 - 소문자 테이블 먼저 시도
-        const { data: existingUser, error: dbError } = await supabase
+        // 이미 추가 정보가 등록되어 있는지 확인 - 트랜잭션 모델로 양쪽 테이블 모두 확인
+        let userRecord = null;
+        let dbError = null;
+        
+        // 소문자 테이블 먼저 시도
+        const { data: existingUser, error: usersError } = await supabase
           .from('users')
           .select('id, username, user_id')
           .eq('user_id', user.id)
           .maybeSingle();
         
-        console.log('📝 users 테이블 조회 결과:', existingUser, dbError);
-        setDebugInfo(prev => ({...prev, usersQuery: { data: existingUser, error: dbError }}));
+        console.log('📝 users 테이블 조회 결과:', existingUser, usersError);
+        setDebugInfo(prev => ({...prev, usersQuery: { data: existingUser, error: usersError }}));
           
-        if (dbError) {
-          console.error('❌ users 테이블 조회 에러:', dbError.message);
-          
+        // 소문자 테이블 결과가 있으면 저장, 없으면 대문자 테이블 확인
+        if (!usersError && existingUser) {
+          userRecord = existingUser;
+        } else {
           // 대문자 테이블 시도
-          const { data: existingUserCaps, error: dbErrorCaps } = await supabase
+          const { data: existingUserCaps, error: usersErrorCaps } = await supabase
             .from('Users')
             .select('id, username, user_id')
             .eq('user_id', user.id)
             .maybeSingle();
             
-          console.log('📝 Users 테이블(대문자) 조회 결과:', existingUserCaps, dbErrorCaps);
-          setDebugInfo(prev => ({...prev, UsersQuery: { data: existingUserCaps, error: dbErrorCaps }}));
+          console.log('📝 Users 테이블(대문자) 조회 결과:', existingUserCaps, usersErrorCaps);
+          setDebugInfo(prev => ({...prev, UsersQuery: { data: existingUserCaps, error: usersErrorCaps }}));
           
-          if (dbErrorCaps) {
-            setError('사용자 정보 확인 중 오류가 발생했습니다. 테이블을 확인해주세요.');
-            setIsLoading(false);
-            return;
+          if (!usersErrorCaps) {
+            userRecord = existingUserCaps;
+          } else {
+            dbError = usersErrorCaps;
           }
-          
-          if (existingUserCaps) {
-            setError('이미 추가 정보가 등록되어 있습니다. 메인 페이지로 이동합니다.');
-            setTimeout(() => {
-              router.replace('/');
-            }, 2000);
-            return;
-          }
-          
-          // 기존 정보 없음, 계속 진행
+        }
+        
+        // DB 오류 처리
+        if (dbError && dbError.code !== 'PGRST116') {
+          console.error('❌ 사용자 정보 조회 실패:', dbError);
+          setError('데이터베이스 조회 중 오류가 발생했습니다: ' + dbError.message);
           setIsLoading(false);
           return;
         }
         
-        if (existingUser) {
+        // 이미 등록된 사용자인 경우
+        if (userRecord) {
           console.log('🏠 이미 등록된 사용자, 메인으로 이동');
           setError('이미 추가 정보가 등록되어 있습니다. 메인 페이지로 이동합니다.');
           setTimeout(() => {
             router.replace('/');
-          }, 2000);
+          }, 1500);
           return;
         }
         
@@ -137,45 +169,53 @@ function RegisterForm() {
       console.log('💾 추가정보 저장 시도:', { nickname, age, region, userId });
       setDebugInfo(prev => ({...prev, saveAttempt: { nickname, age, region, userId }}));
       
-      // 소문자 테이블에 저장 시도
-      const { error: insertError } = await supabase.from('users').insert([{
+      // 트랜잭션 방식으로 양쪽 테이블에 모두 저장 시도
+      let saveSuccess = false;
+      let saveError = null;
+      
+      // 요청 데이터 준비
+      const userData = {
         user_id: userId,
         username: nickname,
         age: safeAge,
         region,
         email: userEmail || '',
-      }]);
+        created_at: new Date().toISOString(),
+      };
       
-      // 소문자 테이블 저장 실패하면 대문자 테이블 시도
-      if (insertError) {
+      // 1. 소문자 'users' 테이블에 저장 시도
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([userData]);
+      
+      if (!insertError) {
+        saveSuccess = true;
+        console.log('✅ 사용자 정보 저장 성공 (소문자 테이블)');
+      } else {
         console.error('❌ users 테이블 저장 실패:', insertError);
         setDebugInfo(prev => ({...prev, usersInsertError: insertError}));
         
-        const { error: insertCapsError } = await supabase.from('Users').insert([{
-          user_id: userId,
-          username: nickname,
-          age: safeAge,
-          region,
-          email: userEmail || '',
-        }]);
+        // 2. 실패하면 대문자 'Users' 테이블에 저장 시도
+        const { error: insertCapsError } = await supabase
+          .from('Users')
+          .insert([userData]);
         
-        if (insertCapsError) {
+        if (!insertCapsError) {
+          saveSuccess = true;
+          console.log('✅ 사용자 정보 저장 성공 (대문자 테이블)');
+        } else {
+          saveError = insertCapsError;
           console.error('❌ Users 테이블(대문자) 저장 실패:', insertCapsError);
           setDebugInfo(prev => ({...prev, UsersInsertError: insertCapsError}));
-          setError('저장 실패: ' + insertCapsError.message);
-          setIsLoading(false);
-          return;
         }
-        
-        console.log('✅ 사용자 정보 저장 성공 (대문자 테이블)');
-        alert('정보가 저장되었습니다!');
-        
-        // 메인 페이지로 이동
-        router.replace('/');
+      }
+      
+      if (!saveSuccess) {
+        setError('저장 실패: ' + (saveError?.message || '알 수 없는 오류'));
+        setIsLoading(false);
         return;
       }
       
-      console.log('✅ 사용자 정보 저장 성공 (소문자 테이블)');
       alert('정보가 저장되었습니다!');
       
       // 메인 페이지로 이동
