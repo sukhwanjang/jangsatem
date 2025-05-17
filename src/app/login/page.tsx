@@ -60,11 +60,33 @@ function LoginForm() {
       setIsLoading(true);
       console.log('🔍 로그인 상태 확인 중...');
       
+      // JWT 오류 확인
+      const errorMessage = localStorage.getItem('auth_error');
+      if (errorMessage && errorMessage.includes('JWT')) {
+        console.error('❌ JWT 오류 발견:', errorMessage);
+        setErrorMessage('인증 오류: ' + errorMessage);
+        localStorage.removeItem('auth_error');
+        localStorage.removeItem('auth_in_progress');
+        
+        // 세션 클리어 시도
+        await supabase.auth.signOut();
+        console.log('세션 클리어됨');
+        
+        setIsLoading(false);
+        return;
+      }
+      
       // 현재 로그인된 유저 확인
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
         console.error('❌ 인증 에러:', userError.message);
+        
+        // JWT 관련 오류 저장
+        if (userError.message.includes('JWT')) {
+          localStorage.setItem('auth_error', userError.message);
+        }
+        
         setErrorMessage(userError.message);
         setIsLoading(false);
         localStorage.removeItem('auth_in_progress');
@@ -175,6 +197,10 @@ function LoginForm() {
       setIsLoading(true);
       console.log(`🚀 ${provider} 로그인 시도...`);
       
+      // JWT 관련 문제 해결을 위해 세션 클리어 시도
+      await supabase.auth.signOut();
+      console.log('기존 세션 클리어');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -227,7 +253,27 @@ function LoginForm() {
           <>
             {errorMessage && (
               <div className="p-4 bg-red-50 text-red-600 rounded mb-4">
-                {errorMessage}
+                {errorMessage.includes('JWT') || errorMessage.includes('claim') ? 
+                  '인증 세션에 문제가 발생했습니다. 다시 로그인해주세요.' : 
+                  errorMessage
+                }
+                {(errorMessage.includes('JWT') || errorMessage.includes('claim')) && (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await supabase.auth.signOut();
+                        localStorage.removeItem('auth_error');
+                        localStorage.removeItem('auth_in_progress');
+                        window.location.reload();
+                      } catch (e) {
+                        console.error('세션 초기화 실패:', e);
+                      }
+                    }}
+                    className="w-full mt-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm py-1 rounded"
+                  >
+                    세션 초기화 후 다시 시도
+                  </button>
+                )}
               </div>
             )}
             
