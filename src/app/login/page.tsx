@@ -14,18 +14,28 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error('Auth Error:', authError.message);
+        return;
+      }
+
       if (user) {
         setUserId(user.id);
 
         const { data: existingUser, error } = await supabase
-          .from('User')
+          .from('Users')
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
 
         if (error) {
           console.error('User check error:', error.message);
+          return;
         }
 
         if (!existingUser) {
@@ -55,7 +65,7 @@ export default function LoginPage() {
       return;
     }
 
-    const { error } = await supabase.from('User').insert([
+    const { error } = await supabase.from('Users').insert([
       {
         user_id: userId,
         username: nickname,
