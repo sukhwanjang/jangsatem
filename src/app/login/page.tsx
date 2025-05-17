@@ -12,40 +12,40 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
+  const checkUser = async () => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error('Auth error:', userError.message);
+      return;
+    }
+
+    if (!user) {
+      console.log('No authenticated user found');
+      return;
+    }
+
+    setUserId(user.id);
+
+    const { data: existingUser, error } = await supabase
+      .from('Users') // 정확한 테이블명
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('User check error:', error.message);
+      return;
+    }
+
+    if (!existingUser) {
+      setUserExists(false); // 사용자 정보 입력 폼 보여줌
+    } else {
+      router.replace('/');
+    }
+  };
+
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error('Auth error:', userError.message);
-        return;
-      }
-
-      if (!user) {
-        console.log('No authenticated user found');
-        return;
-      }
-
-      setUserId(user.id);
-
-      const { data: existingUser, error } = await supabase
-        .from('Users') // ✅ 정확한 테이블명
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('User check error:', error.message);
-        return;
-      }
-
-      if (!existingUser) {
-        setUserExists(false); // 사용자 정보 입력 폼 보여줌
-      } else {
-        router.replace('/');
-      }
-    };
-
     checkUser();
   }, [router]);
 
@@ -79,7 +79,8 @@ export default function LoginPage() {
       alert('정보 저장 실패: ' + error.message);
     } else {
       alert('정보가 저장되었습니다.');
-      router.replace('/');
+      // 👇 insert 후 다시 유저 체크 (로그인 redirect)
+      checkUser();
     }
   };
 
