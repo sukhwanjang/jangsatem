@@ -14,33 +14,30 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data, error: userError } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error('인증 정보 불러오기 실패:', userError.message);
-        return;
-      }
-
-      const user = data.user;
-      if (!user) return;
-
-      setUserId(user.id);
-
-      const { data: existingUser, error } = await supabase
-        .from('Users')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
-        console.error('Users 테이블 조회 실패:', error.message);
+        console.error('Auth error:', error.message);
         return;
       }
 
-      if (!existingUser) {
-        setUserExists(false);
-      } else {
-        router.replace('/');
+      if (user) {
+        setUserId(user.id);
+
+        const { data: existingUser, error: checkError } = await supabase
+          .from('Users')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('User check error:', checkError.message);
+        }
+
+        if (!existingUser) {
+          setUserExists(false);
+        } else {
+          router.replace('/');
+        }
       }
     };
 
@@ -54,7 +51,7 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/login`,
       },
     });
-    if (error) console.error('소셜 로그인 실패:', error.message);
+    if (error) console.error('OAuth login error:', error.message);
   };
 
   const handleSave = async () => {
@@ -63,17 +60,23 @@ export default function LoginPage() {
       return;
     }
 
+    const parsedAge = parseInt(age, 10);
+    if (isNaN(parsedAge)) {
+      alert('나이는 숫자로 입력해주세요.');
+      return;
+    }
+
     const { error } = await supabase.from('Users').insert([
       {
         user_id: userId,
         username: nickname,
-        age: parseInt(age),
+        age: parsedAge,
         region: region,
       },
     ]);
 
     if (error) {
-      console.error('회원 정보 저장 실패:', error.message);
+      console.error('Insert error:', error.message);
       alert('저장 실패: ' + error.message);
     } else {
       alert('정보가 저장되었습니다.');
