@@ -6,103 +6,111 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [userExists, setUserExists] = useState(true);
   const [nickname, setNickname] = useState('');
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  useEffect(() => {
-    const handleSession = async () => {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+  // 세션 복구 또는 유저 확인
+  const checkUser = async () => {
+    try {
+      console.log('🔍 checkUser 시작');
 
+      // 세션 수동 복구 시도
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('📦 sessionData:', sessionData);
       if (sessionError) {
-        console.error('세션 확인 실패:', sessionError.message);
-        setLoading(false);
+        console.error('❌ getSession error:', sessionError.message);
+      }
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('❌ getUser error:', userError.message);
         return;
       }
 
-      if (!session || !session.user) {
-        console.warn('세션 없음');
-        setLoading(false);
+      if (!user) {
+        console.warn('⚠️ 유저 없음 (비로그인 상태)');
         return;
       }
 
-      const user = session.user;
+      console.log('✅ 로그인된 사용자:', user);
       setUserId(user.id);
 
-      const { data: existingUser, error: fetchError } = await supabase
+      const { data: existingUser, error } = await supabase
         .from('Users')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (fetchError) {
-        console.error('기존 유저 확인 실패:', fetchError.message);
-        setLoading(false);
+      if (error) {
+        console.error('❌ 사용자 확인 중 Supabase 에러:', error.message);
         return;
       }
 
       if (!existingUser) {
-        setUserExists(false); // 추가 정보 입력 폼 노출
+        console.log('🆕 신규 유저: 추가정보 필요');
+        setUserExists(false);
       } else {
+        console.log('✅ 기존 유저 → 홈으로 이동');
         router.replace('/');
       }
+    } catch (err) {
+      console.error('💥 checkUser 실행 중 예외 발생:', err);
+    }
+  };
 
-      setLoading(false);
-    };
-
-    handleSession();
+  useEffect(() => {
+    checkUser();
   }, [router]);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${location.origin}/login`, // 반드시 맞춰야 함
-      },
-    });
+    try {
+      console.log(`🔐 ${provider} 로그인 시도`);
 
-    if (error) {
-      console.error('로그인 실패:', error.message);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${location.origin}/login`,
+        },
+      });
+
+      if (error) {
+        console.error('❌ OAuth 로그인 오류:', error.message);
+      }
+    } catch (err) {
+      console.error('💥 handleLogin 예외 발생:', err);
     }
   };
 
   const handleSave = async () => {
-    if (!nickname || !age || !region || !userId) {
-      alert('모든 정보를 입력해주세요.');
-      return;
-    }
+    try {
+      if (!nickname || !age || !region || !userId) {
+        alert('모든 정보를 입력해주세요.');
+        return;
+      }
 
-    const { error } = await supabase.from('Users').insert([
-      {
-        user_id: userId,
-        username: nickname,
-        age: parseInt(age),
-        region,
-      },
-    ]);
+      const { error } = await supabase.from('Users').insert([
+        {
+          user_id: userId,
+          username: nickname,
+          age: parseInt(age),
+          region,
+        },
+      ]);
 
-    if (error) {
-      console.error('정보 저장 실패:', error.message);
-      alert('저장 실패: ' + error.message);
-    } else {
-      alert('정보가 저장되었습니다.');
-      router.replace('/');
+      if (error) {
+        console.error('❌ 정보 저장 실패:', error.message);
+        alert('저장 실패: ' + error.message);
+      } else {
+        alert('정보가 저장되었습니다.');
+        checkUser();
+      }
+    } catch (err) {
+      console.error('💥 handleSave 예외 발생:', err);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>세션 확인 중...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
