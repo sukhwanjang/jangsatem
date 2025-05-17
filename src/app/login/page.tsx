@@ -1,53 +1,61 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [userExists, setUserExists] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const [nickname, setNickname] = useState('');
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  const checkUser = async () => {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) {
-      console.error('⚠️ 세션 없음:', sessionError?.message);
-      return;
-    }
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      console.error('❌ 사용자 정보 오류:', userError?.message);
-      return;
-    }
-
-    setUserId(user.id);
-
-    const { data: existingUser, error } = await supabase
-      .from('Users')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('❌ 사용자 존재 확인 오류:', error.message);
-      return;
-    }
-
-    if (!existingUser) {
-      setUserExists(false); // 폼 보여주기
-    } else {
-      router.replace('/');
-    }
-  };
-
   useEffect(() => {
-    checkUser();
-  }, []);
+    const getSessionAndCheckUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setUserId(user.id);
+
+      const { data: existingUser, error } = await supabase
+        .from('Users')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('DB check error:', error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!existingUser) {
+        setUserExists(false);
+      } else {
+        router.replace('/');
+      }
+
+      setLoading(false);
+    };
+
+    // 세션이 생기는 순간을 감지해서 체크
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        getSessionAndCheckUser();
+      }
+    });
+
+    getSessionAndCheckUser(); // 최초 시도
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, [router]);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -56,7 +64,7 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/login`,
       },
     });
-    if (error) console.error('OAuth 오류:', error.message);
+    if (error) console.error('OAuth login error:', error.message);
   };
 
   const handleSave = async () => {
@@ -75,13 +83,15 @@ export default function LoginPage() {
     ]);
 
     if (error) {
-      console.error('❌ 사용자 정보 저장 오류:', error.message);
+      console.error('Insert error:', error.message);
       alert('저장 실패: ' + error.message);
     } else {
-      alert('정보가 저장되었습니다.');
-      checkUser(); // 성공 후 다시 체크
+      alert('정보 저장 완료');
+      router.replace('/');
     }
   };
+
+  if (loading) return <p className="text-center mt-20">로딩 중...</p>;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
