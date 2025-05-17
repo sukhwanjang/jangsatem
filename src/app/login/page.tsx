@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
 
-  // (1) 해시(#access_token=...) 있을 때 자동 / 이동
+  // #access_token=... 있으면 자동으로 메인 이동 (해시 정리)
   useEffect(() => {
     if (
       typeof window !== 'undefined' &&
@@ -43,7 +43,7 @@ export default function LoginPage() {
 
       setUserId(user.id);
 
-      // 반드시 실제 DB 테이블명(Users, 대소문자 주의!)
+      // 실제 운영 테이블명(Users, 대소문자 구분)
       const { data: existingUser, error } = await supabase
         .from('Users')
         .select('id')
@@ -70,16 +70,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     checkUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const handleLogin = async (provider: 'google' | 'kakao') => {
     try {
-      // 무조건 메인(/)으로 리디렉트
+      // **운영 도메인 고정**
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${location.origin}/`,
+          redirectTo: "https://장사템.com/login",
         },
       });
 
@@ -119,7 +118,7 @@ export default function LoginPage() {
           username: nickname,
           age: safeAge,
           region,
-          email: user?.email || '',  // ← email 자동 저장!
+          email: user?.email || '',
         },
       ]);
 
