@@ -7,7 +7,7 @@ import { User } from '@supabase/supabase-js';
 import WriteForm from '@/components/WriteForm';
 
 // 분리한 컴포넌트들 임포트
-import { ITEMS_PER_PAGE, BusinessCard, Post } from '@/lib/categoryData';
+import { ITEMS_PER_PAGE, BusinessCard, Post, categoryData, extraBoards } from '@/lib/categoryData';
 import Banner from '@/components/Banner';
 import MainPage from '@/components/MainPage';
 import CategoryPage from '@/components/CategoryPage';
@@ -15,16 +15,6 @@ import HeaderNav from '@/components/HeaderNav';
 import AdBanner from '@/components/AdBanner';
 
 export default function HomeClient() {
-  const categoryData: { [main: string]: string[] } = {
-    업체추천: ["간판", "스카이", "인테리어", "전기설비", "철거", "프렌차이즈"],
-    장사시작템: ["간판", "현수막", "배너", "기타출력물", "스카이", "인테리어", "전기설비", "철거", "프렌차이즈"],
-    창업아이템: ["무인아이템", "유인아이템", "프렌차이즈", "신박아이템"],
-    추천글: ["자유게시판 베스트", "유머게시판 베스트", "이런장사어때요 베스트"],
-    커뮤니티: ["핫한게시물", "자유게시판", "유머게시판", "이런장사어때요?"],
-    업종별토론: ["반려동물", "무인창업", "제조업", "음식", "쇼핑몰", "배달", "스마트스토어", "미용", "숙박업", "스크린", "헬스장", "편의점", "학원"],
-    공지: ["공지사항"]
-  };
-  const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
   const router = useRouter();
   const searchParams = useSearchParams();
   const [view, setView] = useState<'main' | 'category'>('main');
