@@ -16,8 +16,8 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
     <>
       <section>
         <h2 className="text-base font-semibold mb-3">💼 입점 대기 중인 홍보 업체</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {fillEmptyCards(businessCards.slice(0, 15), 15).map((card, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {fillEmptyCards(businessCards.slice(0, 4), 4).map((card, i) => (
             <a
               key={i}
               href={card?.link_url || "#"}
