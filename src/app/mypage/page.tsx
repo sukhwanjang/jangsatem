@@ -27,6 +27,10 @@ export default function MyPage() {
   const [nickname, setNickname] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  // 프로필 이미지 관련 상태
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -153,6 +157,9 @@ export default function MyPage() {
   useEffect(() => {
     if (profile) {
       setNickname(profile.nickname);
+      if (profile.profile_image) {
+        setProfileImageUrl(profile.profile_image);
+      }
     }
   }, [profile]);
 
@@ -161,6 +168,55 @@ export default function MyPage() {
     if (!dateString) return '알 수 없음';
     const date = new Date(dateString);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  // 프로필 이미지 선택 처리
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setProfileImage(file);
+      
+      // 미리보기 URL 생성
+      const imageUrl = URL.createObjectURL(file);
+      setProfileImageUrl(imageUrl);
+    }
+  };
+
+  // 프로필 이미지 업로드 처리
+  const uploadProfileImage = async () => {
+    if (!profileImage || !user) return null;
+    
+    setIsUploadingImage(true);
+    
+    try {
+      // 파일 확장자 가져오기
+      const fileExt = profileImage.name.split('.').pop();
+      // 고유한 파일명 생성 (사용자 ID + 현재 시간)
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `profile_images/${fileName}`;
+      
+      // Supabase Storage에 이미지 업로드
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, profileImage);
+        
+      if (uploadError) {
+        console.error('프로필 이미지 업로드 중 오류:', uploadError);
+        return null;
+      }
+      
+      // 이미지 URL 가져오기
+      const { data } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+        
+      return data.publicUrl;
+    } catch (error) {
+      console.error('이미지 업로드 중 오류 발생:', error);
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -177,6 +233,15 @@ export default function MyPage() {
           text: '닉네임을 입력해주세요.'
         });
         return;
+      }
+      
+      // 프로필 이미지 업로드
+      let profileImagePath = profile.profile_image;
+      if (profileImage) {
+        const uploadedImageUrl = await uploadProfileImage();
+        if (uploadedImageUrl) {
+          profileImagePath = uploadedImageUrl;
+        }
       }
       
       // Supabase users 테이블에 사용자 정보가 있는지 확인
@@ -207,16 +272,18 @@ export default function MyPage() {
               nickname: nickname,
               username: nickname, // username 필드도 함께 업데이트
               email: user.email,
-              join_date: user.created_at
+              join_date: user.created_at,
+              profile_image: profileImagePath
             }
           ]);
       } else {
-        // 사용자 정보가 있으면 닉네임 업데이트
+        // 사용자 정보가 있으면 닉네임과 프로필 이미지 업데이트
         result = await supabase
           .from('users')
           .update({ 
             nickname: nickname,
-            username: nickname // username 필드도 함께 업데이트
+            username: nickname, // username 필드도 함께 업데이트
+            profile_image: profileImagePath
           })
           .eq('user_id', user.id);
       }
@@ -233,7 +300,8 @@ export default function MyPage() {
                 nickname: nickname,
                 username: nickname,
                 email: user.email,
-                join_date: user.created_at
+                join_date: user.created_at,
+                profile_image: profileImagePath
               }
             ]);
         } catch (e) {
@@ -246,11 +314,12 @@ export default function MyPage() {
             .from('Users')
             .update({ 
               nickname: nickname,
-              username: nickname 
+              username: nickname,
+              profile_image: profileImagePath
             })
             .eq('user_id', user.id);
         } catch (e) {
-          console.log('대문자 테이블 업데이트 중 오류 (무시):', e);
+          console.log('대문자 테이블 업데이트 시도 중 오류 (무시):', e);
         }
       }
       
@@ -262,7 +331,8 @@ export default function MyPage() {
       setProfile({
         ...profile,
         nickname: nickname,
-        username: nickname
+        username: nickname,
+        profile_image: profileImagePath
       });
       
       setSaveMessage({
@@ -284,6 +354,103 @@ export default function MyPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // 설정 탭 렌더링
+  const renderSettingsTab = () => {
+    return (
+      <div className="mt-6">
+        <h2 className="text-xl font-bold mb-6">프로필 설정</h2>
+        
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+              {profileImageUrl ? (
+                <img src={profileImageUrl} alt="프로필 이미지" className="w-full h-full object-cover" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-gray-400">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+              )}
+              
+              {/* 이미지 업로드 버튼 추가 */}
+              <label className="block mt-2">
+                <span className="sr-only">프로필 이미지 선택</span>
+                <input 
+                  type="file" 
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfileImageChange}
+                />
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                    if (fileInput) fileInput.click();
+                  }}
+                  className="mt-2 text-sm text-blue-500 hover:text-blue-700 cursor-pointer w-24 h-8 bg-white border border-blue-500 rounded-full hover:bg-blue-50 flex items-center justify-center"
+                >
+                  사진 변경
+                </button>
+              </label>
+            </div>
+            
+            <div className="flex-1">
+              <div className="mb-4">
+                <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1">
+                  닉네임
+                </label>
+                <input
+                  type="text"
+                  id="nickname"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="닉네임을 입력하세요"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  이메일
+                </label>
+                <div className="px-4 py-2 bg-gray-100 rounded-md text-gray-500">
+                  {profile?.email || user?.email || '이메일 정보 없음'}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  이메일은 변경할 수 없습니다.
+                </p>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  가입일
+                </label>
+                <div className="px-4 py-2 bg-gray-100 rounded-md text-gray-500">
+                  {formatDate(profile?.join_date || user?.created_at)}
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className={`px-6 py-2 rounded-md ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                >
+                  {isSaving || isUploadingImage ? '저장 중...' : '저장하기'}
+                </button>
+              </div>
+              
+              {saveMessage && (
+                <div className={`mt-4 p-3 rounded-md ${saveMessage.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {saveMessage.text}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -330,8 +497,8 @@ export default function MyPage() {
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-            {profile.profile_image ? (
-              <img src={profile.profile_image} alt="프로필 이미지" className="w-full h-full object-cover" />
+            {profileImageUrl ? (
+              <img src={profileImageUrl} alt="프로필 이미지" className="w-full h-full object-cover" />
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-gray-400">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -479,85 +646,7 @@ export default function MyPage() {
       )}
       
       {/* 계정 설정 */}
-      {activeTab === 'settings' && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">계정 설정</h2>
-          
-          {saveMessage && (
-            <div className={`mb-4 p-3 rounded-md ${saveMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {saveMessage.text}
-            </div>
-          )}
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
-            <input
-              type="email"
-              value={profile?.email || ''}
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-            />
-            <p className="mt-1 text-xs text-gray-500">이메일은 변경할 수 없습니다.</p>
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">프로필 이미지</label>
-            <div className="flex items-center mt-2">
-              <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden mr-4">
-                {profile?.profile_image ? (
-                  <img src={profile.profile_image} alt="프로필 이미지" className="w-full h-full object-cover" />
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-400">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                  </svg>
-                )}
-              </div>
-              <button
-                className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
-              >
-                이미지 업로드
-              </button>
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3">
-            <button
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              onClick={() => {
-                setActiveTab('posts');
-                if (profile) setNickname(profile.nickname);
-              }}
-            >
-              취소
-            </button>
-            <button
-              className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center`}
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  저장 중...
-                </>
-              ) : '저장'}
-            </button>
-          </div>
-        </div>
-      )}
+      {activeTab === 'settings' && renderSettingsTab()}
     </div>
   );
 } 

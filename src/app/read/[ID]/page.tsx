@@ -23,6 +23,7 @@ interface Comment {
   content: string;
   created_at: string;
   author_nickname?: string;
+  author_profile_image?: string;
 }
 
 interface RevenueStat {
@@ -60,6 +61,8 @@ export default function ReadPage() {
   const [activeTab, setActiveTab] = useState('');
   // 현재 로그인한 사용자 정보
   const [user, setUser] = useState<any>(null);
+  // 작성자 프로필 이미지
+  const [authorProfileImage, setAuthorProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,52 +126,56 @@ export default function ReadPage() {
           // 1. 소문자 users 테이블에서 user_id로 조회
           const { data: userData, error: userError } = await supabase
             .from('users')
-            .select('nickname')
+            .select('nickname, profile_image')
             .eq('user_id', postData.user_id)
             .single();
           
           if (!userError && userData) {
             console.log("1차 쿼리 성공:", userData);
             setAuthorNickname(userData.nickname || '익명');
+            if (userData.profile_image) setAuthorProfileImage(userData.profile_image);
           } else {
             console.log("1차 쿼리 실패:", userError);
             
             // 2. 대문자 Users 테이블에서 user_id로 조회
             const { data: upperUserData, error: upperUserError } = await supabase
               .from('Users')
-              .select('nickname')
+              .select('nickname, profile_image')
               .eq('user_id', postData.user_id)
               .single();
             
             if (!upperUserError && upperUserData) {
               console.log("2차 쿼리 성공:", upperUserData);
               setAuthorNickname(upperUserData.nickname || '익명');
+              if (upperUserData.profile_image) setAuthorProfileImage(upperUserData.profile_image);
             } else {
               console.log("2차 쿼리 실패:", upperUserError);
               
               // 3. id로 조회 시도
               const { data: idUserData, error: idUserError } = await supabase
                 .from('users')
-                .select('nickname')
+                .select('nickname, profile_image')
                 .eq('id', postData.user_id)
                 .single();
               
               if (!idUserError && idUserData) {
                 console.log("3차 쿼리 성공:", idUserData);
                 setAuthorNickname(idUserData.nickname || '익명');
+                if (idUserData.profile_image) setAuthorProfileImage(idUserData.profile_image);
               } else {
                 console.log("3차 쿼리 실패:", idUserError);
                 
                 // 4. 대문자 Users 테이블에서 id로 조회
                 const { data: idUpperUserData, error: idUpperUserError } = await supabase
                   .from('Users')
-                  .select('nickname')
+                  .select('nickname, profile_image')
                   .eq('id', postData.user_id)
                   .single();
                 
                 if (!idUpperUserError && idUpperUserData) {
                   console.log("4차 쿼리 성공:", idUpperUserData);
                   setAuthorNickname(idUpperUserData.nickname || '익명');
+                  if (idUpperUserData.profile_image) setAuthorProfileImage(idUpperUserData.profile_image);
                 } else {
                   console.log("모든 쿼리 실패. 기본값 '익명' 사용");
                 }
@@ -192,48 +199,61 @@ export default function ReadPage() {
         const commentsWithAuthors = await Promise.all(
           commentData.map(async (comment) => {
             let authorNickname = '익명';
+            let authorProfileImage = null;
             
             if (comment.user_id) {
               try {
                 // 1. 소문자 users 테이블에서 조회
                 const { data: commentAuthorData } = await supabase
                   .from('users')
-                  .select('nickname')
+                  .select('nickname, profile_image')
                   .eq('user_id', comment.user_id)
                   .single();
                 
                 if (commentAuthorData && commentAuthorData.nickname) {
                   authorNickname = commentAuthorData.nickname;
+                  if (commentAuthorData.profile_image) {
+                    authorProfileImage = commentAuthorData.profile_image;
+                  }
                 } else {
                   // 2. 대문자 Users 테이블에서 조회
                   const { data: upperCommentAuthorData } = await supabase
                     .from('Users')
-                    .select('nickname')
+                    .select('nickname, profile_image')
                     .eq('user_id', comment.user_id)
                     .single();
                   
                   if (upperCommentAuthorData && upperCommentAuthorData.nickname) {
                     authorNickname = upperCommentAuthorData.nickname;
+                    if (upperCommentAuthorData.profile_image) {
+                      authorProfileImage = upperCommentAuthorData.profile_image;
+                    }
                   } else {
                     // 3. id로 조회
                     const { data: idCommentAuthorData } = await supabase
                       .from('users')
-                      .select('nickname')
+                      .select('nickname, profile_image')
                       .eq('id', comment.user_id)
                       .single();
                     
                     if (idCommentAuthorData && idCommentAuthorData.nickname) {
                       authorNickname = idCommentAuthorData.nickname;
+                      if (idCommentAuthorData.profile_image) {
+                        authorProfileImage = idCommentAuthorData.profile_image;
+                      }
                     } else {
                       // 4. 대문자 Users 테이블에서 id로 조회
                       const { data: idUpperCommentAuthorData } = await supabase
                         .from('Users')
-                        .select('nickname')
+                        .select('nickname, profile_image')
                         .eq('id', comment.user_id)
                         .single();
                       
                       if (idUpperCommentAuthorData && idUpperCommentAuthorData.nickname) {
                         authorNickname = idUpperCommentAuthorData.nickname;
+                        if (idUpperCommentAuthorData.profile_image) {
+                          authorProfileImage = idUpperCommentAuthorData.profile_image;
+                        }
                       }
                     }
                   }
@@ -245,7 +265,8 @@ export default function ReadPage() {
             
             return {
               ...comment,
-              author_nickname: authorNickname
+              author_nickname: authorNickname,
+              author_profile_image: authorProfileImage
             };
           })
         );
@@ -312,6 +333,7 @@ export default function ReadPage() {
     if (!insertError && insertData && insertData.length > 0) {
       // 사용자 닉네임 가져오기
       let authorNickname = '익명';
+      let authorProfileImage = null;
       
       console.log("댓글 작성자 ID:", user.id);
       
@@ -319,46 +341,58 @@ export default function ReadPage() {
         // 1. 소문자 users 테이블에서 조회
         const { data: userData } = await supabase
           .from('users')
-          .select('nickname')
+          .select('nickname, profile_image')
           .eq('user_id', user.id)
           .single();
           
         if (userData && userData.nickname) {
           console.log("댓글 작성자 정보(1차):", userData);
           authorNickname = userData.nickname;
+          if (userData.profile_image) {
+            authorProfileImage = userData.profile_image;
+          }
         } else {
           // 2. 대문자 Users 테이블에서 조회
           const { data: upperUserData } = await supabase
             .from('Users')
-            .select('nickname')
+            .select('nickname, profile_image')
             .eq('user_id', user.id)
             .single();
             
           if (upperUserData && upperUserData.nickname) {
             console.log("댓글 작성자 정보(2차):", upperUserData);
             authorNickname = upperUserData.nickname;
+            if (upperUserData.profile_image) {
+              authorProfileImage = upperUserData.profile_image;
+            }
           } else {
             // 3. id로 조회
             const { data: idUserData } = await supabase
               .from('users')
-              .select('nickname')
+              .select('nickname, profile_image')
               .eq('id', user.id)
               .single();
               
             if (idUserData && idUserData.nickname) {
               console.log("댓글 작성자 정보(3차):", idUserData);
               authorNickname = idUserData.nickname;
+              if (idUserData.profile_image) {
+                authorProfileImage = idUserData.profile_image;
+              }
             } else {
               // 4. 대문자 Users 테이블에서 id로 조회
               const { data: idUpperUserData } = await supabase
                 .from('Users')
-                .select('nickname')
+                .select('nickname, profile_image')
                 .eq('id', user.id)
                 .single();
                 
               if (idUpperUserData && idUpperUserData.nickname) {
                 console.log("댓글 작성자 정보(4차):", idUpperUserData);
                 authorNickname = idUpperUserData.nickname;
+                if (idUpperUserData.profile_image) {
+                  authorProfileImage = idUpperUserData.profile_image;
+                }
               } else {
                 console.log("댓글 작성자 정보를 찾을 수 없음, 기본값 사용");
               }
@@ -371,7 +405,8 @@ export default function ReadPage() {
       
       const newComment = {
         ...insertData[0],
-        author_nickname: authorNickname
+        author_nickname: authorNickname,
+        author_profile_image: authorProfileImage
       } as Comment;
       
       setComments((prev) => [...prev, newComment]);
@@ -479,8 +514,12 @@ export default function ReadPage() {
             
             <div className="flex justify-between items-center border-b pb-4">
               <div className="flex items-center">
-                <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
-                  {authorNickname.slice(0, 1)}
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2 overflow-hidden bg-gray-200">
+                  {authorProfileImage ? (
+                    <img src={authorProfileImage} alt={authorNickname} className="w-full h-full object-cover" />
+                  ) : (
+                    authorNickname.slice(0, 1)
+                  )}
                 </div>
                 <div>
                   <div className="font-medium">{authorNickname}</div>
@@ -586,8 +625,12 @@ export default function ReadPage() {
                   return (
                     <div key={comment.id} className="border-b pb-4">
                       <div className="flex items-start mb-1">
-                        <div className="flex-shrink-0 bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
-                          {comment.author_nickname?.slice(0, 1) || '?'}
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2 overflow-hidden bg-gray-200">
+                          {comment.author_profile_image ? (
+                            <img src={comment.author_profile_image} alt={comment.author_nickname} className="w-full h-full object-cover" />
+                          ) : (
+                            comment.author_nickname?.slice(0, 1) || '?'
+                          )}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-baseline">
