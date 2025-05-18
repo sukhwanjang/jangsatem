@@ -207,14 +207,24 @@ export default function LoginPage() {
   // 소셜 로그인 처리
   const handleSocialLogin = async (provider: 'google' | 'kakao') => {
     try {
+      // 중복 클릭 방지
+      if (isLoading) {
+        console.log('이미 로딩 중입니다.');
+        return;
+      }
+      
       setIsLoading(true);
       setError(null);
       setDebug(null);
+      
+      console.log(`${provider} 로그인 시도 중...`);
+      console.log('환경 변수 확인:', !!process.env.NEXT_PUBLIC_SUPABASE_URL, !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
       
       // 기존 세션 정리
       await clearSession();
       
       // 소셜 로그인 시작
+      console.log('소셜 로그인 시작...');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -227,16 +237,28 @@ export default function LoginPage() {
       
       if (error) {
         console.error('로그인 오류:', error.message);
+        console.error('오류 상세:', error);
         setError('로그인 처리 중 오류가 발생했습니다: ' + error.message);
         setDebug(prev => ({...prev, login_error: error}));
         setIsLoading(false);
       } else if (data && data.url) {
-        console.log('OAuth URL:', data.url);
+        console.log('OAuth URL 받음:', data.url);
         // 리디렉션 URL이 있으면 이동
-        window.location.href = data.url;
+        try {
+          window.location.href = data.url;
+        } catch (redirectError) {
+          console.error('리디렉션 오류:', redirectError);
+          setError('리디렉션 중 오류가 발생했습니다. URL: ' + data.url);
+          setIsLoading(false);
+        }
+      } else {
+        console.error('로그인 데이터 또는 URL이 없음:', data);
+        setError('로그인 처리 중 오류가 발생했습니다: 인증 URL을 받지 못했습니다.');
+        setIsLoading(false);
       }
     } catch (err: any) {
       console.error('로그인 예외:', err.message);
+      console.error('예외 상세:', err);
       setError('로그인 시도 중 문제가 발생했습니다: ' + err.message);
       setDebug(prev => ({...prev, exception: err}));
       setIsLoading(false);
@@ -258,13 +280,19 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow relative">
         <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">장사템 로그인</h1>
         
-        {/* 디버그 버튼 */}
-        <div className="absolute top-2 right-2">
+        {/* 디버그 버튼들 */}
+        <div className="absolute top-2 right-2 flex gap-2">
           <button 
             onClick={() => setDebug(debug ? null : { showInfo: true })}
             className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded"
           >
             디버그
+          </button>
+          <button 
+            onClick={handleResetSession}
+            className="text-xs bg-red-200 hover:bg-red-300 px-2 py-1 rounded"
+          >
+            세션초기화
           </button>
         </div>
         
@@ -321,6 +349,12 @@ export default function LoginPage() {
             </button>
           </>
         )}
+        
+        {/* 환경 정보 */}
+        <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-400">
+          <p>운영체제: {typeof window !== 'undefined' ? window.navigator.platform : '알 수 없음'}</p>
+          <p>Supabase URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '설정안됨'}</p>
+        </div>
       </div>
     </div>
   );

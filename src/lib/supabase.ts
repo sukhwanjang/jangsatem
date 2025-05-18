@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// 환경 변수 확인 및 기본값 설정
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kbzukawbrbkzuirlumin.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtienVrYXdicmJrenVpcmx1bWluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4MDA4NDgsImV4cCI6MjA2MjM3Njg0OH0.KOx57sIqq7ssy_Ynbn8cgSOY-gGuFzbnq8AG5SRYhPA';
+
+console.log('Supabase 초기화 정보:');
+console.log('URL:', supabaseUrl);
+console.log('키 설정됨:', !!supabaseAnonKey);
 
 // Supabase 클라이언트 옵션
 const supabaseOptions = {
