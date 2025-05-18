@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { categoryData, extraBoards } from '@/lib/categoryData';
 
 interface SidebarProps {
@@ -22,11 +23,30 @@ export default function Sidebar({
   setView,
   setCurrentPage
 }: SidebarProps) {
+  const router = useRouter();
+
+  const handleMainCategoryClick = (main: string) => {
+    setOpenCategory(openCategory === main ? null : main);
+  };
+
+  const handleSubCategoryClick = (main: string, sub: string) => {
+    setSelectedCategory(main);
+    setActiveTab(sub);
+    setView('category');
+    setCurrentPage(1);
+    
+    // URL 업데이트
+    router.push(`/?category=${encodeURIComponent(main)}&tab=${encodeURIComponent(sub)}`);
+  };
+
   return (
     <aside className="w-60 min-h-screen border-r p-6 bg-gray-50 overflow-y-auto">
       <div 
         className="text-xl font-bold mb-4 text-blue-600 cursor-pointer" 
-        onClick={() => setView('main')}
+        onClick={() => {
+          setView('main');
+          router.push('/');
+        }}
       >
         장사템
       </div>
@@ -35,7 +55,7 @@ export default function Sidebar({
         {Object.entries(categoryData).map(([main, subs]) => (
           <div key={main}>
             <button
-              onClick={() => setOpenCategory(openCategory === main ? null : main)}
+              onClick={() => handleMainCategoryClick(main)}
               className="w-full text-left bg-gray-100 border px-4 py-2 font-bold"
             >
               {main}
@@ -45,12 +65,7 @@ export default function Sidebar({
                 {subs.map((sub: string) => (
                   <button
                     key={sub}
-                    onClick={() => {
-                      setSelectedCategory(main);
-                      setActiveTab(sub);
-                      setView('category');
-                      setCurrentPage(1);
-                    }}
+                    onClick={() => handleSubCategoryClick(main, sub)}
                     className="block w-full text-left text-sm px-2 py-1 rounded hover:bg-gray-100"
                   >
                     ▸ {sub}
@@ -71,6 +86,9 @@ export default function Sidebar({
               setActiveTab("");
               setView("category");
               setCurrentPage(1);
+              
+              // URL 업데이트
+              router.push(`/?category=${encodeURIComponent(board)}`);
             }}
             className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
               selectedCategory === board ? "bg-green-100 text-green-700" : "text-gray-700 hover:bg-green-50 hover:text-green-600"
