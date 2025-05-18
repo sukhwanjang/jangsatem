@@ -11,6 +11,8 @@ interface Post {
   region: string;
   image_url?: string;
   created_at: string;
+  user_id: string;
+  view_count?: number;
 }
 
 interface Comment {
@@ -40,6 +42,8 @@ export default function ReadPage() {
   const [likeCount, setLikeCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authorNickname, setAuthorNickname] = useState('익명');
+  const [viewCount, setViewCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +65,38 @@ export default function ReadPage() {
         return;
       }
 
+      // 조회수 증가 처리
+      const currentViewCount = postData.view_count || 0;
+      const newViewCount = currentViewCount + 1;
+      
+      // 조회수 업데이트
+      const { error: updateError } = await supabase
+        .from("posts")
+        .update({ view_count: newViewCount })
+        .eq("id", numericId);
+      
+      if (updateError) {
+        console.error("❌ 조회수 업데이트 실패:", updateError);
+      } else {
+        // 업데이트 성공 시 로컬 상태 변경
+        setViewCount(newViewCount);
+        postData.view_count = newViewCount;
+      }
+
       setPost(postData as Post);
+
+      // 작성자 닉네임 가져오기
+      if (postData.user_id) {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('nickname')
+          .eq('user_id', postData.user_id)
+          .single();
+          
+        if (!userError && userData && userData.nickname) {
+          setAuthorNickname(userData.nickname);
+        }
+      }
 
       const { data: commentData } = await supabase
         .from('comments')
@@ -158,8 +193,18 @@ export default function ReadPage() {
 
   return (
     <div className="p-10 max-w-xl mx-auto">
-      <div className="text-gray-400 text-sm mb-2">{post.region}</div>
-      <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+      <div className="flex justify-between items-center mb-2">
+        <div className="text-gray-400 text-sm">{post.region}</div>
+        <div className="text-sm text-gray-500">조회수: {viewCount}</div>
+      </div>
+      
+      <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
+      
+      <div className="mb-4 flex justify-between items-center border-b pb-3">
+        <div className="text-gray-600 text-sm">작성자: {authorNickname}</div>
+        <div className="text-gray-500 text-sm">{new Date(post.created_at).toLocaleString()}</div>
+      </div>
+      
       {post.image_url && (
         <img
           src={post.image_url}
@@ -172,7 +217,7 @@ export default function ReadPage() {
       <div className="flex items-center mb-6 gap-4">
         <button
           onClick={handleLike}
-          className={`px-3 py-1 text-sm rounded ${
+          className={`px-3 py-1 text-sm rounded cursor-pointer ${
             hasLiked ? 'bg-gray-400 text-white' : 'bg-pink-500 text-white hover:bg-pink-600'
           }`}
         >
@@ -201,7 +246,7 @@ export default function ReadPage() {
           />
           <button
             onClick={handleCommentSubmit}
-            className="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+            className="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer"
           >
             댓글달기
           </button>
