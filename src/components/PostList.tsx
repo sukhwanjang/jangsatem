@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/lib/categoryData';
 import { supabase } from '@/lib/supabase';
@@ -22,90 +22,94 @@ interface ExtendedPost extends Post {
 export default function PostList({ posts, currentCategory }: PostListProps) {
   const router = useRouter();
   const [extendedPosts, setExtendedPosts] = useState<ExtendedPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // 가져온 posts에 이미 확장 필드가 있는지 확인
+  const postsHaveExtendedData = useMemo(() => {
+    return posts.length > 0 && 
+      (posts[0] as any).like_count !== undefined &&
+      (posts[0] as any).author_nickname !== undefined;
+  }, [posts]);
   
   useEffect(() => {
     const fetchExtendedData = async () => {
-      const postsWithCounts = await Promise.all(
-        posts.map(async (post) => {
-          // 좋아요 수 가져오기
-          const { data: likes } = await supabase
-            .from('likes')
-            .select('*')
-            .eq('post_id', post.id);
+      try {
+        setIsLoading(true);
+        
+        // 이미 확장 데이터가 있으면 추가 API 호출 없이 바로 사용
+        if (postsHaveExtendedData) {
+          setExtendedPosts(posts as ExtendedPost[]);
+          setIsLoading(false);
+          return;
+        }
+        
+        const postsWithCounts = await Promise.all(
+          posts.map(async (post) => {
+            // 기본값 설정
+            let likeCount = 0;
+            let commentCount = 0;
+            let authorNickname = '익명';
             
-          // 댓글 수 가져오기
-          const { data: comments } = await supabase
-            .from('comments')
-            .select('*')
-            .eq('post_id', post.id);
+            // 병렬로 좋아요와 댓글 수 가져오기
+            const [likesResult, commentsResult] = await Promise.all([
+              supabase.from('likes').select('id').eq('post_id', post.id),
+              supabase.from('comments').select('id').eq('post_id', post.id)
+            ]);
             
-          // 사용자 정보 가져오기
-          let author_nickname = '익명';
-          if (post.user_id) {
-            try {
-              // 1. 소문자 users 테이블에서 조회
-              const { data: userData } = await supabase
-                .from('users')
-                .select('nickname')
-                .eq('user_id', post.user_id)
-                .single();
-              
-              if (userData && userData.nickname) {
-                author_nickname = userData.nickname;
-              } else {
-                // 2. 대문자 Users 테이블에서 조회
-                const { data: upperUserData } = await supabase
-                  .from('Users')
-                  .select('nickname')
-                  .eq('user_id', post.user_id)
-                  .single();
-                  
-                if (upperUserData && upperUserData.nickname) {
-                  author_nickname = upperUserData.nickname;
+            if (likesResult.data) likeCount = likesResult.data.length;
+            if (commentsResult.data) commentCount = commentsResult.data.length;
+            
+            // 사용자 정보 가져오기
+            if (post.user_id) {
+              try {
+                // 소문자와 대문자 users 테이블을 병렬로 조회
+                const [userResult, upperUserResult] = await Promise.all([
+                  supabase.from('users').select('nickname').eq('user_id', post.user_id).single(),
+                  supabase.from('Users').select('nickname').eq('user_id', post.user_id).single()
+                ]);
+                
+                if (userResult.data?.nickname) {
+                  authorNickname = userResult.data.nickname;
+                } else if (upperUserResult.data?.nickname) {
+                  authorNickname = upperUserResult.data.nickname;
                 } else {
-                  // 3. id로 조회
-                  const { data: idUserData } = await supabase
-                    .from('users')
-                    .select('nickname')
-                    .eq('id', post.user_id)
-                    .single();
-                    
-                  if (idUserData && idUserData.nickname) {
-                    author_nickname = idUserData.nickname;
-                  } else {
-                    // 4. 대문자 Users 테이블에서 id로 조회
-                    const { data: idUpperUserData } = await supabase
-                      .from('Users')
-                      .select('nickname')
-                      .eq('id', post.user_id)
-                      .single();
-                      
-                    if (idUpperUserData && idUpperUserData.nickname) {
-                      author_nickname = idUpperUserData.nickname;
-                    }
+                  // ID 기반 조회 필요 시 추가 조회
+                  const [idUserResult, idUpperUserResult] = await Promise.all([
+                    supabase.from('users').select('nickname').eq('id', post.user_id).single(),
+                    supabase.from('Users').select('nickname').eq('id', post.user_id).single()
+                  ]);
+                  
+                  if (idUserResult.data?.nickname) {
+                    authorNickname = idUserResult.data.nickname;
+                  } else if (idUpperUserResult.data?.nickname) {
+                    authorNickname = idUpperUserResult.data.nickname;
                   }
                 }
+              } catch (error) {
+                console.error("게시글 작성자 정보 조회 중 오류:", error);
               }
-            } catch (error) {
-              console.error("게시글 작성자 정보 조회 중 오류:", error);
             }
-          }
-          
-          return {
-            ...post,
-            created_at: post.created_at || new Date().toISOString(),
-            like_count: likes?.length || 0,
-            comment_count: comments?.length || 0,
-            author_nickname
-          };
-        })
-      );
-      
-      setExtendedPosts(postsWithCounts);
+            
+            return {
+              ...post,
+              created_at: post.created_at || new Date().toISOString(),
+              like_count: likeCount,
+              comment_count: commentCount,
+              author_nickname: authorNickname
+            };
+          })
+        );
+        
+        setExtendedPosts(postsWithCounts);
+      } catch (error) {
+        console.error("게시글 확장 데이터 가져오기 오류:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     fetchExtendedData();
-  }, [posts]);
+  }, [posts, postsHaveExtendedData]);
   
   // 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
@@ -137,7 +141,13 @@ export default function PostList({ posts, currentCategory }: PostListProps) {
           </tr>
         </thead>
         <tbody>
-          {extendedPosts.length > 0 ? (
+          {isLoading ? (
+            <tr>
+              <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                불러오는 중...
+              </td>
+            </tr>
+          ) : extendedPosts.length > 0 ? (
             extendedPosts.map((post) => (
               <tr 
                 key={post.id} 
