@@ -67,20 +67,33 @@ export default function ReadPage() {
 
       // 조회수 증가 처리
       const currentViewCount = postData.view_count || 0;
-      const newViewCount = currentViewCount + 1;
       
-      // 조회수 업데이트
-      const { error: updateError } = await supabase
-        .from("posts")
-        .update({ view_count: newViewCount })
-        .eq("id", numericId);
+      // 현재 로그인한 사용자 정보 가져오기
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      if (updateError) {
-        console.error("❌ 조회수 업데이트 실패:", updateError);
+      // 본인 글인지 확인 (작성자와 현재 로그인한 사용자가 동일한지)
+      const isOwnPost = currentUser && postData.user_id === currentUser.id;
+      
+      // 본인 글이 아닌 경우에만 조회수 증가
+      if (!isOwnPost) {
+        const newViewCount = currentViewCount + 1;
+        
+        // 조회수 업데이트
+        const { error: updateError } = await supabase
+          .from("posts")
+          .update({ view_count: newViewCount })
+          .eq("id", numericId);
+        
+        if (updateError) {
+          console.error("❌ 조회수 업데이트 실패:", updateError);
+        } else {
+          // 업데이트 성공 시 로컬 상태 변경
+          setViewCount(newViewCount);
+          postData.view_count = newViewCount;
+        }
       } else {
-        // 업데이트 성공 시 로컬 상태 변경
-        setViewCount(newViewCount);
-        postData.view_count = newViewCount;
+        // 본인 글인 경우 조회수 증가 없이 현재 조회수만 표시
+        setViewCount(currentViewCount);
       }
 
       setPost(postData as Post);
