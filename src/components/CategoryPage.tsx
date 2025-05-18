@@ -2,19 +2,10 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard, categoryData } from '@/lib/categoryData';
-import { supabase } from '@/lib/supabase';
 import WriteForm from './WriteForm';
 import PostList from './PostList';
-
-// 확장된 Post 타입 정의
-interface ExtendedPost extends Post {
-  like_count?: number;
-  comment_count?: number;
-  author_nickname?: string;
-}
 
 interface CategoryPageProps {
   selectedCategory: string;
@@ -50,9 +41,6 @@ export default function CategoryPage({
   setView
 }: CategoryPageProps) {
   const router = useRouter();
-  const [sortByPopular, setSortByPopular] = useState(false);
-  const [postsWithLikes, setPostsWithLikes] = useState<ExtendedPost[]>([]);
-  const [isLoadingLikes, setIsLoadingLikes] = useState(false);
   
   // 현재 선택된 카테고리에 맞는 지역 설정
   const currentRegion = extraBoards.includes(selectedCategory)
@@ -85,82 +73,11 @@ export default function CategoryPage({
     return dateB - dateA;
   });
   
-  // 좋아요 수에 따른 게시물 정렬 처리
-  useEffect(() => {
-    // 인기글 정렬이 활성화된 경우에만 좋아요 정보를 가져오기
-    if (sortByPopular) {
-      const fetchLikesForPosts = async () => {
-        try {
-          setIsLoadingLikes(true);
-          
-          // 불필요한 API 호출 방지를 위해 이미 좋아요 정보가 있는지 확인
-          if (postsWithLikes.length === 0 || postsWithLikes.length !== filteredPosts.length) {
-            // 현재 필터링된 게시물에 대해서만 좋아요 수 가져오기
-            const postsWithLikeCount = await Promise.all(
-              filteredPosts.map(async (post) => {
-                // 좋아요 정보 가져오기
-                const { data: likes } = await supabase
-                  .from('likes')
-                  .select('id')
-                  .eq('post_id', post.id);
-                  
-                // 댓글 정보 가져오기
-                const { data: comments } = await supabase
-                  .from('comments')
-                  .select('id')
-                  .eq('post_id', post.id);
-                  
-                // 사용자 정보 가져오기
-                let authorNickname = '익명';
-                
-                if (post.user_id) {
-                  try {
-                    const { data: userData } = await supabase
-                      .from('users')
-                      .select('nickname')
-                      .eq('user_id', post.user_id)
-                      .single();
-                      
-                    if (userData?.nickname) {
-                      authorNickname = userData.nickname;
-                    }
-                  } catch (error) {
-                    console.error("사용자 정보 조회 중 오류:", error);
-                  }
-                }
-                
-                return {
-                  ...post,
-                  like_count: likes?.length || 0,
-                  comment_count: comments?.length || 0,
-                  author_nickname: authorNickname
-                };
-              })
-            );
-            
-            setPostsWithLikes(postsWithLikeCount);
-          }
-        } catch (error) {
-          console.error("좋아요 정보 가져오기 중 오류:", error);
-        } finally {
-          setIsLoadingLikes(false);
-        }
-      };
-      
-      fetchLikesForPosts();
-    }
-  }, [sortByPopular, filteredPosts, postsWithLikes.length]);
-  
-  // 정렬된 게시물 (인기순 또는 최신순)
-  const sortedPosts = sortByPopular && postsWithLikes.length > 0
-    ? [...postsWithLikes].sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
-    : [...filteredPosts];
-  
   // 총 페이지 수 계산
-  const totalPages = Math.ceil(sortedPosts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
 
   // 현재 페이지에 표시할 게시물
-  const paginatedPosts = sortedPosts.slice(
+  const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE, 
     currentPage * ITEMS_PER_PAGE
   );
@@ -187,16 +104,7 @@ export default function CategoryPage({
       {/* 인기글과 서브 카테고리 버튼만 상단에 배치 */}
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => {
-            // 현재 카테고리 내에서 인기글로 정렬
-            setSortByPopular(!sortByPopular);
-            setCurrentPage(1); // 페이지를 첫 페이지로 리셋
-          }}
-          className={`px-4 py-1.5 text-sm rounded-full font-medium shadow-sm transition-all duration-200 ease-in-out border ${
-            sortByPopular 
-              ? "bg-gray-300 text-gray-900 border-gray-400" 
-              : "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
-          }`}
+          className="px-4 py-1.5 bg-gray-100 text-gray-800 text-sm rounded-full cursor-default font-medium shadow-sm transition-all duration-200 ease-in-out border border-gray-200"
         >
           인기글
         </button>
