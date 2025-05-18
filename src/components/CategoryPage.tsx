@@ -112,15 +112,35 @@ export default function CategoryPage({
         >
           인기글
         </button>
-        <button
-          onClick={() => {
-            // 현재 카테고리의 전체 게시판으로 이동
-            router.push(`/?category=${selectedCategory}`);
-          }}
-          className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 cursor-pointer"
-        >
-          {selectedCategory}
-        </button>
+        
+        {activeTab ? (
+          <>
+            {/* 메인 카테고리 버튼 (서브 카테고리가 선택되었을 때만 표시) */}
+            <button
+              onClick={() => {
+                // 메인 카테고리로 이동
+                router.push(`/?category=${selectedCategory}`);
+              }}
+              className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 cursor-pointer"
+            >
+              {selectedCategory}
+            </button>
+            
+            {/* 서브 카테고리 버튼 */}
+            <button
+              className="px-3 py-1 bg-gray-300 text-gray-900 text-sm rounded cursor-default font-medium"
+            >
+              {activeTab}
+            </button>
+          </>
+        ) : (
+          /* 메인 카테고리만 선택된 경우 */
+          <button
+            className="px-3 py-1 bg-gray-300 text-gray-900 text-sm rounded cursor-default font-medium"
+          >
+            {selectedCategory}
+          </button>
+        )}
       </div>
 
       {isWriting[currentRegion] && (
