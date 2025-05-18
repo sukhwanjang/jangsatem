@@ -21,6 +21,7 @@ interface Comment {
   user_id: string;
   content: string;
   created_at: string;
+  author_nickname?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -108,16 +109,69 @@ export default function ReadPage() {
           
         if (!userError && userData && userData.nickname) {
           setAuthorNickname(userData.nickname);
+        } else {
+          console.error('작성자 정보 불러오기 실패:', userError);
+          
+          // 다른 방식으로 시도 (id로 조회)
+          const { data: altUserData, error: altUserError } = await supabase
+            .from('users')
+            .select('nickname, username')
+            .eq('id', postData.user_id)
+            .single();
+            
+          if (!altUserError && altUserData) {
+            // nickname이 있으면 사용, 없으면 username 사용
+            setAuthorNickname(altUserData.nickname || altUserData.username || '익명');
+          }
         }
       }
 
+      // 댓글 불러오기
       const { data: commentData } = await supabase
         .from('comments')
         .select('*')
         .eq('post_id', numericId)
         .order('created_at', { ascending: true });
 
-      if (commentData) setComments(commentData as Comment[]);
+      if (commentData) {
+        // 댓글 작성자 정보 추가
+        const commentsWithAuthors = await Promise.all(
+          commentData.map(async (comment) => {
+            let authorNickname = '익명';
+            
+            if (comment.user_id) {
+              // 사용자 테이블에서 user_id로 조회
+              const { data: commentAuthorData } = await supabase
+                .from('users')
+                .select('nickname, username')
+                .eq('user_id', comment.user_id)
+                .single();
+                
+              if (commentAuthorData && (commentAuthorData.nickname || commentAuthorData.username)) {
+                authorNickname = commentAuthorData.nickname || commentAuthorData.username;
+              } else {
+                // user_id로 조회 실패 시 id로 조회 시도
+                const { data: altCommentAuthorData } = await supabase
+                  .from('users')
+                  .select('nickname, username')
+                  .eq('id', comment.user_id)
+                  .single();
+                  
+                if (altCommentAuthorData && (altCommentAuthorData.nickname || altCommentAuthorData.username)) {
+                  authorNickname = altCommentAuthorData.nickname || altCommentAuthorData.username;
+                }
+              }
+            }
+            
+            return {
+              ...comment,
+              author_nickname: authorNickname
+            };
+          })
+        );
+        
+        setComments(commentsWithAuthors as Comment[]);
+      }
 
       const { data: likeData, error: likeError } = await supabase
         .from('likes')
@@ -166,7 +220,37 @@ export default function ReadPage() {
       .select();
 
     if (!insertError && insertData && insertData.length > 0) {
-      setComments((prev) => [...prev, insertData[0] as Comment]);
+      // 사용자 닉네임 가져오기
+      let authorNickname = '익명';
+      
+      // 현재 로그인한 사용자의 닉네임 가져오기
+      const { data: userData } = await supabase
+        .from('users')
+        .select('nickname, username')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (userData && (userData.nickname || userData.username)) {
+        authorNickname = userData.nickname || userData.username;
+      } else {
+        // user_id로 조회 실패 시 id로 조회 시도
+        const { data: altUserData } = await supabase
+          .from('users')
+          .select('nickname, username')
+          .eq('id', user.id)
+          .single();
+          
+        if (altUserData && (altUserData.nickname || altUserData.username)) {
+          authorNickname = altUserData.nickname || altUserData.username;
+        }
+      }
+      
+      const newComment = {
+        ...insertData[0],
+        author_nickname: authorNickname
+      } as Comment;
+      
+      setComments((prev) => [...prev, newComment]);
       setCommentText('');
     } else {
       console.error('댓글 작성 실패:', insertError);
@@ -245,8 +329,11 @@ export default function ReadPage() {
 
         {comments.map((c) => (
           <div key={c.id} className="bg-gray-50 border p-3 rounded">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-medium text-gray-700">{c.author_nickname || '익명'}</span>
+              <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</span>
+            </div>
             <div className="text-sm text-gray-800">{c.content}</div>
-            <div className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</div>
           </div>
         ))}
 
