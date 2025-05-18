@@ -28,6 +28,7 @@ export default function HeaderNav({
 }: HeaderNavProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCategoryMenu, setShowCategoryMenu] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -60,6 +61,7 @@ export default function HeaderNav({
     setView('category');
     setCurrentPage(1);
     router.push(`/?category=${encodeURIComponent(main)}&tab=${encodeURIComponent(sub)}`);
+    setShowCategoryMenu(null);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -72,15 +74,56 @@ export default function HeaderNav({
     <div className="sticky top-0 z-50 w-full">
       {/* 상단 헤더 */}
       <div className="bg-blue-500 text-white">
-        <div className="max-w-screen-xl mx-auto px-4 py-2 flex justify-between items-center">
-          <div 
-            className="text-2xl font-bold cursor-pointer"
-            onClick={() => {
-              setView('main');
-              router.push('/');
-            }}
-          >
-            장사템
+        <div className="max-w-screen-xl mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-6">
+            <div 
+              className="text-2xl font-bold cursor-pointer"
+              onClick={() => {
+                setView('main');
+                router.push('/');
+              }}
+            >
+              장사템
+            </div>
+            
+            {/* 카테고리 메뉴 */}
+            <div className="flex space-x-6">
+              {Object.keys(categoryData).map((category) => (
+                <div key={category} className="relative group">
+                  <button
+                    onClick={() => handleCategoryClick(category)}
+                    onMouseEnter={() => setShowCategoryMenu(category)}
+                    onMouseLeave={() => setShowCategoryMenu(null)}
+                    className={`text-sm font-medium px-1 py-2 transition-colors ${
+                      selectedCategory === category
+                        ? 'text-yellow-300 border-b-2 border-yellow-300'
+                        : 'text-white hover:text-yellow-100'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                  
+                  {/* 서브 카테고리 드롭다운 */}
+                  {showCategoryMenu === category && categoryData[category].length > 0 && (
+                    <div 
+                      className="absolute left-0 mt-1 w-40 bg-white shadow-lg rounded-md overflow-hidden z-50"
+                      onMouseEnter={() => setShowCategoryMenu(category)}
+                      onMouseLeave={() => setShowCategoryMenu(null)}
+                    >
+                      {categoryData[category].map((subCategory) => (
+                        <button
+                          key={subCategory}
+                          onClick={() => handleSubCategoryClick(category, subCategory)}
+                          className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          {subCategory}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -134,30 +177,9 @@ export default function HeaderNav({
         </div>
       </div>
       
-      {/* 메인 카테고리 내비게이션 바 */}
-      <div className="bg-blue-50 border-b shadow-sm">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap py-3 px-4 gap-6">
-            {Object.keys(categoryData).map((category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryClick(category)}
-                className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-700 hover:bg-blue-100'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      {/* 서브 카테고리 바 */}
+      {/* 서브 카테고리 바 - 메인 카테고리 선택 시에만 표시 */}
       {selectedCategory && categoryData[selectedCategory] && (
-        <div className="bg-white border-b">
+        <div className="bg-white border-b shadow-sm">
           <div className="max-w-screen-xl mx-auto px-4 py-2">
             <div className="flex flex-wrap gap-2">
               {categoryData[selectedCategory].map((subCategory) => (
