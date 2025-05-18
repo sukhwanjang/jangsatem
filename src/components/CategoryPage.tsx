@@ -103,7 +103,7 @@ export default function CategoryPage({
 
       <header className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-blue-600">
-          {selectedCategory}{activeTab ? ` > ${activeTab}` : ' > 전체게시판'}
+          {activeTab ? `${activeTab}` : '전체게시판'}
         </h1>
         {user && (
           <button
@@ -141,7 +141,7 @@ export default function CategoryPage({
       <div className="mb-6">
         <PostList 
           posts={paginatedPosts} 
-          currentCategory={`${selectedCategory}${activeTab ? ` > ${activeTab}` : ' > 전체게시판'}`}
+          currentCategory={activeTab || '전체게시판'}
         />
       </div>
 
