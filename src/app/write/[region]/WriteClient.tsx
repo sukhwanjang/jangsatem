@@ -1,16 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { categoryData, extraBoards } from "@/lib/categoryData";
 import dynamic from 'next/dynamic';
 
-// TinyMCE 에디터를 클라이언트 사이드에서만 로드
-const Editor = dynamic(
-  () => import('@tinymce/tinymce-react').then(mod => mod.Editor),
-  { ssr: false }
-);
+// 컴포넌트 타입 정의
+interface TiptapEditorProps {
+  content: string;
+  onChange: (newContent: string) => void;
+}
+
+// Tiptap 에디터를 동적으로 가져오기 (절대 경로 사용)
+const TiptapEditor = dynamic<TiptapEditorProps>(() => import('@/app/write/[region]/TiptapEditor'), { 
+  ssr: false,
+  loading: () => <div className="w-full h-60 flex items-center justify-center bg-gray-50">에디터 로딩 중...</div>
+});
 
 interface Props {
   region: string;
@@ -24,7 +30,6 @@ export default function WriteClient({ region }: Props) {
   const [loading, setLoading] = useState(false);
   const [selectedHeader, setSelectedHeader] = useState("수다");
   const [editorLoaded, setEditorLoaded] = useState(false);
-  const editorRef = useRef<any>(null);
   
   // 현재 지역에 맞는 말머리 옵션 구하기
   const [headers, setHeaders] = useState<string[]>(["수다", "팁/정보", "질문", "소갯/자랑", "게임뉴스"]);
@@ -53,8 +58,8 @@ export default function WriteClient({ region }: Props) {
     if (file) setImage(file);
   };
 
-  const handleEditorChange = (content: string) => {
-    setContent(content);
+  const handleEditorChange = (newContent: string) => {
+    setContent(newContent);
   };
 
   const handleSubmit = async () => {
@@ -139,32 +144,14 @@ export default function WriteClient({ region }: Props) {
         />
       </div>
 
-      {/* 내용 - TinyMCE 에디터로 교체 */}
+      {/* 내용 - Tiptap 에디터로 교체 */}
       <div className="mb-6">
         <label className="block font-bold text-sm text-gray-700 mb-2">내용입력 <span className="text-red-500">*</span></label>
         
         {editorLoaded && (
-          <Editor
-            onInit={(evt, editor) => editorRef.current = editor}
-            apiKey="no-api-key"
-            init={{
-              height: 300,
-              menubar: false,
-              plugins: [
-                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'media', 'table', 'help', 'wordcount'
-              ],
-              toolbar: 'undo redo | blocks | ' +
-                'bold italic forecolor | alignleft aligncenter ' +
-                'alignright alignjustify | bullist numlist outdent indent | ' +
-                'removeformat | help',
-              content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-              placeholder: '여기에 내용을 입력하세요.',
-              language: 'ko_KR',
-            }}
-            value={content}
-            onEditorChange={handleEditorChange}
+          <TiptapEditor
+            content={content}
+            onChange={handleEditorChange}
           />
         )}
       </div>
