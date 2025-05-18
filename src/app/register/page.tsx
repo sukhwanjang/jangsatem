@@ -209,6 +209,7 @@ export default function RegisterPage() {
       
       const userData = {
         user_id: userId,
+        username: nickname,
         email: userEmail || '',
         age: safeAge,
         region: region,
