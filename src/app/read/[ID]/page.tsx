@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import HeaderNav from '@/components/HeaderNav';
 
 interface Post {
   id: number;
@@ -54,6 +55,11 @@ export default function ReadPage() {
   const [viewCount, setViewCount] = useState(0);
   const [salesStats, setSalesStats] = useState<RevenueStat[]>([]);
   const [showCopyAlert, setShowCopyAlert] = useState(false);
+  // 헤더 네비게이션에 필요한 상태들
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [activeTab, setActiveTab] = useState('');
+  // 현재 로그인한 사용자 정보
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,6 +68,10 @@ export default function ReadPage() {
         setLoading(false);
         return;
       }
+
+      // 현재 로그인한 사용자 정보 가져오기
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
 
       const { data: postData, error: postError } = await supabase
         .from("posts")
@@ -77,9 +87,6 @@ export default function ReadPage() {
 
       // 조회수 증가 처리
       const currentViewCount = postData.view_count || 0;
-      
-      // 현재 로그인한 사용자 정보 가져오기
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
       // 본인 글인지 확인 (작성자와 현재 로그인한 사용자가 동일한지)
       const isOwnPost = currentUser && postData.user_id === currentUser.id;
@@ -427,197 +434,229 @@ export default function ReadPage() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* 제목 및 메타 정보 */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-bold">{post.title}</h1>
-          
-          {/* 링크 복사 및 신고 버튼 */}
-          <div className="flex space-x-2">
-            <button 
-              onClick={handleCopyLink}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-              aria-label="링크 복사"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <button 
-              onClick={handleReport}
-              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-              aria-label="신고하기"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-        
-        <div className="flex justify-between items-center border-b pb-4">
-          <div className="flex items-center">
-            <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
-              {authorNickname.slice(0, 1)}
-            </div>
-            <div>
-              <div className="font-medium">{authorNickname}</div>
-              <div className="text-xs text-gray-500">{formattedDate} | 조회 {viewCount}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* 게시글 내용 */}
-      <div className="mb-8">
-        {post.image_url && (
-          <img
-            src={post.image_url}
-            alt="게시글 이미지"
-            className="w-full mb-4 rounded-lg"
-          />
-        )}
-        <div 
-          className="text-gray-800 leading-relaxed break-words"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
-      </div>
-      
-      {/* 매출 통계 차트 (이미지에 있는 차트와 유사하게 구현) */}
-      {salesStats.length > 0 && (
-        <div className="mb-8 grid grid-cols-2 gap-4">
-          <div className="border rounded-lg p-4">
-            <h3 className="text-sm font-semibold mb-2">판매</h3>
-            <div className="text-xl font-bold text-blue-600">
-              {salesStats[0].revenue.toLocaleString()} 원
-            </div>
-            <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '80%' }}></div>
-            </div>
-            <div className="grid grid-cols-4 text-xs mt-2">
-              <div>제품</div>
-              <div className="text-right">0</div>
-              <div>게임머니</div>
-              <div className="text-right">0</div>
-            </div>
-            <div className="grid grid-cols-4 text-xs mt-1">
-              <div>상품권</div>
-              <div className="text-right">0</div>
-              <div>아이템</div>
-              <div className="text-right">0</div>
-            </div>
-          </div>
-          
-          <div className="border rounded-lg p-4">
-            <h3 className="text-sm font-semibold mb-2">구매</h3>
-            <div className="text-xl font-bold text-red-500">
-              {salesStats[1].revenue.toLocaleString()} 원
-            </div>
-            <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
-              <div className="bg-red-500 h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
-            <div className="grid grid-cols-4 text-xs mt-2">
-              <div>제품</div>
-              <div className="text-right">{salesStats[1].revenue.toLocaleString()}</div>
-              <div>게임머니</div>
-              <div className="text-right">0</div>
-            </div>
-            <div className="grid grid-cols-4 text-xs mt-1">
-              <div>상품권</div>
-              <div className="text-right">0</div>
-              <div>아이템</div>
-              <div className="text-right">0</div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* 출처 */}
-      <div className="text-xs text-gray-500 text-right mb-8">
-        출처 : 쌸백고단장
-      </div>
-      
-      {/* 좋아요 */}
-      <div className="flex justify-center mb-8">
-        <button
-          className="py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
-          onClick={() => handleLike()}
-        >
-          👍 <span className="font-semibold">{likeCount}</span>
-        </button>
-      </div>
-      
-      {/* 댓글 섹션 */}
-      <div className="border-t pt-6">
-        <h2 className="font-semibold mb-4">댓글 {comments.length}개</h2>
-        
-        {comments.length > 0 ? (
-          <div className="space-y-4 mb-6">
-            {comments.map((comment) => {
-              const commentDate = new Date(comment.created_at).toLocaleString('ko-KR', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              });
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* 헤더 및 네비게이션 */}
+      <HeaderNav 
+        user={user}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        setActiveTab={setActiveTab}
+        setView={(view) => view === 'main' ? router.push('/') : null}
+        setCurrentPage={() => {}}
+        activeTab={activeTab}
+      />
+
+      {/* 게시글 상세 컨텐츠 */}
+      <div className="flex-1">
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          {/* 제목 및 메타 정보 */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-1">
+              <h1 className="text-xl font-bold">{post.title}</h1>
               
-              return (
-                <div key={comment.id} className="border-b pb-4">
-                  <div className="flex items-start mb-1">
-                    <div className="flex-shrink-0 bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
-                      {comment.author_nickname?.slice(0, 1) || '?'}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-baseline">
-                        <span className="font-medium mr-2">{comment.author_nickname}</span>
-                        <span className="text-xs text-gray-500">{commentDate}</span>
-                      </div>
-                      <p className="text-sm mt-1">{comment.content}</p>
-                    </div>
-                  </div>
+              {/* 링크 복사 및 신고 버튼 */}
+              <div className="flex space-x-2">
+                <button 
+                  onClick={handleCopyLink}
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+                  aria-label="링크 복사"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+                <button 
+                  onClick={handleReport}
+                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+                  aria-label="신고하기"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-center border-b pb-4">
+              <div className="flex items-center">
+                <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
+                  {authorNickname.slice(0, 1)}
                 </div>
-              );
-            })}
+                <div>
+                  <div className="font-medium">{authorNickname}</div>
+                  <div className="text-xs text-gray-500">{formattedDate} | 조회 {viewCount}</div>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : (
-          <p className="text-gray-500 text-sm mb-6">아직 댓글이 없습니다. 첫 댓글을 작성해 보세요!</p>
-        )}
-        
-        {/* 댓글 입력 폼 */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="댓글을 입력하세요..."
-            className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          <button
-            onClick={handleCommentSubmit}
-            className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          >
-            등록
-          </button>
+          
+          {/* 게시글 내용 */}
+          <div className="mb-8">
+            {post.image_url && (
+              <img
+                src={post.image_url}
+                alt="게시글 이미지"
+                className="w-full mb-4 rounded-lg"
+              />
+            )}
+            <div 
+              className="text-gray-800 leading-relaxed break-words"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          </div>
+          
+          {/* 매출 통계 차트 (이미지에 있는 차트와 유사하게 구현) */}
+          {salesStats.length > 0 && (
+            <div className="mb-8 grid grid-cols-2 gap-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-2">판매</h3>
+                <div className="text-xl font-bold text-blue-600">
+                  {salesStats[0].revenue.toLocaleString()} 원
+                </div>
+                <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '80%' }}></div>
+                </div>
+                <div className="grid grid-cols-4 text-xs mt-2">
+                  <div>제품</div>
+                  <div className="text-right">0</div>
+                  <div>게임머니</div>
+                  <div className="text-right">0</div>
+                </div>
+                <div className="grid grid-cols-4 text-xs mt-1">
+                  <div>상품권</div>
+                  <div className="text-right">0</div>
+                  <div>아이템</div>
+                  <div className="text-right">0</div>
+                </div>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <h3 className="text-sm font-semibold mb-2">구매</h3>
+                <div className="text-xl font-bold text-red-500">
+                  {salesStats[1].revenue.toLocaleString()} 원
+                </div>
+                <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+                  <div className="bg-red-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+                </div>
+                <div className="grid grid-cols-4 text-xs mt-2">
+                  <div>제품</div>
+                  <div className="text-right">{salesStats[1].revenue.toLocaleString()}</div>
+                  <div>게임머니</div>
+                  <div className="text-right">0</div>
+                </div>
+                <div className="grid grid-cols-4 text-xs mt-1">
+                  <div>상품권</div>
+                  <div className="text-right">0</div>
+                  <div>아이템</div>
+                  <div className="text-right">0</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* 출처 */}
+          <div className="text-xs text-gray-500 text-right mb-8">
+            출처 : 쌸백고단장
+          </div>
+          
+          {/* 좋아요 */}
+          <div className="flex justify-center mb-8">
+            <button
+              className="py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+              onClick={() => handleLike()}
+            >
+              👍 <span className="font-semibold">{likeCount}</span>
+            </button>
+          </div>
+          
+          {/* 댓글 섹션 */}
+          <div className="border-t pt-6">
+            <h2 className="font-semibold mb-4">댓글 {comments.length}개</h2>
+            
+            {comments.length > 0 ? (
+              <div className="space-y-4 mb-6">
+                {comments.map((comment) => {
+                  const commentDate = new Date(comment.created_at).toLocaleString('ko-KR', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                  
+                  return (
+                    <div key={comment.id} className="border-b pb-4">
+                      <div className="flex items-start mb-1">
+                        <div className="flex-shrink-0 bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
+                          {comment.author_nickname?.slice(0, 1) || '?'}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-baseline">
+                            <span className="font-medium mr-2">{comment.author_nickname}</span>
+                            <span className="text-xs text-gray-500">{commentDate}</span>
+                          </div>
+                          <p className="text-sm mt-1">{comment.content}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm mb-6">아직 댓글이 없습니다. 첫 댓글을 작성해 보세요!</p>
+            )}
+            
+            {/* 댓글 입력 폼 */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="댓글을 입력하세요..."
+                className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+              />
+              <button
+                onClick={handleCommentSubmit}
+                className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              >
+                등록
+              </button>
+            </div>
+          </div>
+          
+          {/* 링크 복사 알림 */}
+          {showCopyAlert && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-md text-sm">
+              링크가 복사되었습니다!
+            </div>
+          )}
+          
+          {/* 목록으로 버튼 */}
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
+            >
+              목록으로
+            </button>
+          </div>
         </div>
       </div>
-      
-      {/* 링크 복사 알림 */}
-      {showCopyAlert && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-md text-sm">
-          링크가 복사되었습니다!
+
+      {/* 푸터 */}
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="max-w-screen-xl mx-auto px-4">
+          <div className="text-center">
+            <h3 className="text-xl font-bold mb-2">장사템</h3>
+            <p className="text-gray-400 text-sm mb-4">소상공인 장비/간판/인력 정보 플랫폼</p>
+            <div className="flex justify-center space-x-6 text-sm">
+              <a href="/terms" className="hover:text-blue-400">이용약관</a>
+              <a href="/privacy" className="hover:text-blue-400">개인정보처리방침</a>
+              <a href="#" className="hover:text-blue-400">고객센터</a>
+            </div>
+            <p className="mt-4 text-xs text-gray-500">© 2024 장사템. All rights reserved.</p>
+          </div>
         </div>
-      )}
-      
-      {/* 목록으로 버튼 */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={() => router.back()}
-          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
-        >
-          목록으로
-        </button>
-      </div>
+      </footer>
     </div>
   );
 }
