@@ -7,10 +7,10 @@ interface BannerProps {
   imageUrl?: string;
 }
 
-export default function Banner({ title = "🎯 원하는 업체를 한눈에!", imageUrl }: BannerProps) {
+export default function Banner({ title = "", imageUrl }: BannerProps) {
   return (
     <div className="mb-8">
-      <h1 className="text-3xl font-bold text-blue-600 mb-4">{title}</h1>
+      {title && <h1 className="text-3xl font-bold text-blue-600 mb-4">{title}</h1>}
       <div className="w-full h-52 bg-white border border-gray-200 flex items-center justify-center rounded-lg shadow">
         {imageUrl && (
           <Image
