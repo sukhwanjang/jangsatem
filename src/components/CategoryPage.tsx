@@ -101,7 +101,28 @@ export default function CategoryPage({
         ) : null;
       })()}
 
-      {/* 헤더 부분 제거하고 버튼만 하단에 배치 */}
+      {/* 인기글과 카테고리 버튼을 상단에 배치 */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => {
+            // 인기 게시글로 이동하는 로직
+            router.push(`/?category=커뮤니티&tab=핫한게시물`);
+          }}
+          className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 cursor-pointer"
+        >
+          인기글
+        </button>
+        <button
+          onClick={() => {
+            // 현재 카테고리의 전체 게시판으로 이동
+            router.push(`/?category=${selectedCategory}`);
+          }}
+          className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 cursor-pointer"
+        >
+          {selectedCategory}
+        </button>
+      </div>
+
       {isWriting[currentRegion] && (
         <WriteForm
           user={user}
@@ -125,22 +146,8 @@ export default function CategoryPage({
         />
       </div>
 
-      {/* 버튼 영역을 아래로 이동 */}
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          {activeTab && (
-            <button
-              onClick={() => {
-                // 인기 게시글로 이동하는 로직
-                router.push(`/?category=커뮤니티&tab=핫한게시물`);
-              }}
-              className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 cursor-pointer"
-            >
-              인기 게시글
-            </button>
-          )}
-        </div>
-        
+      {/* 글쓰기 버튼은 계속 하단에 유지 */}
+      <div className="flex justify-end mb-4">
         {user && (
           <button
             onClick={() => {
