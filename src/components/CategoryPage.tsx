@@ -101,14 +101,8 @@ export default function CategoryPage({
         ) : null;
       })()}
 
-      {/* 인기글과 서브 카테고리 버튼만 상단에 배치 */}
+      {/* 서브 카테고리 버튼만 상단에 배치 */}
       <div className="flex gap-2 mb-4">
-        <button
-          className="px-4 py-1.5 bg-gray-100 text-gray-800 text-sm rounded-full cursor-default font-medium shadow-sm transition-all duration-200 ease-in-out border border-gray-200"
-        >
-          인기글
-        </button>
-        
         {activeTab && (
           <button
             className="px-4 py-1.5 bg-gray-200 text-gray-800 text-sm rounded-full cursor-default font-medium shadow-sm border border-gray-300"
