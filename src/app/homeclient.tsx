@@ -106,6 +106,7 @@ export default function HomeClient() {
         setActiveTab={setActiveTab}
         setView={setView}
         setCurrentPage={setCurrentPage}
+        activeTab={activeTab}
       />
 
       <div className="flex-1 p-6">

@@ -12,6 +12,7 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   setView: (view: 'main' | 'category') => void;
   setCurrentPage: (page: number) => void;
+  activeTab: string;
 }
 
 export default function Sidebar({
@@ -21,12 +22,27 @@ export default function Sidebar({
   setSelectedCategory,
   setActiveTab,
   setView,
-  setCurrentPage
+  setCurrentPage,
+  activeTab
 }: SidebarProps) {
   const router = useRouter();
 
   const handleMainCategoryClick = (main: string) => {
-    setOpenCategory(openCategory === main ? null : main);
+    // 현재 열린 카테고리와 같으면 닫기
+    if (openCategory === main) {
+      setOpenCategory(null);
+      return;
+    }
+    
+    // 열린 카테고리 변경 및 해당 카테고리 페이지로 이동
+    setOpenCategory(main);
+    setSelectedCategory(main);
+    setActiveTab(''); // 서브 카테고리는 초기화
+    setView('category');
+    setCurrentPage(1);
+    
+    // URL 업데이트 (메인 카테고리만 쿼리로 전달)
+    router.push(`/?category=${encodeURIComponent(main)}`);
   };
 
   const handleSubCategoryClick = (main: string, sub: string) => {
@@ -35,7 +51,7 @@ export default function Sidebar({
     setView('category');
     setCurrentPage(1);
     
-    // URL 업데이트
+    // URL 업데이트 (메인 및 서브 카테고리 쿼리 전달)
     router.push(`/?category=${encodeURIComponent(main)}&tab=${encodeURIComponent(sub)}`);
   };
 
@@ -56,7 +72,7 @@ export default function Sidebar({
           <div key={main}>
             <button
               onClick={() => handleMainCategoryClick(main)}
-              className="w-full text-left bg-gray-100 border px-4 py-2 font-bold"
+              className={`w-full text-left ${selectedCategory === main && !activeTab ? 'bg-blue-100 text-blue-600' : 'bg-gray-100'} border px-4 py-2 font-bold`}
             >
               {main}
             </button>
@@ -66,7 +82,9 @@ export default function Sidebar({
                   <button
                     key={sub}
                     onClick={() => handleSubCategoryClick(main, sub)}
-                    className="block w-full text-left text-sm px-2 py-1 rounded hover:bg-gray-100"
+                    className={`block w-full text-left text-sm px-2 py-1 rounded ${
+                      selectedCategory === main && activeTab === sub ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
+                    }`}
                   >
                     ▸ {sub}
                   </button>
