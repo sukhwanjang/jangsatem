@@ -12,32 +12,32 @@ export const categoryData: { [main: string]: string[] } = {
 };
 
 // 별도 게시판 데이터
-export const extraBoards = ["자유게시판", "유머게시판", "내가게자랑"];
+export const extraBoards = ["자유게시판", "유머게시판", "내가게자랑", "온드리안", "메이플스토리"];
 
 // 페이지당 항목 수
 export const ITEMS_PER_PAGE = 18;
 
-// 비즈니스 카드 인터페이스
+// 비즈니스 카드 및 게시물 인터페이스 정의
 export interface BusinessCard {
   id: number;
   name: string;
-  region: string;
   image_url?: string;
+  region?: string;
   link_url?: string;
+  created_at?: string;
 }
 
-// 게시글 인터페이스
 export interface Post {
   id: number;
   title: string;
   content: string;
+  user_id: string;
   region: string;
-  user_id?: string;
-  image_url?: string;
   created_at?: string;
   view_count?: number;
   like_count?: number;
   comment_count?: number;
+  image_url?: string;
 }
 
 // 카드 뷰 헬퍼 함수
@@ -47,7 +47,7 @@ export const fillEmptyCards = <T extends object>(items: T[], total: number): (T 
   return filled;
 };
 
-// 비즈니스 카드 여부 확인 함수
-export const isBusinessCard = (item: BusinessCard | Post): item is BusinessCard => {
+// 비즈니스 카드 타입 가드
+export const isBusinessCard = (item: any): item is BusinessCard => {
   return "name" in item;
 }; 

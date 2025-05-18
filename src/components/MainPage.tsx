@@ -53,56 +53,124 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
         </div>
       </section>
 
+      <section className="mt-8">
+        <h2 className="text-base font-semibold mb-3">최근 갤러리</h2>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 bg-gray-200 rounded-full mb-2 overflow-hidden">
+              <Image
+                src="/images/default-avatar.jpg"
+                alt="자유게시판"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
+            </div>
+            <p className="text-xs font-medium">자유게시판</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 bg-gray-200 rounded-full mb-2 overflow-hidden">
+              <Image
+                src="/images/default-avatar.jpg"
+                alt="온드리안"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
+            </div>
+            <p className="text-xs font-medium">온드리안</p>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 bg-gray-200 rounded-full mb-2 overflow-hidden">
+              <Image
+                src="/images/default-avatar.jpg"
+                alt="메이플스토리"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+                unoptimized
+              />
+            </div>
+            <p className="text-xs font-medium">메이플스토리</p>
+          </div>
+        </div>
+      </section>
+
       <section className="mt-12">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">🔥 커뮤니티 최신글</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* 자유게시판 */}
-          <div className="bg-white border rounded-lg p-4 shadow">
-            <h3 className="text-lg font-semibold mb-2 text-blue-600">자유게시판</h3>
-            <ul className="space-y-2">
-              {posts.filter(p => p.region === "자유게시판").slice(0, 3).map((post) => (
-                <li 
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-base font-semibold">자유게시판 베스트</h2>
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full">
+            <tbody>
+              {posts.filter(p => p.region === "자유게시판").slice(0, 5).map((post) => (
+                <tr 
                   key={post.id} 
-                  className="text-sm text-gray-700 hover:underline cursor-pointer"
+                  className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
                   onClick={() => router.push(`/read/${Number(post.id)}`)}
                 >
-                  {post.title}
-                </li>
+                  <td className="px-4 py-3">
+                    <p className="text-sm text-gray-700 line-clamp-1">{post.title}</p>
+                    <div className="flex items-center mt-1">
+                      <span className="text-xs text-gray-500">댓글 {post.comment_count || 0}</span>
+                      <span className="text-xs text-gray-400 mx-1">•</span>
+                      <span className="text-xs text-gray-500">조회 {post.view_count || 0}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end">
+                      <span className="text-xs text-gray-500">{post.created_at?.substring(0, 10)}</span>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </ul>
-          </div>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-          {/* 유머게시판 */}
-          <div className="bg-white border rounded-lg p-4 shadow">
-            <h3 className="text-lg font-semibold mb-2 text-pink-600">유머게시판</h3>
-            <ul className="space-y-2">
-              {posts.filter(p => p.region === "유머게시판").slice(0, 3).map((post) => (
-                <li 
+      <section className="mt-8">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-base font-semibold">유머게시판 베스트</h2>
+          <div className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full">
+            <tbody>
+              {posts.filter(p => p.region === "유머게시판").slice(0, 5).map((post) => (
+                <tr 
                   key={post.id} 
-                  className="text-sm text-gray-700 hover:underline cursor-pointer"
+                  className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
                   onClick={() => router.push(`/read/${Number(post.id)}`)}
                 >
-                  {post.title}
-                </li>
+                  <td className="px-4 py-3">
+                    <p className="text-sm text-gray-700 line-clamp-1">{post.title}</p>
+                    <div className="flex items-center mt-1">
+                      <span className="text-xs text-gray-500">댓글 {post.comment_count || 0}</span>
+                      <span className="text-xs text-gray-400 mx-1">•</span>
+                      <span className="text-xs text-gray-500">조회 {post.view_count || 0}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end">
+                      <span className="text-xs text-gray-500">{post.created_at?.substring(0, 10)}</span>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </ul>
-          </div>
-
-          {/* 내가게자랑 */}
-          <div className="bg-white border rounded-lg p-4 shadow">
-            <h3 className="text-lg font-semibold mb-2 text-green-600">내가게자랑</h3>
-            <ul className="space-y-2">
-              {posts.filter(p => p.region === "내가게자랑").slice(0, 3).map((post) => (
-                <li 
-                  key={post.id} 
-                  className="text-sm text-gray-700 hover:underline cursor-pointer"
-                  onClick={() => router.push(`/read/${Number(post.id)}`)}
-                >
-                  {post.title}
-                </li>
-              ))}
-            </ul>
-          </div>
+            </tbody>
+          </table>
         </div>
       </section>
     </>

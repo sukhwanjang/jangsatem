@@ -9,7 +9,7 @@ interface Post {
   title: string;
   content: string;
   region: string;
-  user_id?: string;
+  user_id: string;
 }
 
 interface Props {
