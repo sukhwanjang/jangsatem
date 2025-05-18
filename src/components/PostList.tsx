@@ -85,7 +85,7 @@ export default function PostList({ posts, currentCategory }: PostListProps) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-bold">{currentCategory} 게시판</h2>
+        <h2 className="text-lg font-bold">{currentCategory}</h2>
       </div>
       
       <table className="w-full text-sm">
