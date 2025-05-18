@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <p className="mb-4">장사템은 회원의 개인정보를 소중히 다루며, 아래와 같은 방침을 따릅니다.</p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">1. 수집 항목</h2>
-      <p className="mb-4">이메일, 닉네임, 지역, 나이 등</p>
+      <p className="mb-4">이메일(소셜 로그인 시 제공), 닉네임, 나이, 지역</p>
 
       <h2 className="text-xl font-semibold mt-6 mb-2">2. 수집 목적</h2>
       <p className="mb-4">회원가입 및 로그인, 커뮤니티 활동, 통계 분석</p>

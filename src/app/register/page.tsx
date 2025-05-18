@@ -9,7 +9,6 @@ export default function RegisterPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [username, setUsername] = useState('');
   const [age, setAge] = useState('');
   const [region, setRegion] = useState('');
   const [nickname, setNickname] = useState('');
@@ -108,26 +107,49 @@ export default function RegisterPage() {
           
           if (profileError) {
             console.error('프로필 조회 오류:', profileError);
-            setError('프로필 정보를 조회하는 중 오류가 발생했습니다: ' + profileError.message);
             setDebug((prev: any) => ({...prev, profileError}));
             
-            // 테이블이 없는 경우 새 사용자로 간주
-            if (profileError.code === 'PGRST116' || 
-                profileError.message.includes('does not exist')) {
-              console.log('테이블이 없습니다. 새 사용자로 등록합니다.');
-              setIsNewUser(true);
+            // 테이블이 없는 경우 아래에서 소문자로 시도함
+            if (!(profileError.code === 'PGRST116' || 
+                profileError.message.includes('does not exist'))) {
+              setError('프로필 정보를 조회하는 중 오류가 발생했습니다: ' + profileError.message);
               setIsLoading(false);
               return;
             }
-            
-            setIsLoading(false);
-            return;
           }
           
           if (profile) {
             // 로컬 스토리지가 없고, 이미 프로필이 있는 경우
             if (redirectStatus !== 'register') {
-              console.log('이미 회원가입 완료된 사용자');
+              console.log('이미 회원가입 완료된 사용자 (대문자 테이블)');
+              setError('이미 추가 정보가 등록되어 있습니다');
+              setTimeout(() => router.push('/'), 1500);
+              return;
+            }
+          }
+          
+          // 대문자 테이블에서 프로필이 없으면 소문자 테이블 확인
+        } catch (err) {
+          console.error('대문자 테이블 프로필 확인 예외:', err);
+          setDebug((prev: any) => ({...prev, profileCheckErrorUpper: err}));
+          // 대문자 테이블 조회 오류, 소문자 테이블 확인으로 진행
+        }
+        
+        // 소문자 'users' 테이블 확인
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (profileError) {
+            console.error('소문자 테이블 프로필 조회 오류:', profileError);
+            setDebug((prev: any) => ({...prev, profileErrorLower: profileError}));
+          } else if (profile) {
+            // 소문자 테이블에 프로필 정보가 있는 경우
+            if (redirectStatus !== 'register') {
+              console.log('이미 회원가입 완료된 사용자 (소문자 테이블)');
               setError('이미 추가 정보가 등록되어 있습니다');
               setTimeout(() => router.push('/'), 1500);
               return;
@@ -137,9 +159,9 @@ export default function RegisterPage() {
           // 프로필이 없으면 새 사용자로 등록
           setIsNewUser(true);
         } catch (err) {
-          console.error('프로필 확인 예외:', err);
+          console.error('소문자 테이블 프로필 확인 예외:', err);
           setError('프로필 확인 중 오류가 발생했습니다');
-          setDebug((prev: any) => ({...prev, profileCheckError: err}));
+          setDebug((prev: any) => ({...prev, profileCheckErrorLower: err}));
           // 오류가 발생해도 폼은 표시
           setIsNewUser(true);
         }
@@ -163,7 +185,7 @@ export default function RegisterPage() {
   const handleSubmit = async () => {
     try {
       // 입력값 검증
-      if (!username || !age || !region || !nickname) {
+      if (!nickname || !age || !region) {
         setError('모든 항목을 입력해주세요');
         return;
       }
@@ -187,7 +209,6 @@ export default function RegisterPage() {
       
       const userData = {
         user_id: userId,
-        username: username,
         email: userEmail || '',
         age: safeAge,
         region: region,
@@ -313,21 +334,10 @@ export default function RegisterPage() {
             )}
             
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">아이디(username)</label>
-              <input
-                type="text"
-                placeholder="사용할 아이디"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            
-            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
               <input
                 type="text"
-                placeholder="닉네임"
+                placeholder="다른 사용자에게 표시될 이름"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 className="w-full p-2 border rounded"

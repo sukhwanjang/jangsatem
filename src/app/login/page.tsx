@@ -203,6 +203,43 @@ export default function LoginPage() {
         setDebug(prev => ({...prev, Users_exception: error}));
       }
       
+      // 소문자 'users' 테이블 확인 시도
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        setDebug(prev => ({...prev, 
+          users_query: { data: profile, error: profileError }
+        }));
+        
+        // 소문자 테이블에서 프로필 발견
+        if (!profileError && profile) {
+          userProfile = profile;
+          console.log('기존 사용자(소문자 테이블): 메인 페이지로 이동');
+          localStorage.removeItem('loginRedirect');
+          
+          // 리디렉션 중임을 표시
+          localStorage.setItem('isRedirecting', 'true');
+          setIsLoading(false);
+          
+          // 메인 페이지로 이동
+          router.push('/');
+          
+          // 리디렉션 완료 후 플래그 제거 (지연 설정)
+          setTimeout(() => {
+            localStorage.removeItem('isRedirecting');
+          }, 3000);
+          
+          return;
+        }
+      } catch (error) {
+        console.error('소문자 테이블 조회 예외:', error);
+        setDebug(prev => ({...prev, users_exception: error}));
+      }
+      
       localStorage.removeItem('loginRedirect');
       
       // 프로필이 없으면 회원가입 페이지로 이동
