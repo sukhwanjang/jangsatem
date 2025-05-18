@@ -49,8 +49,25 @@ export default function MyPage() {
           
         if (profileError) {
           console.error('프로필 정보를 가져오는 중 오류 발생:', profileError);
+          // 프로필 정보가 없을 경우 기본 프로필 생성
+          const defaultProfile: UserProfile = {
+            user_id: user.id,
+            nickname: user.email?.split('@')[0] || '사용자',
+            email: user.email || '이메일 없음',
+            join_date: user.created_at
+          };
+          setProfile(defaultProfile);
         } else if (profileData) {
           setProfile(profileData);
+        } else {
+          // 프로필 데이터가 없는 경우 (null인 경우)
+          const defaultProfile: UserProfile = {
+            user_id: user.id,
+            nickname: user.email?.split('@')[0] || '사용자',
+            email: user.email || '이메일 없음',
+            join_date: user.created_at
+          };
+          setProfile(defaultProfile);
         }
         
         // 내가 작성한 게시물 가져오기
