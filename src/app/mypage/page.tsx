@@ -10,6 +10,7 @@ import { Post } from '@/lib/categoryData';
 interface UserProfile {
   user_id: string;
   nickname: string;
+  username?: string;
   email: string;
   join_date?: string;
   profile_image?: string;
@@ -43,15 +44,35 @@ export default function MyPage() {
         
         setUser(user);
         
-        // 사용자 프로필 정보 가져오기
+        // 사용자 프로필 정보 가져오기 (소문자 users 테이블)
         const { data: profileData, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('user_id', user.id)
           .single();
           
+        // 소문자 테이블에 정보가 없으면 대문자 Users 테이블 확인
+        let userProfile = profileData;
+        let userProfileError = profileError;
+        
         if (profileError) {
-          console.error('프로필 정보를 가져오는 중 오류 발생:', profileError);
+          // 대문자 Users 테이블에서 확인
+          const { data: upperProfileData, error: upperProfileError } = await supabase
+            .from('Users')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (!upperProfileError && upperProfileData) {
+            userProfile = upperProfileData;
+            userProfileError = null;
+          } else {
+            userProfileError = upperProfileError;
+          }
+        }
+        
+        if (userProfileError) {
+          console.error('프로필 정보를 가져오는 중 오류 발생:', userProfileError);
           // 프로필 정보가 없을 경우 기본 프로필 생성
           const defaultProfile: UserProfile = {
             user_id: user.id,
@@ -60,8 +81,18 @@ export default function MyPage() {
             join_date: user.created_at
           };
           setProfile(defaultProfile);
-        } else if (profileData) {
-          setProfile(profileData);
+        } else if (userProfile) {
+          // nickname이 없을 경우 username 필드 확인
+          if (!userProfile.nickname && userProfile.username) {
+            userProfile.nickname = userProfile.username;
+          }
+          
+          // 여전히 nickname이 없으면 기본값 설정
+          if (!userProfile.nickname) {
+            userProfile.nickname = user.email?.split('@')[0] || '사용자';
+          }
+          
+          setProfile(userProfile);
         } else {
           // 프로필 데이터가 없는 경우 (null인 경우)
           const defaultProfile: UserProfile = {
@@ -154,9 +185,18 @@ export default function MyPage() {
         .select('*')
         .eq('user_id', user.id)
         .single();
+
+      // 대문자 Users 테이블에서도 확인
+      const { data: existingUpperUser, error: checkUpperError } = await supabase
+        .from('Users')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
       
       let result;
+      let resultUpper;
       
+      // 소문자 users 테이블 업데이트 또는 생성
       if (checkError || !existingUser) {
         // 사용자 정보가 없으면 새로 생성
         result = await supabase
@@ -165,6 +205,7 @@ export default function MyPage() {
             {
               user_id: user.id,
               nickname: nickname,
+              username: nickname, // username 필드도 함께 업데이트
               email: user.email,
               join_date: user.created_at
             }
@@ -173,8 +214,44 @@ export default function MyPage() {
         // 사용자 정보가 있으면 닉네임 업데이트
         result = await supabase
           .from('users')
-          .update({ nickname: nickname })
+          .update({ 
+            nickname: nickname,
+            username: nickname // username 필드도 함께 업데이트
+          })
           .eq('user_id', user.id);
+      }
+      
+      // 대문자 Users 테이블 업데이트 또는 생성
+      if (checkUpperError || !existingUpperUser) {
+        // 대문자 테이블에 사용자 정보가 없으면 생성 시도 (에러 무시)
+        try {
+          resultUpper = await supabase
+            .from('Users')
+            .insert([
+              {
+                user_id: user.id,
+                nickname: nickname,
+                username: nickname,
+                email: user.email,
+                join_date: user.created_at
+              }
+            ]);
+        } catch (e) {
+          console.log('대문자 테이블 생성 시도 중 오류 (무시):', e);
+        }
+      } else {
+        // 대문자 테이블에 사용자 정보가 있으면 업데이트
+        try {
+          resultUpper = await supabase
+            .from('Users')
+            .update({ 
+              nickname: nickname,
+              username: nickname 
+            })
+            .eq('user_id', user.id);
+        } catch (e) {
+          console.log('대문자 테이블 업데이트 중 오류 (무시):', e);
+        }
       }
       
       if (result.error) {
@@ -184,7 +261,8 @@ export default function MyPage() {
       // 프로필 상태 업데이트
       setProfile({
         ...profile,
-        nickname: nickname
+        nickname: nickname,
+        username: nickname
       });
       
       setSaveMessage({
