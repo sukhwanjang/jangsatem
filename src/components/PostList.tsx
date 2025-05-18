@@ -16,7 +16,7 @@ interface ExtendedPost extends Post {
   view_count?: number;
   like_count?: number;
   comment_count?: number;
-  username?: string;
+  author_nickname?: string;
 }
 
 export default function PostList({ posts, currentCategory }: PostListProps) {
@@ -40,16 +40,54 @@ export default function PostList({ posts, currentCategory }: PostListProps) {
             .eq('post_id', post.id);
             
           // 사용자 정보 가져오기
-          let username = '익명';
+          let author_nickname = '익명';
           if (post.user_id) {
-            const { data: userData } = await supabase
-              .from('users')
-              .select('nickname')
-              .eq('user_id', post.user_id)
-              .single();
-            
-            if (userData) {
-              username = userData.nickname || '익명';
+            try {
+              // 1. 소문자 users 테이블에서 조회
+              const { data: userData } = await supabase
+                .from('users')
+                .select('nickname')
+                .eq('user_id', post.user_id)
+                .single();
+              
+              if (userData && userData.nickname) {
+                author_nickname = userData.nickname;
+              } else {
+                // 2. 대문자 Users 테이블에서 조회
+                const { data: upperUserData } = await supabase
+                  .from('Users')
+                  .select('nickname')
+                  .eq('user_id', post.user_id)
+                  .single();
+                  
+                if (upperUserData && upperUserData.nickname) {
+                  author_nickname = upperUserData.nickname;
+                } else {
+                  // 3. id로 조회
+                  const { data: idUserData } = await supabase
+                    .from('users')
+                    .select('nickname')
+                    .eq('id', post.user_id)
+                    .single();
+                    
+                  if (idUserData && idUserData.nickname) {
+                    author_nickname = idUserData.nickname;
+                  } else {
+                    // 4. 대문자 Users 테이블에서 id로 조회
+                    const { data: idUpperUserData } = await supabase
+                      .from('Users')
+                      .select('nickname')
+                      .eq('id', post.user_id)
+                      .single();
+                      
+                    if (idUpperUserData && idUpperUserData.nickname) {
+                      author_nickname = idUpperUserData.nickname;
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.error("게시글 작성자 정보 조회 중 오류:", error);
             }
           }
           
@@ -58,7 +96,7 @@ export default function PostList({ posts, currentCategory }: PostListProps) {
             created_at: post.created_at || new Date().toISOString(),
             like_count: likes?.length || 0,
             comment_count: comments?.length || 0,
-            username
+            author_nickname
           };
         })
       );
@@ -114,7 +152,7 @@ export default function PostList({ posts, currentCategory }: PostListProps) {
                     )}
                   </div>
                 </td>
-                <td className="px-2 py-3 text-center text-gray-600">{post.username}</td>
+                <td className="px-2 py-3 text-center text-gray-600">{post.author_nickname || '익명'}</td>
                 <td className="px-2 py-3 text-center text-gray-500">{formatDate(post.created_at)}</td>
                 <td className="px-2 py-3 text-center text-gray-500">{post.view_count || 0}</td>
                 <td className="px-2 py-3 text-center text-gray-500">{post.like_count}</td>
