@@ -107,7 +107,7 @@ export default function HomeClient() {
             <Banner />
 
             {/* 메인 또는 카테고리 페이지 */}
-            {view === 'main' ? (
+{view === 'main' ? (
               <MainPage
                 businessCards={businessCards}
                 posts={posts}
@@ -120,17 +120,17 @@ export default function HomeClient() {
                 setCurrentPage={setCurrentPage}
                 businessCards={businessCards}
                 posts={posts}
-                user={user}
+    user={user}
                 isWriting={isWriting}
                 setIsWriting={setIsWriting}
                 setNewPostContent={setNewPostContent}
-                setPosts={setPosts}
-                setSelectedCategory={setSelectedCategory}
-                setActiveTab={setActiveTab}
-                setView={setView}
-              />
-            )}
-          </div>
+    setPosts={setPosts}
+    setSelectedCategory={setSelectedCategory}
+    setActiveTab={setActiveTab}
+    setView={setView}
+  />
+)}
+</div>
 
           {/* 우측 광고 영역 */}
           <div className="hidden lg:block">

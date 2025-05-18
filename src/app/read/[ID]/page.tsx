@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 interface Post {
@@ -24,6 +24,12 @@ interface Comment {
   author_nickname?: string;
 }
 
+interface RevenueStat {
+  month: string;
+  revenue: number;
+  type: 'sales' | 'expenses' | 'profit' | 'etc';
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Like {
   id: number;
@@ -33,6 +39,7 @@ interface Like {
 }
 
 export default function ReadPage() {
+  const router = useRouter();
   const pathname = usePathname();
   const idFromPath = pathname?.split('/').pop();
   const numericId = Number(idFromPath);
@@ -45,6 +52,8 @@ export default function ReadPage() {
   const [loading, setLoading] = useState(true);
   const [authorNickname, setAuthorNickname] = useState('익명');
   const [viewCount, setViewCount] = useState(0);
+  const [salesStats, setSalesStats] = useState<RevenueStat[]>([]);
+  const [showCopyAlert, setShowCopyAlert] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -255,6 +264,16 @@ export default function ReadPage() {
         }
       }
 
+      // 매출 통계 데이터 생성 (이미지에 보이는 차트를 위한 임시 데이터)
+      if (post && post.content && (post.content.includes('월매출') || post.content.includes('수익'))) {
+        // 예시 데이터 생성
+        const mockSalesData: RevenueStat[] = [
+          { month: '5월', revenue: 2439000, type: 'sales' },
+          { month: '5월', revenue: 1710000, type: 'profit' },
+        ];
+        setSalesStats(mockSalesData);
+      }
+
       setLoading(false);
     };
 
@@ -383,72 +402,221 @@ export default function ReadPage() {
     }
   };
 
+  // 링크 복사 기능
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setShowCopyAlert(true);
+    setTimeout(() => setShowCopyAlert(false), 2000);
+  };
+  
+  // 신고 기능
+  const handleReport = () => {
+    alert('게시글이 신고되었습니다.');
+  };
+
   if (loading) return <div className="p-10 text-center">불러오는 중...</div>;
   if (!post) return <div className="p-10 text-center text-red-500">잘못된 게시글 ID입니다.</div>;
 
+  // 날짜 형식화 (게시글 작성 시간)
+  const formattedDate = new Date(post.created_at).toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
   return (
-    <div className="p-10 max-w-xl mx-auto">
-      <div className="flex justify-between items-center mb-2">
-        <div className="text-gray-400 text-sm">{post.region}</div>
-        <div className="text-sm text-gray-500">조회수: {viewCount}</div>
-      </div>
-      
-      <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-      
-      <div className="mb-4 flex justify-between items-center border-b pb-3">
-        <div className="text-gray-600 text-sm">작성자: {authorNickname}</div>
-        <div className="text-gray-500 text-sm">{new Date(post.created_at).toLocaleString()}</div>
-      </div>
-      
-      {post.image_url && (
-        <img
-          src={post.image_url}
-          alt="post image"
-          className="w-full max-h-96 object-contain rounded-lg border mb-4"
-        />
-      )}
-      <div className="text-gray-700 whitespace-pre-line mb-6">{post.content}</div>
-
-      <div className="flex items-center mb-6 gap-4">
-        <button
-          onClick={handleLike}
-          className={`px-3 py-1 text-sm rounded cursor-pointer ${
-            hasLiked ? 'bg-gray-400 text-white' : 'bg-pink-500 text-white hover:bg-pink-600'
-          }`}
-        >
-          ♥ 좋아요
-        </button>
-        <span className="text-sm text-gray-700">좋아요 {likeCount}개</span>
-      </div>
-
-      <hr className="my-6" />
-      <div className="space-y-4">
-        <h2 className="font-semibold text-lg">💬 댓글</h2>
-
-        {comments.map((c) => (
-          <div key={c.id} className="bg-gray-50 border p-3 rounded">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-medium text-gray-700">{c.author_nickname || '익명'}</span>
-              <span className="text-xs text-gray-400">{new Date(c.created_at).toLocaleString()}</span>
-            </div>
-            <div className="text-sm text-gray-800">{c.content}</div>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      {/* 제목 및 메타 정보 */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-xl font-bold">{post.title}</h1>
+          
+          {/* 링크 복사 및 신고 버튼 */}
+          <div className="flex space-x-2">
+            <button 
+              onClick={handleCopyLink}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+              aria-label="링크 복사"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </button>
+            <button 
+              onClick={handleReport}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+              aria-label="신고하기"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </button>
           </div>
-        ))}
-
-        <div className="flex gap-2 mt-4">
+        </div>
+        
+        <div className="flex justify-between items-center border-b pb-4">
+          <div className="flex items-center">
+            <div className="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
+              {authorNickname.slice(0, 1)}
+            </div>
+            <div>
+              <div className="font-medium">{authorNickname}</div>
+              <div className="text-xs text-gray-500">{formattedDate} | 조회 {viewCount}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* 게시글 내용 */}
+      <div className="mb-8">
+        {post.image_url && (
+          <img
+            src={post.image_url}
+            alt="게시글 이미지"
+            className="w-full mb-4 rounded-lg"
+          />
+        )}
+        <div 
+          className="text-gray-800 leading-relaxed break-words"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      </div>
+      
+      {/* 매출 통계 차트 (이미지에 있는 차트와 유사하게 구현) */}
+      {salesStats.length > 0 && (
+        <div className="mb-8 grid grid-cols-2 gap-4">
+          <div className="border rounded-lg p-4">
+            <h3 className="text-sm font-semibold mb-2">판매</h3>
+            <div className="text-xl font-bold text-blue-600">
+              {salesStats[0].revenue.toLocaleString()} 원
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '80%' }}></div>
+            </div>
+            <div className="grid grid-cols-4 text-xs mt-2">
+              <div>제품</div>
+              <div className="text-right">0</div>
+              <div>게임머니</div>
+              <div className="text-right">0</div>
+            </div>
+            <div className="grid grid-cols-4 text-xs mt-1">
+              <div>상품권</div>
+              <div className="text-right">0</div>
+              <div>아이템</div>
+              <div className="text-right">0</div>
+            </div>
+          </div>
+          
+          <div className="border rounded-lg p-4">
+            <h3 className="text-sm font-semibold mb-2">구매</h3>
+            <div className="text-xl font-bold text-red-500">
+              {salesStats[1].revenue.toLocaleString()} 원
+            </div>
+            <div className="w-full bg-gray-200 h-2 rounded-full mt-2">
+              <div className="bg-red-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+            </div>
+            <div className="grid grid-cols-4 text-xs mt-2">
+              <div>제품</div>
+              <div className="text-right">{salesStats[1].revenue.toLocaleString()}</div>
+              <div>게임머니</div>
+              <div className="text-right">0</div>
+            </div>
+            <div className="grid grid-cols-4 text-xs mt-1">
+              <div>상품권</div>
+              <div className="text-right">0</div>
+              <div>아이템</div>
+              <div className="text-right">0</div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 출처 */}
+      <div className="text-xs text-gray-500 text-right mb-8">
+        출처 : 쌸백고단장
+      </div>
+      
+      {/* 좋아요 */}
+      <div className="flex justify-center mb-8">
+        <button
+          className="py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
+          onClick={() => handleLike()}
+        >
+          👍 <span className="font-semibold">{likeCount}</span>
+        </button>
+      </div>
+      
+      {/* 댓글 섹션 */}
+      <div className="border-t pt-6">
+        <h2 className="font-semibold mb-4">댓글 {comments.length}개</h2>
+        
+        {comments.length > 0 ? (
+          <div className="space-y-4 mb-6">
+            {comments.map((comment) => {
+              const commentDate = new Date(comment.created_at).toLocaleString('ko-KR', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              
+              return (
+                <div key={comment.id} className="border-b pb-4">
+                  <div className="flex items-start mb-1">
+                    <div className="flex-shrink-0 bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center text-gray-600 mr-2">
+                      {comment.author_nickname?.slice(0, 1) || '?'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-baseline">
+                        <span className="font-medium mr-2">{comment.author_nickname}</span>
+                        <span className="text-xs text-gray-500">{commentDate}</span>
+                      </div>
+                      <p className="text-sm mt-1">{comment.content}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm mb-6">아직 댓글이 없습니다. 첫 댓글을 작성해 보세요!</p>
+        )}
+        
+        {/* 댓글 입력 폼 */}
+        <div className="flex gap-2">
           <input
+            type="text"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            className="flex-1 border px-3 py-2 rounded text-sm"
-            placeholder="댓글을 입력하세요"
+            placeholder="댓글을 입력하세요..."
+            className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
           />
           <button
             onClick={handleCommentSubmit}
-            className="px-4 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 cursor-pointer"
+            className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
           >
-            댓글달기
+            등록
           </button>
         </div>
+      </div>
+      
+      {/* 링크 복사 알림 */}
+      {showCopyAlert && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-md text-sm">
+          링크가 복사되었습니다!
+        </div>
+      )}
+      
+      {/* 목록으로 버튼 */}
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
+        >
+          목록으로
+        </button>
       </div>
     </div>
   );

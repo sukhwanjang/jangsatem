@@ -6,7 +6,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  
+
   /* 테마 변수들을 :root에 직접 정의 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
