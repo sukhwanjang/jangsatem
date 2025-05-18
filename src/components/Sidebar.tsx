@@ -68,51 +68,6 @@ export default function Sidebar({
       </div>
 
       <div className="space-y-4">
-        <div className="pb-4 mb-4 border-b border-gray-200">
-          <h3 className="font-medium text-sm mb-2">최근 갤러리</h3>
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                setSelectedCategory('자유게시판');
-                setActiveTab('');
-                setView('category');
-                setCurrentPage(1);
-                router.push('/?category=자유게시판');
-              }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 flex items-center"
-            >
-              <span className="w-[16px] h-[16px] bg-blue-100 rounded-full mr-2"></span>
-              자유게시판
-            </button>
-            <button
-              onClick={() => {
-                setSelectedCategory('온드리안');
-                setActiveTab('');
-                setView('category');
-                setCurrentPage(1);
-                router.push('/?category=온드리안');
-              }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 flex items-center"
-            >
-              <span className="w-[16px] h-[16px] bg-yellow-100 rounded-full mr-2"></span>
-              온드리안
-            </button>
-            <button
-              onClick={() => {
-                setSelectedCategory('메이플스토리');
-                setActiveTab('');
-                setView('category');
-                setCurrentPage(1);
-                router.push('/?category=메이플스토리');
-              }}
-              className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-gray-100 flex items-center"
-            >
-              <span className="w-[16px] h-[16px] bg-green-100 rounded-full mr-2"></span>
-              메이플스토리
-            </button>
-          </div>
-        </div>
-
         <div>
           <h3 className="font-medium text-sm mb-2">갤러리</h3>
           <div className="space-y-2">

@@ -53,51 +53,6 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-base font-semibold mb-3">최근 갤러리</h2>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full mb-2 overflow-hidden">
-              <Image
-                src="/images/default-avatar.jpg"
-                alt="자유게시판"
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-                unoptimized
-              />
-            </div>
-            <p className="text-xs font-medium">자유게시판</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full mb-2 overflow-hidden">
-              <Image
-                src="/images/default-avatar.jpg"
-                alt="온드리안"
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-                unoptimized
-              />
-            </div>
-            <p className="text-xs font-medium">온드리안</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-20 h-20 bg-gray-200 rounded-full mb-2 overflow-hidden">
-              <Image
-                src="/images/default-avatar.jpg"
-                alt="메이플스토리"
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-                unoptimized
-              />
-            </div>
-            <p className="text-xs font-medium">메이플스토리</p>
-          </div>
-        </div>
-      </section>
-
       <section className="mt-12">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-base font-semibold">자유게시판 베스트</h2>
