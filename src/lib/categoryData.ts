@@ -35,6 +35,9 @@ export interface Post {
   user_id?: string;
   image_url?: string;
   created_at?: string;
+  view_count?: number;
+  like_count?: number;
+  comment_count?: number;
 }
 
 // 카드 뷰 헬퍼 함수

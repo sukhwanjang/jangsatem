@@ -114,6 +114,14 @@ export default function HeaderNav({
                 로그인
               </button>
             )}
+            {user && (
+              <button
+                onClick={() => router.push('/mypage')}
+                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
+              >
+                마이페이지
+              </button>
+            )}
             <button
               onClick={() => router.push('/register')}
               className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
