@@ -101,17 +101,6 @@ export default function CategoryPage({
         ) : null;
       })()}
 
-      {/* 서브 카테고리 버튼만 상단에 배치 */}
-      <div className="flex gap-2 mb-4">
-        {activeTab && (
-          <button
-            className="px-4 py-1.5 bg-gray-200 text-gray-800 text-sm rounded-full cursor-default font-medium shadow-sm border border-gray-300"
-          >
-            {activeTab}
-          </button>
-        )}
-      </div>
-
       {isWriting[currentRegion] && (
         <WriteForm
           user={user}
