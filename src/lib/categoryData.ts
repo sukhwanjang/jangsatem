@@ -34,6 +34,7 @@ export interface Post {
   region: string;
   user_id?: string;
   image_url?: string;
+  created_at?: string;
 }
 
 // 카드 뷰 헬퍼 함수

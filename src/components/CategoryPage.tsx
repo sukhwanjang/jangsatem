@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard } from '@/lib/categoryData';
 import WriteForm from './WriteForm';
+import PostList from './PostList';
 
 interface CategoryPageProps {
   selectedCategory: string;
@@ -48,12 +49,6 @@ export default function CategoryPage({
 
   // 현재 지역에 해당하는 게시물만 필터링
   const filteredPosts = posts.filter((post) => post.region === currentRegion);
-  
-  // 페이지네이션을 위한 데이터 준비
-  const paginatedPosts = fillEmptyCards(
-    filteredPosts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
-    ITEMS_PER_PAGE
-  );
   
   // 총 페이지 수 계산
   const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
@@ -109,46 +104,12 @@ export default function CategoryPage({
         />
       )}
 
-      <div className="grid grid-cols-6 gap-4">
-        {paginatedPosts.map((item, index) => {
-          if (!item) {
-            return (
-              <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-                <div className="w-full h-36 flex items-center justify-center text-gray-200">빈칸</div>
-              </div>
-            );
-          }
-
-          return (
-            <div
-              key={index}
-              onClick={() => {
-                console.log('🔥 클릭된 게시글 ID:', item.id);
-                router.push(`/read/${Number(item.id)}`);
-              }}
-              className="cursor-pointer border rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition min-h-[150px]"
-            >
-              {!isBusinessCard(item) && item.image_url ? (
-                <Image
-                  src={item.image_url}
-                  alt={item.title}
-                  width={300}
-                  height={128}
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-              ) : (
-                <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
-                  이미지 없음
-                </div>
-              )}
-
-              <p className="font-semibold text-sm mb-1 mt-2">
-                {isBusinessCard(item) ? item.name : item.title}
-              </p>
-              <p className="text-xs text-gray-500">{item.region}</p>
-            </div>
-          );
-        })}
+      {/* 게시글 목록 테이블 */}
+      <div className="mb-6">
+        <PostList 
+          posts={filteredPosts} 
+          currentCategory={`${selectedCategory}${activeTab ? ` > ${activeTab}` : ''}`}
+        />
       </div>
 
       {/* 페이지네이션 */}
