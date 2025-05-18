@@ -101,11 +101,33 @@ export default function CategoryPage({
         ) : null;
       })()}
 
-      <header className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">
-            {activeTab ? `${activeTab}` : '전체게시판'}
-          </h1>
+      {/* 헤더 부분 제거하고 버튼만 하단에 배치 */}
+      {isWriting[currentRegion] && (
+        <WriteForm
+          user={user}
+          activeTab={activeTab}
+          selectedCategory={selectedCategory}
+          extraBoards={extraBoards}
+          setPosts={setPosts}
+          setNewPostContent={setNewPostContent}
+          setSelectedCategory={setSelectedCategory}
+          setActiveTab={setActiveTab}
+          setView={setView}
+          setIsWriting={setIsWriting}
+        />
+      )}
+
+      {/* 게시글 목록 테이블 */}
+      <div className="mb-6">
+        <PostList 
+          posts={paginatedPosts} 
+          currentCategory={activeTab || '전체게시판'}
+        />
+      </div>
+
+      {/* 버튼 영역을 아래로 이동 */}
+      <div className="flex justify-between items-center mb-4">
+        <div>
           {activeTab && (
             <button
               onClick={() => {
@@ -134,29 +156,6 @@ export default function CategoryPage({
             글쓰기
           </button>
         )}
-      </header>
-
-      {isWriting[currentRegion] && (
-        <WriteForm
-          user={user}
-          activeTab={activeTab}
-          selectedCategory={selectedCategory}
-          extraBoards={extraBoards}
-          setPosts={setPosts}
-          setNewPostContent={setNewPostContent}
-          setSelectedCategory={setSelectedCategory}
-          setActiveTab={setActiveTab}
-          setView={setView}
-          setIsWriting={setIsWriting}
-        />
-      )}
-
-      {/* 게시글 목록 테이블 */}
-      <div className="mb-6">
-        <PostList 
-          posts={paginatedPosts} 
-          currentCategory={activeTab || '전체게시판'}
-        />
       </div>
 
       {/* 페이지네이션 */}
