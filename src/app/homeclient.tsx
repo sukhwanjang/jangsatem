@@ -96,51 +96,53 @@ export default function HomeClient() {
   };
 
   return (
-    <main className="min-h-screen flex bg-white text-gray-800">
-      {/* 사이드바 */}
-      <Sidebar
-        openCategory={openCategory}
-        selectedCategory={selectedCategory}
-        setOpenCategory={setOpenCategory}
-        setSelectedCategory={setSelectedCategory}
-        setActiveTab={setActiveTab}
-        setView={setView}
-        setCurrentPage={setCurrentPage}
-        activeTab={activeTab}
-      />
+    <div className="flex justify-center bg-gray-100 min-h-screen">
+      <div className="max-w-screen-xl w-full flex bg-white shadow-lg">
+        {/* 사이드바 */}
+        <Sidebar
+          openCategory={openCategory}
+          selectedCategory={selectedCategory}
+          setOpenCategory={setOpenCategory}
+          setSelectedCategory={setSelectedCategory}
+          setActiveTab={setActiveTab}
+          setView={setView}
+          setCurrentPage={setCurrentPage}
+          activeTab={activeTab}
+        />
 
-      <div className="flex-1 p-6">
-        {/* 헤더 */}
-        <Header user={user} />
+        <div className="flex-1 p-6">
+          {/* 헤더 */}
+          <Header user={user} />
 
-        {/* 배너 */}
-        <Banner />
+          {/* 배너 */}
+          <Banner />
 
-        {/* 메인 또는 카테고리 페이지 */}
-        {view === 'main' ? (
-          <MainPage
-            businessCards={businessCards}
-            posts={posts}
-          />
-        ) : (
-          <CategoryPage
-            selectedCategory={selectedCategory}
-            activeTab={activeTab}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            businessCards={businessCards}
-            posts={posts}
-            user={user}
-            isWriting={isWriting}
-            setIsWriting={setIsWriting}
-            setNewPostContent={setNewPostContent}
-            setPosts={setPosts}
-            setSelectedCategory={setSelectedCategory}
-            setActiveTab={setActiveTab}
-            setView={setView}
-          />
-        )}
+          {/* 메인 또는 카테고리 페이지 */}
+          {view === 'main' ? (
+            <MainPage
+              businessCards={businessCards}
+              posts={posts}
+            />
+          ) : (
+            <CategoryPage
+              selectedCategory={selectedCategory}
+              activeTab={activeTab}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              businessCards={businessCards}
+              posts={posts}
+              user={user}
+              isWriting={isWriting}
+              setIsWriting={setIsWriting}
+              setNewPostContent={setNewPostContent}
+              setPosts={setPosts}
+              setSelectedCategory={setSelectedCategory}
+              setActiveTab={setActiveTab}
+              setView={setView}
+            />
+          )}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
