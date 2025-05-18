@@ -82,6 +82,13 @@ export default function CategoryPage({
     currentPage * ITEMS_PER_PAGE
   );
 
+  // 서브카테고리 클릭 핸들러
+  const handleSubCategoryClick = (sub: string) => {
+    setActiveTab(sub);
+    setCurrentPage(1);
+    router.push(`/?category=${encodeURIComponent(selectedCategory)}&tab=${encodeURIComponent(sub)}`);
+  };
+
   return (
     <>
       {/* 선택된 카테고리에 해당하는 로고 보여주기 */}
@@ -123,6 +130,23 @@ export default function CategoryPage({
           currentCategory={activeTab || '전체게시판'}
         />
       </div>
+      
+      {/* 서브카테고리 버튼 (메인 카테고리가 선택되었고 extraBoards에 포함되지 않을 때만 표시) */}
+      {!activeTab && categoryData[selectedCategory] && !extraBoards.includes(selectedCategory) && (
+        <div className="mb-6 mt-2">
+          <div className="flex flex-wrap gap-2">
+            {categoryData[selectedCategory].map((subCategory) => (
+              <button
+                key={subCategory}
+                onClick={() => handleSubCategoryClick(subCategory)}
+                className="px-3 py-1.5 bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-sm rounded-full transition-colors"
+              >
+                {subCategory}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 글쓰기 버튼은 계속 하단에 유지 */}
       <div className="flex justify-end mb-4">
