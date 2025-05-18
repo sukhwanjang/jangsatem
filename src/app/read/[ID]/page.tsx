@@ -101,28 +101,66 @@ export default function ReadPage() {
 
       // 작성자 닉네임 가져오기
       if (postData.user_id) {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('nickname')
-          .eq('user_id', postData.user_id)
-          .single();
-          
-        if (!userError && userData && userData.nickname) {
-          setAuthorNickname(userData.nickname);
-        } else {
-          console.error('작성자 정보 불러오기 실패:', userError);
-          
-          // 다른 방식으로 시도 (id로 조회)
-          const { data: altUserData, error: altUserError } = await supabase
+        console.log("게시글 작성자 ID:", postData.user_id);
+        
+        try {
+          // 1. 소문자 users 테이블에서 user_id로 조회
+          const { data: userData, error: userError } = await supabase
             .from('users')
             .select('nickname, username')
-            .eq('id', postData.user_id)
+            .eq('user_id', postData.user_id)
             .single();
+          
+          if (!userError && userData) {
+            console.log("1차 쿼리 성공:", userData);
+            setAuthorNickname(userData.nickname || userData.username || '익명');
+          } else {
+            console.log("1차 쿼리 실패:", userError);
             
-          if (!altUserError && altUserData) {
-            // nickname이 있으면 사용, 없으면 username 사용
-            setAuthorNickname(altUserData.nickname || altUserData.username || '익명');
+            // 2. 대문자 Users 테이블에서 user_id로 조회
+            const { data: upperUserData, error: upperUserError } = await supabase
+              .from('Users')
+              .select('nickname, username')
+              .eq('user_id', postData.user_id)
+              .single();
+            
+            if (!upperUserError && upperUserData) {
+              console.log("2차 쿼리 성공:", upperUserData);
+              setAuthorNickname(upperUserData.nickname || upperUserData.username || '익명');
+            } else {
+              console.log("2차 쿼리 실패:", upperUserError);
+              
+              // 3. id로 조회 시도
+              const { data: idUserData, error: idUserError } = await supabase
+                .from('users')
+                .select('nickname, username')
+                .eq('id', postData.user_id)
+                .single();
+              
+              if (!idUserError && idUserData) {
+                console.log("3차 쿼리 성공:", idUserData);
+                setAuthorNickname(idUserData.nickname || idUserData.username || '익명');
+              } else {
+                console.log("3차 쿼리 실패:", idUserError);
+                
+                // 4. 대문자 Users 테이블에서 id로 조회
+                const { data: idUpperUserData, error: idUpperUserError } = await supabase
+                  .from('Users')
+                  .select('nickname, username')
+                  .eq('id', postData.user_id)
+                  .single();
+                
+                if (!idUpperUserError && idUpperUserData) {
+                  console.log("4차 쿼리 성공:", idUpperUserData);
+                  setAuthorNickname(idUpperUserData.nickname || idUpperUserData.username || '익명');
+                } else {
+                  console.log("모든 쿼리 실패. 기본값 '익명' 사용");
+                }
+              }
+            }
           }
+        } catch (error) {
+          console.error("작성자 닉네임 조회 중 오류 발생:", error);
         }
       }
 
@@ -140,26 +178,52 @@ export default function ReadPage() {
             let authorNickname = '익명';
             
             if (comment.user_id) {
-              // 사용자 테이블에서 user_id로 조회
-              const { data: commentAuthorData } = await supabase
-                .from('users')
-                .select('nickname, username')
-                .eq('user_id', comment.user_id)
-                .single();
-                
-              if (commentAuthorData && (commentAuthorData.nickname || commentAuthorData.username)) {
-                authorNickname = commentAuthorData.nickname || commentAuthorData.username;
-              } else {
-                // user_id로 조회 실패 시 id로 조회 시도
-                const { data: altCommentAuthorData } = await supabase
+              try {
+                // 1. 소문자 users 테이블에서 조회
+                const { data: commentAuthorData } = await supabase
                   .from('users')
                   .select('nickname, username')
-                  .eq('id', comment.user_id)
+                  .eq('user_id', comment.user_id)
                   .single();
+                
+                if (commentAuthorData && (commentAuthorData.nickname || commentAuthorData.username)) {
+                  authorNickname = commentAuthorData.nickname || commentAuthorData.username;
+                } else {
+                  // 2. 대문자 Users 테이블에서 조회
+                  const { data: upperCommentAuthorData } = await supabase
+                    .from('Users')
+                    .select('nickname, username')
+                    .eq('user_id', comment.user_id)
+                    .single();
                   
-                if (altCommentAuthorData && (altCommentAuthorData.nickname || altCommentAuthorData.username)) {
-                  authorNickname = altCommentAuthorData.nickname || altCommentAuthorData.username;
+                  if (upperCommentAuthorData && (upperCommentAuthorData.nickname || upperCommentAuthorData.username)) {
+                    authorNickname = upperCommentAuthorData.nickname || upperCommentAuthorData.username;
+                  } else {
+                    // 3. id로 조회
+                    const { data: idCommentAuthorData } = await supabase
+                      .from('users')
+                      .select('nickname, username')
+                      .eq('id', comment.user_id)
+                      .single();
+                    
+                    if (idCommentAuthorData && (idCommentAuthorData.nickname || idCommentAuthorData.username)) {
+                      authorNickname = idCommentAuthorData.nickname || idCommentAuthorData.username;
+                    } else {
+                      // 4. 대문자 Users 테이블에서 id로 조회
+                      const { data: idUpperCommentAuthorData } = await supabase
+                        .from('Users')
+                        .select('nickname, username')
+                        .eq('id', comment.user_id)
+                        .single();
+                      
+                      if (idUpperCommentAuthorData && (idUpperCommentAuthorData.nickname || idUpperCommentAuthorData.username)) {
+                        authorNickname = idUpperCommentAuthorData.nickname || idUpperCommentAuthorData.username;
+                      }
+                    }
+                  }
                 }
+              } catch (error) {
+                console.error("댓글 작성자 닉네임 조회 중 오류:", error);
               }
             }
             
@@ -223,26 +287,60 @@ export default function ReadPage() {
       // 사용자 닉네임 가져오기
       let authorNickname = '익명';
       
-      // 현재 로그인한 사용자의 닉네임 가져오기
-      const { data: userData } = await supabase
-        .from('users')
-        .select('nickname, username')
-        .eq('user_id', user.id)
-        .single();
-        
-      if (userData && (userData.nickname || userData.username)) {
-        authorNickname = userData.nickname || userData.username;
-      } else {
-        // user_id로 조회 실패 시 id로 조회 시도
-        const { data: altUserData } = await supabase
+      console.log("댓글 작성자 ID:", user.id);
+      
+      try {
+        // 1. 소문자 users 테이블에서 조회
+        const { data: userData } = await supabase
           .from('users')
           .select('nickname, username')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single();
           
-        if (altUserData && (altUserData.nickname || altUserData.username)) {
-          authorNickname = altUserData.nickname || altUserData.username;
+        if (userData && (userData.nickname || userData.username)) {
+          console.log("댓글 작성자 정보(1차):", userData);
+          authorNickname = userData.nickname || userData.username;
+        } else {
+          // 2. 대문자 Users 테이블에서 조회
+          const { data: upperUserData } = await supabase
+            .from('Users')
+            .select('nickname, username')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (upperUserData && (upperUserData.nickname || upperUserData.username)) {
+            console.log("댓글 작성자 정보(2차):", upperUserData);
+            authorNickname = upperUserData.nickname || upperUserData.username;
+          } else {
+            // 3. id로 조회
+            const { data: idUserData } = await supabase
+              .from('users')
+              .select('nickname, username')
+              .eq('id', user.id)
+              .single();
+              
+            if (idUserData && (idUserData.nickname || idUserData.username)) {
+              console.log("댓글 작성자 정보(3차):", idUserData);
+              authorNickname = idUserData.nickname || idUserData.username;
+            } else {
+              // 4. 대문자 Users 테이블에서 id로 조회
+              const { data: idUpperUserData } = await supabase
+                .from('Users')
+                .select('nickname, username')
+                .eq('id', user.id)
+                .single();
+                
+              if (idUpperUserData && (idUpperUserData.nickname || idUpperUserData.username)) {
+                console.log("댓글 작성자 정보(4차):", idUpperUserData);
+                authorNickname = idUpperUserData.nickname || idUpperUserData.username;
+              } else {
+                console.log("댓글 작성자 정보를 찾을 수 없음, 기본값 사용");
+              }
+            }
+          }
         }
+      } catch (error) {
+        console.error("댓글 작성자 정보 조회 중 오류:", error);
       }
       
       const newComment = {
