@@ -101,44 +101,23 @@ export default function CategoryPage({
         ) : null;
       })()}
 
-      {/* 인기글과 카테고리 버튼을 상단에 배치 */}
+      {/* 인기글과 서브 카테고리 버튼만 상단에 배치 */}
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => {
             // 인기 게시글로 이동하는 로직
             router.push(`/?category=커뮤니티&tab=핫한게시물`);
           }}
-          className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 cursor-pointer"
+          className="px-4 py-1.5 bg-gray-100 text-gray-800 text-sm rounded-full hover:bg-gray-200 cursor-pointer font-medium shadow-sm transition-all duration-200 ease-in-out border border-gray-200"
         >
           인기글
         </button>
         
-        {activeTab ? (
-          <>
-            {/* 메인 카테고리 버튼 (서브 카테고리가 선택되었을 때만 표시) */}
-            <button
-              onClick={() => {
-                // 메인 카테고리로 이동
-                router.push(`/?category=${selectedCategory}`);
-              }}
-              className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded hover:bg-gray-300 cursor-pointer"
-            >
-              {selectedCategory}
-            </button>
-            
-            {/* 서브 카테고리 버튼 */}
-            <button
-              className="px-3 py-1 bg-gray-300 text-gray-900 text-sm rounded cursor-default font-medium"
-            >
-              {activeTab}
-            </button>
-          </>
-        ) : (
-          /* 메인 카테고리만 선택된 경우 */
+        {activeTab && (
           <button
-            className="px-3 py-1 bg-gray-300 text-gray-900 text-sm rounded cursor-default font-medium"
+            className="px-4 py-1.5 bg-gray-200 text-gray-800 text-sm rounded-full cursor-default font-medium shadow-sm border border-gray-300"
           >
-            {selectedCategory}
+            {activeTab}
           </button>
         )}
       </div>
@@ -178,7 +157,7 @@ export default function CategoryPage({
               }
               router.push(`/write/${encodeURIComponent(currentRegion)}`);
             }}
-            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+            className="px-4 py-1.5 bg-blue-500 text-white text-sm rounded-full hover:bg-blue-600 cursor-pointer font-medium shadow-sm transition-all duration-200 ease-in-out"
           >
             글쓰기
           </button>
