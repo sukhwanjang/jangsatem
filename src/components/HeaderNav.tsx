@@ -143,14 +143,14 @@ export default function HeaderNav({
             {user ? (
               <button
                 onClick={handleLogout}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
               >
                 로그아웃
               </button>
             ) : (
               <button
                 onClick={() => router.push('/login')}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
               >
                 로그인
               </button>
@@ -158,7 +158,7 @@ export default function HeaderNav({
             {user && (
               <button
                 onClick={() => router.push('/mypage')}
-                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
+                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 cursor-pointer"
               >
                 마이페이지
               </button>
@@ -166,7 +166,7 @@ export default function HeaderNav({
             {!user && (
               <button
                 onClick={() => router.push('/register')}
-                className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+                className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 cursor-pointer"
               >
                 회원가입
               </button>
@@ -218,7 +218,7 @@ export default function HeaderNav({
                 <>
                   <button
                     onClick={handleLogout}
-                    className="px-3 py-2 bg-blue-700 text-white text-sm rounded hover:bg-blue-800 flex-grow"
+                    className="px-3 py-2 bg-blue-700 text-white text-sm rounded hover:bg-blue-800 flex-grow cursor-pointer"
                   >
                     로그아웃
                   </button>
@@ -227,7 +227,7 @@ export default function HeaderNav({
                       router.push('/mypage');
                       setMobileMenuOpen(false);
                     }}
-                    className="px-3 py-2 bg-green-500 text-white text-sm rounded hover:bg-green-600 flex-grow"
+                    className="px-3 py-2 bg-green-500 text-white text-sm rounded hover:bg-green-600 flex-grow cursor-pointer"
                   >
                     마이페이지
                   </button>
@@ -239,7 +239,7 @@ export default function HeaderNav({
                       router.push('/login');
                       setMobileMenuOpen(false);
                     }}
-                    className="px-3 py-2 bg-blue-700 text-white text-sm rounded hover:bg-blue-800 flex-grow"
+                    className="px-3 py-2 bg-blue-700 text-white text-sm rounded hover:bg-blue-800 flex-grow cursor-pointer"
                   >
                     로그인
                   </button>
@@ -248,7 +248,7 @@ export default function HeaderNav({
                       router.push('/register');
                       setMobileMenuOpen(false);
                     }}
-                    className="px-3 py-2 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 flex-grow"
+                    className="px-3 py-2 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 flex-grow cursor-pointer"
                   >
                     회원가입
                   </button>

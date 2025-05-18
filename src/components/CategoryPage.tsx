@@ -106,22 +106,34 @@ export default function CategoryPage({
           <h1 className="text-2xl font-bold">
             {activeTab ? `${activeTab}` : '전체게시판'}
           </h1>
-          {user && (
+          {activeTab && (
             <button
               onClick={() => {
-                // 글쓰기는 서브카테고리가 선택되어 있을 때만 가능
-                if (!activeTab && !extraBoards.includes(selectedCategory)) {
-                  alert('글을 작성하려면 서브카테고리를 선택해주세요.');
-                  return;
-                }
-                router.push(`/write/${encodeURIComponent(currentRegion)}`);
+                // 인기 게시글로 이동하는 로직
+                router.push(`/?category=커뮤니티&tab=핫한게시물`);
               }}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 cursor-pointer"
             >
-              글쓰기
+              인기 게시글
             </button>
           )}
         </div>
+        
+        {user && (
+          <button
+            onClick={() => {
+              // 글쓰기는 서브카테고리가 선택되어 있을 때만 가능
+              if (!activeTab && !extraBoards.includes(selectedCategory)) {
+                alert('글을 작성하려면 서브카테고리를 선택해주세요.');
+                return;
+              }
+              router.push(`/write/${encodeURIComponent(currentRegion)}`);
+            }}
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+          >
+            글쓰기
+          </button>
+        )}
       </header>
 
       {isWriting[currentRegion] && (
@@ -154,7 +166,7 @@ export default function CategoryPage({
             <button
               key={i + 1}
               onClick={() => setCurrentPage(i + 1)}
-              className={`w-8 h-8 rounded-full text-sm font-semibold border text-center ${
+              className={`w-8 h-8 rounded-full text-sm font-semibold border text-center cursor-pointer ${
                 currentPage === i + 1
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-white text-gray-600 border-gray-300 hover:bg-blue-100"
