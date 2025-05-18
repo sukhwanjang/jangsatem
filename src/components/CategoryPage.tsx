@@ -2,8 +2,10 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard, categoryData } from '@/lib/categoryData';
+import { supabase } from '@/lib/supabase';
 import WriteForm from './WriteForm';
 import PostList from './PostList';
 
@@ -41,7 +43,9 @@ export default function CategoryPage({
   setView
 }: CategoryPageProps) {
   const router = useRouter();
-
+  const [sortByPopular, setSortByPopular] = useState(false);
+  const [postsWithLikes, setPostsWithLikes] = useState<(Post & { like_count?: number })[]>([]);
+  
   // 현재 선택된 카테고리에 맞는 지역 설정
   const currentRegion = extraBoards.includes(selectedCategory)
     ? selectedCategory
@@ -73,11 +77,40 @@ export default function CategoryPage({
     return dateB - dateA;
   });
   
+  // 좋아요 수에 따른 게시물 정렬 처리
+  useEffect(() => {
+    const fetchLikesForPosts = async () => {
+      // 현재 필터링된 게시물에 대해서만 좋아요 수 가져오기
+      const postsWithLikeCount = await Promise.all(
+        filteredPosts.map(async (post) => {
+          const { data: likes } = await supabase
+            .from('likes')
+            .select('*')
+            .eq('post_id', post.id);
+            
+          return {
+            ...post,
+            like_count: likes?.length || 0
+          };
+        })
+      );
+      
+      setPostsWithLikes(postsWithLikeCount);
+    };
+    
+    fetchLikesForPosts();
+  }, [filteredPosts]);
+  
+  // 정렬된 게시물 (인기순 또는 최신순)
+  let sortedPosts = sortByPopular 
+    ? [...postsWithLikes].sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
+    : [...filteredPosts];
+  
   // 총 페이지 수 계산
-  const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(sortedPosts.length / ITEMS_PER_PAGE);
 
   // 현재 페이지에 표시할 게시물
-  const paginatedPosts = filteredPosts.slice(
+  const paginatedPosts = sortedPosts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE, 
     currentPage * ITEMS_PER_PAGE
   );
@@ -105,10 +138,15 @@ export default function CategoryPage({
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => {
-            // 인기 게시글로 이동하는 로직
-            router.push(`/?category=커뮤니티&tab=핫한게시물`);
+            // 현재 카테고리 내에서 인기글로 정렬
+            setSortByPopular(!sortByPopular);
+            setCurrentPage(1); // 페이지를 첫 페이지로 리셋
           }}
-          className="px-4 py-1.5 bg-gray-100 text-gray-800 text-sm rounded-full hover:bg-gray-200 cursor-pointer font-medium shadow-sm transition-all duration-200 ease-in-out border border-gray-200"
+          className={`px-4 py-1.5 text-sm rounded-full font-medium shadow-sm transition-all duration-200 ease-in-out border ${
+            sortByPopular 
+              ? "bg-gray-300 text-gray-900 border-gray-400" 
+              : "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200"
+          }`}
         >
           인기글
         </button>
