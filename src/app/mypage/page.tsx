@@ -174,6 +174,24 @@ export default function MyPage() {
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      // 파일 크기 체크 (5MB 제한)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('이미지 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+      
+      // 이미지 파일 타입 체크
+      if (!file.type.startsWith('image/')) {
+        alert('이미지 파일만 업로드 가능합니다.');
+        return;
+      }
+      
+      console.log('이미지 선택됨:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)} KB`
+      });
+      
       setProfileImage(file);
       
       // 미리보기 URL 생성
@@ -187,30 +205,43 @@ export default function MyPage() {
     if (!profileImage || !user) return null;
     
     setIsUploadingImage(true);
+    console.log('업로드 시작:', { 
+      fileName: profileImage.name, 
+      type: profileImage.type, 
+      size: profileImage.size
+    });
     
     try {
       // 파일 확장자 가져오기
       const fileExt = profileImage.name.split('.').pop();
-      // 고유한 파일명 생성 (사용자 ID + 현재 시간)
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      // 고유한 파일명 생성 (타임스탬프 사용)
+      const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `profile_images/${fileName}`;
       
+      console.log('업로드 경로:', filePath);
+      
       // Supabase Storage에 이미지 업로드
-      const { error: uploadError } = await supabase.storage
+      const { data, error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, profileImage);
+        .upload(filePath, profileImage, {
+          contentType: profileImage.type,
+          cacheControl: '3600'
+        });
         
       if (uploadError) {
         console.error('프로필 이미지 업로드 중 오류:', uploadError);
         return null;
       }
       
+      console.log('업로드 성공:', data);
+      
       // 이미지 URL 가져오기
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('profiles')
         .getPublicUrl(filePath);
         
-      return data.publicUrl;
+      console.log('이미지 URL:', urlData);
+      return urlData.publicUrl;
     } catch (error) {
       console.error('이미지 업로드 중 오류 발생:', error);
       return null;
@@ -235,97 +266,48 @@ export default function MyPage() {
         return;
       }
       
+      console.log('프로필 저장 시작:', { 
+        userId: user.id, 
+        nickname: nickname, 
+        hasProfileImage: !!profileImage 
+      });
+      
       // 프로필 이미지 업로드
       let profileImagePath = profile.profile_image;
       if (profileImage) {
+        console.log('이미지 업로드 시작');
         const uploadedImageUrl = await uploadProfileImage();
+        console.log('이미지 업로드 결과:', uploadedImageUrl);
         if (uploadedImageUrl) {
           profileImagePath = uploadedImageUrl;
         }
       }
       
-      // Supabase users 테이블에 사용자 정보가 있는지 확인
-      const { data: existingUser, error: checkError } = await supabase
+      // users 테이블에 직접 사용자 정보 저장 시도
+      console.log('프로필 데이터 저장 시도:', {
+        테이블: 'users',
+        user_id: user.id,
+        nickname: nickname,
+        profile_image: profileImagePath
+      });
+      
+      const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      // 대문자 Users 테이블에서도 확인
-      const { data: existingUpperUser, error: checkUpperError } = await supabase
-        .from('Users')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .upsert({
+          user_id: user.id,
+          nickname: nickname,
+          username: nickname,
+          email: user.email || '',
+          profile_image: profileImagePath
+        })
+        .select();
       
-      let result;
-      let resultUpper;
-      
-      // 소문자 users 테이블 업데이트 또는 생성
-      if (checkError || !existingUser) {
-        // 사용자 정보가 없으면 새로 생성
-        result = await supabase
-          .from('users')
-          .insert([
-            {
-              user_id: user.id,
-              nickname: nickname,
-              username: nickname, // username 필드도 함께 업데이트
-              email: user.email,
-              join_date: user.created_at,
-              profile_image: profileImagePath
-            }
-          ]);
-      } else {
-        // 사용자 정보가 있으면 닉네임과 프로필 이미지 업데이트
-        result = await supabase
-          .from('users')
-          .update({ 
-            nickname: nickname,
-            username: nickname, // username 필드도 함께 업데이트
-            profile_image: profileImagePath
-          })
-          .eq('user_id', user.id);
+      if (userError) {
+        console.error('users 테이블 저장 오류:', userError);
+        throw userError;
       }
       
-      // 대문자 Users 테이블 업데이트 또는 생성
-      if (checkUpperError || !existingUpperUser) {
-        // 대문자 테이블에 사용자 정보가 없으면 생성 시도 (에러 무시)
-        try {
-          resultUpper = await supabase
-            .from('Users')
-            .insert([
-              {
-                user_id: user.id,
-                nickname: nickname,
-                username: nickname,
-                email: user.email,
-                join_date: user.created_at,
-                profile_image: profileImagePath
-              }
-            ]);
-        } catch (e) {
-          console.log('대문자 테이블 생성 시도 중 오류 (무시):', e);
-        }
-      } else {
-        // 대문자 테이블에 사용자 정보가 있으면 업데이트
-        try {
-          resultUpper = await supabase
-            .from('Users')
-            .update({ 
-              nickname: nickname,
-              username: nickname,
-              profile_image: profileImagePath
-            })
-            .eq('user_id', user.id);
-        } catch (e) {
-          console.log('대문자 테이블 업데이트 시도 중 오류 (무시):', e);
-        }
-      }
-      
-      if (result.error) {
-        throw result.error;
-      }
+      console.log('users 테이블 저장 성공:', userData);
       
       // 프로필 상태 업데이트
       setProfile({
@@ -372,30 +354,43 @@ export default function MyPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
               )}
-              
-              {/* 이미지 업로드 버튼 추가 */}
-              <label className="block mt-2">
-                <span className="sr-only">프로필 이미지 선택</span>
-                <input 
-                  type="file" 
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleProfileImageChange}
-                />
-                <button 
-                  type="button"
-                  onClick={() => {
-                    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-                    if (fileInput) fileInput.click();
-                  }}
-                  className="mt-2 text-sm text-blue-500 hover:text-blue-700 cursor-pointer w-24 h-8 bg-white border border-blue-500 rounded-full hover:bg-blue-50 flex items-center justify-center"
-                >
-                  사진 변경
-                </button>
-              </label>
             </div>
             
             <div className="flex-1">
+              {/* 이미지 업로드 버튼 추가 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  프로필 이미지
+                </label>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="file" 
+                    id="profile-image-input"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleProfileImageChange}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const fileInput = document.getElementById('profile-image-input') as HTMLInputElement;
+                      if (fileInput) fileInput.click();
+                    }}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200"
+                  >
+                    이미지 선택
+                  </button>
+                  {profileImage && (
+                    <span className="text-xs text-gray-500">
+                      {profileImage.name} ({(profileImage.size / 1024).toFixed(1)} KB)
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  5MB 이하의 이미지 파일(JPG, PNG)을 선택해주세요.
+                </p>
+              </div>
+              
               <div className="mb-4">
                 <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1">
                   닉네임
@@ -434,10 +429,18 @@ export default function MyPage() {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={handleSaveProfile}
-                  disabled={isSaving}
-                  className={`px-6 py-2 rounded-md ${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                  disabled={isSaving || isUploadingImage}
+                  className={`px-6 py-2 rounded-md ${isSaving || isUploadingImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
                 >
-                  {isSaving || isUploadingImage ? '저장 중...' : '저장하기'}
+                  {isSaving || isUploadingImage ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      저장 중...
+                    </span>
+                  ) : '저장하기'}
                 </button>
               </div>
               
