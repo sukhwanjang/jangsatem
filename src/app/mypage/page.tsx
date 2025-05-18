@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -23,6 +23,9 @@ export default function MyPage() {
   const [likedPosts, setLikedPosts] = useState<Post[]>([]);
   const [activeTab, setActiveTab] = useState<'posts' | 'likes' | 'settings'>('posts');
   const [isLoading, setIsLoading] = useState(true);
+  const [nickname, setNickname] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -116,11 +119,93 @@ export default function MyPage() {
     fetchUserData();
   }, [router]);
 
+  useEffect(() => {
+    if (profile) {
+      setNickname(profile.nickname);
+    }
+  }, [profile]);
+
   // 날짜 포맷팅 함수
   const formatDate = (dateString?: string) => {
     if (!dateString) return '알 수 없음';
     const date = new Date(dateString);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || !profile) return;
+    
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+      
+      // 닉네임이 비어 있는지 확인
+      if (!nickname.trim()) {
+        setSaveMessage({
+          type: 'error',
+          text: '닉네임을 입력해주세요.'
+        });
+        return;
+      }
+      
+      // Supabase users 테이블에 사용자 정보가 있는지 확인
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      let result;
+      
+      if (checkError || !existingUser) {
+        // 사용자 정보가 없으면 새로 생성
+        result = await supabase
+          .from('users')
+          .insert([
+            {
+              user_id: user.id,
+              nickname: nickname,
+              email: user.email,
+              join_date: user.created_at
+            }
+          ]);
+      } else {
+        // 사용자 정보가 있으면 닉네임 업데이트
+        result = await supabase
+          .from('users')
+          .update({ nickname: nickname })
+          .eq('user_id', user.id);
+      }
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      // 프로필 상태 업데이트
+      setProfile({
+        ...profile,
+        nickname: nickname
+      });
+      
+      setSaveMessage({
+        type: 'success',
+        text: '프로필이 성공적으로 저장되었습니다.'
+      });
+      
+      // 3초 후 메시지 숨기기
+      setTimeout(() => {
+        setSaveMessage(null);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('프로필 저장 중 오류 발생:', error);
+      setSaveMessage({
+        type: 'error',
+        text: '프로필 저장 중 오류가 발생했습니다.'
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (isLoading) {
@@ -309,11 +394,18 @@ export default function MyPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-4">계정 설정</h2>
           
+          {saveMessage && (
+            <div className={`mb-4 p-3 rounded-md ${saveMessage.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {saveMessage.text}
+            </div>
+          )}
+          
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-1">닉네임</label>
             <input
               type="text"
-              defaultValue={profile.nickname}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -322,7 +414,7 @@ export default function MyPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
             <input
               type="email"
-              defaultValue={profile.email}
+              value={profile?.email || ''}
               disabled
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
             />
@@ -333,7 +425,7 @@ export default function MyPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">프로필 이미지</label>
             <div className="flex items-center mt-2">
               <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden mr-4">
-                {profile.profile_image ? (
+                {profile?.profile_image ? (
                   <img src={profile.profile_image} alt="프로필 이미지" className="w-full h-full object-cover" />
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-gray-400">
@@ -352,14 +444,27 @@ export default function MyPage() {
           <div className="flex justify-end gap-3">
             <button
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              onClick={() => setActiveTab('posts')}
+              onClick={() => {
+                setActiveTab('posts');
+                if (profile) setNickname(profile.nickname);
+              }}
             >
               취소
             </button>
             <button
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center`}
+              onClick={handleSaveProfile}
+              disabled={isSaving}
             >
-              저장
+              {isSaving ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  저장 중...
+                </>
+              ) : '저장'}
             </button>
           </div>
         </div>
