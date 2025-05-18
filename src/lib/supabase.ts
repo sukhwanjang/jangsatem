@@ -24,17 +24,61 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, supabaseOptio
 // 세션 초기화 함수
 export async function clearSession() {
   try {
-    // 로컬 스토리지 정리
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('loginRedirect');
+    console.log('세션 초기화 시작...');
+    
+    // 세션 로그아웃 (서버 측)
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('서버 측 로그아웃 오류:', error);
+      throw error;
     }
     
-    // 세션 로그아웃
-    await supabase.auth.signOut();
+    // 로컬 스토리지 정리 (클라이언트 측)
+    if (typeof window !== 'undefined') {
+      // Supabase 관련 항목 모두 삭제
+      const keysToRemove = [
+        'supabase.auth.token',
+        'supabase.auth.refreshToken', 
+        'supabase.auth.access_token',
+        'sb-refresh-token',
+        'sb-access-token',
+        'sb-provider-token',
+        'sb-auth-token',
+        'loginRedirect',
+        'auth_user_id',
+        'auth_user_email',
+        'isRedirecting'
+      ];
+      
+      // 모든 키 삭제
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+          console.log(`로컬 스토리지 항목 삭제: ${key}`);
+        } catch (e) {
+          console.warn(`로컬 스토리지 항목 삭제 실패: ${key}`, e);
+        }
+      });
+      
+      // Supabase로 시작하는 모든 항목 삭제
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('supabase.') || key.startsWith('sb-')) {
+            localStorage.removeItem(key);
+            console.log(`추가 항목 삭제: ${key}`);
+          }
+        });
+      } catch (e) {
+        console.warn('추가 로컬 스토리지 항목 삭제 실패:', e);
+      }
+    }
+    
     console.log('세션 초기화 완료');
+    return { success: true };
   } catch (err) {
     console.error('세션 초기화 실패:', err);
+    return { success: false, error: err };
   }
 }
 
