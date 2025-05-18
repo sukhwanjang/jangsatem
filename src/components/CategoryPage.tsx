@@ -102,24 +102,26 @@ export default function CategoryPage({
       })()}
 
       <header className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-blue-600">
-          {activeTab ? `${activeTab}` : '전체게시판'}
-        </h1>
-        {user && (
-          <button
-            onClick={() => {
-              // 글쓰기는 서브카테고리가 선택되어 있을 때만 가능
-              if (!activeTab && !extraBoards.includes(selectedCategory)) {
-                alert('글을 작성하려면 서브카테고리를 선택해주세요.');
-                return;
-              }
-              router.push(`/write/${encodeURIComponent(currentRegion)}`);
-            }}
-            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-          >
-            글쓰기
-          </button>
-        )}
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">
+            {activeTab ? `${activeTab}` : '전체게시판'}
+          </h1>
+          {user && (
+            <button
+              onClick={() => {
+                // 글쓰기는 서브카테고리가 선택되어 있을 때만 가능
+                if (!activeTab && !extraBoards.includes(selectedCategory)) {
+                  alert('글을 작성하려면 서브카테고리를 선택해주세요.');
+                  return;
+                }
+                router.push(`/write/${encodeURIComponent(currentRegion)}`);
+              }}
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+            >
+              글쓰기
+            </button>
+          )}
+        </div>
       </header>
 
       {isWriting[currentRegion] && (
