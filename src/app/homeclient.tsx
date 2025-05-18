@@ -8,7 +8,6 @@ import WriteForm from '@/components/WriteForm';
 
 // 분리한 컴포넌트들 임포트
 import { ITEMS_PER_PAGE, BusinessCard, Post } from '@/lib/categoryData';
-import Sidebar from '@/components/Sidebar';
 import Banner from '@/components/Banner';
 import MainPage from '@/components/MainPage';
 import CategoryPage from '@/components/CategoryPage';
@@ -110,23 +109,9 @@ export default function HomeClient() {
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1">
-        <div className="max-w-screen-xl mx-auto flex gap-6 py-6 px-4">
-          {/* 좌측 사이드바 */}
-          <div className="hidden md:block">
-            <Sidebar
-              openCategory={openCategory}
-              selectedCategory={selectedCategory}
-              setOpenCategory={setOpenCategory}
-              setSelectedCategory={setSelectedCategory}
-              setActiveTab={setActiveTab}
-              setView={setView}
-              setCurrentPage={setCurrentPage}
-              activeTab={activeTab}
-            />
-          </div>
-
+        <div className="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-6 px-4">
           {/* 메인 콘텐츠 영역 */}
-          <div className="flex-1 bg-white p-6 rounded-lg shadow">
+          <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow">
             {/* 배너 */}
             <Banner />
 
