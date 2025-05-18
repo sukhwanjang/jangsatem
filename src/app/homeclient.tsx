@@ -6,22 +6,13 @@ import { supabase, clearSession } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import WriteForm from '@/components/WriteForm';
 
-interface BusinessCard {
-  id: number;
-  name: string;
-  region: string;
-  image_url?: string;
-  link_url?: string;
-}
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  region: string;
-  user_id?: string;
-  image_url?: string;
-}
+// 분리한 컴포넌트들 임포트
+import { ITEMS_PER_PAGE, BusinessCard, Post } from '@/lib/categoryData';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import Banner from '@/components/Banner';
+import MainPage from '@/components/MainPage';
+import CategoryPage from '@/components/CategoryPage';
 
 export default function HomeClient() {
   const categoryData: { [main: string]: string[] } = {
@@ -47,7 +38,6 @@ export default function HomeClient() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({});
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [newPostContent, setNewPostContent] = useState<string | File>("");
 
   useEffect(() => {
@@ -107,323 +97,47 @@ export default function HomeClient() {
 
   return (
     <main className="min-h-screen flex bg-white text-gray-800">
-      <aside className="w-60 min-h-screen border-r p-6 bg-gray-50 overflow-y-auto">
-        <div className="text-xl font-bold mb-4 text-blue-600 cursor-pointer" onClick={() => setView('main')}>
-          장사템
-        </div>
-
-        <div className="space-y-2">
-          {Object.entries(categoryData).map(([main, subs]) => (
-            <div key={main}>
-              <button
-                onClick={() => setOpenCategory(openCategory === main ? null : main)}
-                className="w-full text-left bg-gray-100 border px-4 py-2 font-bold"
-              >
-                {main}
-              </button>
-              {openCategory === main && (
-                <div className="pl-4 pt-1 space-y-1">
-                  {subs.map((sub: string) => (
-                    <button
-                      key={sub}
-                      onClick={() => {
-                        setSelectedCategory(main);
-                        setActiveTab(sub);
-                        setView('category');
-                        setCurrentPage(1);
-                      }}
-                      className="block w-full text-left text-sm px-2 py-1 rounded hover:bg-gray-100"
-                    >
-                      ▸ {sub}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="pt-4 border-t border-gray-200 mt-4 space-y-2">
-          {extraBoards.map((board) => (
-            <button
-              key={board}
-              onClick={() => {
-                setSelectedCategory(board);
-                setActiveTab("");
-                setView("category");
-                setCurrentPage(1);
-              }}
-              className={`w-full text-left bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium transition ${
-                selectedCategory === board ? "bg-green-100 text-green-700" : "text-gray-700 hover:bg-green-50 hover:text-green-600"
-              }`}
-            >
-              {board}
-            </button>
-          ))}
-        </div>
-      </aside>
+      {/* 사이드바 */}
+      <Sidebar
+        openCategory={openCategory}
+        selectedCategory={selectedCategory}
+        setOpenCategory={setOpenCategory}
+        setSelectedCategory={setSelectedCategory}
+        setActiveTab={setActiveTab}
+        setView={setView}
+        setCurrentPage={setCurrentPage}
+      />
 
       <div className="flex-1 p-6">
-        <header className="flex justify-end mb-4">
-          {user ? (
-            <button
-              onClick={async () => {
-                try {
-                  // 개선된 세션 정리 함수 호출
-                  const { success, error } = await clearSession();
-                  if (!success) {
-                    console.error('로그아웃 중 오류 발생:', error);
-                    alert('로그아웃 중 오류가 발생했습니다. 페이지를 새로고침하세요.');
-                  }
-                  
-                  // 세션 정리 후 잠시 대기
-                  await new Promise(resolve => setTimeout(resolve, 300));
-                  
-                  // 로그인 페이지로 리디렉트
-                  window.location.href = '/login';
-                } catch (e) {
-                  console.error('로그아웃 실패:', e);
-                  alert('로그아웃 중 오류가 발생했습니다. 페이지를 새로고침하세요.');
-                  location.reload();
-                }
-              }}
-              className="px-3 py-1 bg-gray-300 text-sm rounded hover:bg-gray-400"
-            >
-              로그아웃
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/login')}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-            >
-              로그인
-            </button>
-          )}
-        </header>
+        {/* 헤더 */}
+        <Header user={user} />
 
-       {/* ✅ 상단 공통 이미지 (main이든 category든 항상 보여주기) */}
-<div className="mb-8">
-  <h1 className="text-3xl font-bold text-blue-600 mb-4">🎯 원하는 업체를 한눈에!</h1>
-<div className="w-full h-52 bg-white border border-gray-200 flex items-center justify-center rounded-lg shadow">
+        {/* 배너 */}
+        <Banner />
 
-  </div>
-</div>
-
-{/* 👇 아래부터 기존 조건 분기 */}
-{view === 'main' ? (
-  <>
-    {/* 메인 화면 내용 */}
-
-...
-
-<section>
-  <h2 className="text-base font-semibold mb-3">💼 입점 대기 중인 홍보 업체</h2>
-  <div className="flex flex-wrap gap-2 justify-start">
-    {fillEmptyCards(businessCards.slice(0, 63), 63).map((card, i) => (
-      <a
-        key={i}
-        href={card?.link_url || "#"}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-[100px] h-[100px] border rounded-sm p-1 text-center shadow-sm hover:shadow-md transition bg-white block"
-      >
-        {card ? (
-          <>
-            {card.image_url && typeof card.image_url === 'string' ? (
-              <Image
-                src={card.image_url}
-                alt={card.name}
-                width={100}
-                height={55}
-                className="w-full h-[55%] object-cover rounded mb-0.5"
-              />
-            ) : (
-              <div className="w-full h-[55%] bg-gray-100 rounded mb-0.5 flex items-center justify-center text-gray-300 text-[9px]">
-                이미지 없음
-              </div>
-            )}
-            <p className="font-medium text-[10px] truncate">{card.name}</p>
-            <p className="text-[9px] text-gray-500">{card.region}</p>
-          </>
+        {/* 메인 또는 카테고리 페이지 */}
+        {view === 'main' ? (
+          <MainPage
+            businessCards={businessCards}
+            posts={posts}
+          />
         ) : (
-          <div className="w-full h-full bg-gray-100 rounded" />
-        )}
-      </a>
-    ))}
-  </div>
-</section>
-<section className="mt-12">
-  <h2 className="text-xl font-bold mb-4 text-gray-800">🔥 커뮤니티 최신글</h2>
-  <div className="grid grid-cols-3 gap-6">
-    {/* 자유게시판 */}
-    <div className="bg-white border rounded-lg p-4 shadow">
-      <h3 className="text-lg font-semibold mb-2 text-blue-600">자유게시판</h3>
-      <ul className="space-y-2">
-        {posts.filter(p => p.region === "자유게시판").slice(0, 3).map((post) => (
-          <li key={post.id} className="text-sm text-gray-700 hover:underline cursor-pointer">
-            {post.title}
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    {/* 유머게시판 */}
-    <div className="bg-white border rounded-lg p-4 shadow">
-      <h3 className="text-lg font-semibold mb-2 text-pink-600">유머게시판</h3>
-      <ul className="space-y-2">
-        {posts.filter(p => p.region === "유머게시판").slice(0, 3).map((post) => (
-          <li key={post.id} className="text-sm text-gray-700 hover:underline cursor-pointer">
-            {post.title}
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    {/* 내가게자랑 */}
-    <div className="bg-white border rounded-lg p-4 shadow">
-      <h3 className="text-lg font-semibold mb-2 text-green-600">내가게자랑</h3>
-      <ul className="space-y-2">
-        {posts.filter(p => p.region === "내가게자랑").slice(0, 3).map((post) => (
-          <li key={post.id} className="text-sm text-gray-700 hover:underline cursor-pointer">
-            {post.title}
-          </li>
-        ))}
-      </ul>
-    </div>
-  </div>
-</section>
-
-
-          </>
-        ) : (
-          <>
-          {/* ✅ 선택된 카테고리에 해당하는 로고 보여주기 */}
-{view === 'category' && (() => {
-  const region = extraBoards.includes(selectedCategory)
-    ? selectedCategory
-    : `${selectedCategory}-${activeTab}`;
-  const topLogo = businessCards.find(card => card.region === region && card.image_url);
-
-  return topLogo ? (
-    <div className="mb-6">
-      <Image
-        src={topLogo.image_url!}
-        alt="카테고리 로고"
-        width={300}
-        height={100}
-        className="mx-auto mb-4 object-contain"
-      />
-    </div>
-  ) : null;
-})()}
-
-            <header className="flex justify-between items-center mb-4">
-  <h1 className="text-2xl font-bold text-blue-600">{selectedCategory}</h1>
-  {user && (
-    <button
-      onClick={() => {
-        // 글쓰기 경로를 정확히 계산
-        let region = "";
-        if (extraBoards.includes(selectedCategory)) {
-          region = selectedCategory;
-        } else {
-          region = `${selectedCategory}-${activeTab}`;
-        }
-
-        router.push(`/write/${encodeURIComponent(region)}`);
-      }}
-      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-    >
-      글쓰기
-    </button>
-  )}
-</header>
-
-
-{isWriting[selectedCategory] && (
-  <WriteForm
-    user={user}
-    activeTab={activeTab}
-    selectedCategory={selectedCategory}
-    extraBoards={extraBoards}
-    setPosts={setPosts}
-    setNewPostContent={setNewPostContent}
-    setSelectedCategory={setSelectedCategory}
-    setActiveTab={setActiveTab}
-    setView={setView}
-    setIsWriting={setIsWriting}
-  />
-)}
-
-
-
-<div className="grid grid-cols-6 gap-4">
-  {/* 글 목록 렌더링 */}
-</div>
-
-
-
-          <div className="grid grid-cols-6 gap-4">
-  {paginatedPosts.map((item, index) => {
-  if (!item) {
-    return (
-      <div key={index} className="border rounded-xl p-3 text-center bg-white shadow-sm hover:shadow-md transition min-h-[150px]">
-        <div className="w-full h-36 flex items-center justify-center text-gray-200">빈칸</div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-  key={index}
- onClick={() => {
-  console.log('🔥 클릭된 게시글 ID:', item.id);
-  router.push(`/read/${Number(item.id)}`);
-}}
-  className="cursor-pointer border ..."
->
-
-      {!isBusinessCard(item) && item.image_url ? (
-        <Image
-          src={item.image_url}
-          alt={item.title}
-          width={300}
-          height={128}
-          className="w-full h-32 object-cover rounded-lg"
-        />
-      ) : (
-        <div className="w-full h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400 text-sm italic">
-          이미지 없음
-        </div>
-      )}
-
-      <p className="font-semibold text-sm mb-1">
-        {isBusinessCard(item) ? item.name : item.title}
-      </p>
-      <p className="text-xs text-gray-500">{item.region}</p>
-    </div>
-  );
-})}
-
-</div>
-
-            <div className="flex justify-center mt-6 space-x-2">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                 className={`w-8 h-8 rounded-full text-sm font-semibold border text-center ${
-  currentPage === i + 1
-    ? "bg-blue-600 text-white border-blue-600"
-    : "bg-white text-gray-600 border-gray-300 hover:bg-blue-100"
-}`}
-
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          </>
+          <CategoryPage
+            selectedCategory={selectedCategory}
+            activeTab={activeTab}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            businessCards={businessCards}
+            posts={posts}
+            user={user}
+            isWriting={isWriting}
+            setIsWriting={setIsWriting}
+            setNewPostContent={setNewPostContent}
+            setPosts={setPosts}
+            setSelectedCategory={setSelectedCategory}
+            setActiveTab={setActiveTab}
+            setView={setView}
+          />
         )}
       </div>
     </main>
