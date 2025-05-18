@@ -93,7 +93,7 @@ export default function HeaderNav({
                 <button
                   key={category}
                   onClick={() => handleCategoryClick(category)}
-                  className={`text-sm font-medium px-1 py-2 transition-colors ${
+                  className={`text-sm font-medium px-1 py-2 transition-colors cursor-pointer ${
                     selectedCategory === category
                       ? 'text-yellow-300 border-b-2 border-yellow-300'
                       : 'text-white hover:text-yellow-100'
@@ -185,7 +185,7 @@ export default function HeaderNav({
                 <button
                   key={category}
                   onClick={() => handleCategoryClick(category)}
-                  className={`text-sm text-left px-3 py-2 rounded ${
+                  className={`text-sm text-left px-3 py-2 rounded cursor-pointer ${
                     selectedCategory === category
                       ? 'bg-blue-500 text-white'
                       : 'text-white hover:bg-blue-500'
@@ -268,7 +268,7 @@ export default function HeaderNav({
                 <button
                   key={subCategory}
                   onClick={() => handleSubCategoryClick(selectedCategory, subCategory)}
-                  className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap ${
+                  className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer ${
                     activeTab === subCategory
                       ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
                       : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
