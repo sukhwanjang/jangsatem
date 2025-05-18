@@ -14,6 +14,7 @@ interface HeaderNavProps {
   setActiveTab: (tab: string) => void;
   setView: (view: 'main' | 'category') => void;
   setCurrentPage: (page: number) => void;
+  activeTab: string;
 }
 
 export default function HeaderNav({
@@ -22,10 +23,12 @@ export default function HeaderNav({
   setSelectedCategory,
   setActiveTab,
   setView,
-  setCurrentPage
+  setCurrentPage,
+  activeTab
 }: HeaderNavProps) {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -45,11 +48,24 @@ export default function HeaderNav({
   };
 
   const handleCategoryClick = (main: string) => {
+    if (openCategory === main) {
+      setOpenCategory(null);
+    } else {
+      setOpenCategory(main);
+    }
     setSelectedCategory(main);
     setActiveTab('');
     setView('category');
     setCurrentPage(1);
     router.push(`/?category=${encodeURIComponent(main)}`);
+  };
+
+  const handleSubCategoryClick = (main: string, sub: string) => {
+    setSelectedCategory(main);
+    setActiveTab(sub);
+    setView('category');
+    setCurrentPage(1);
+    router.push(`/?category=${encodeURIComponent(main)}&tab=${encodeURIComponent(sub)}`);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -117,20 +133,44 @@ export default function HeaderNav({
       {/* 카테고리 내비게이션 바 */}
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-screen-xl mx-auto">
-          <div className="flex overflow-x-auto whitespace-nowrap py-2 px-4 gap-6">
-            {Object.keys(categoryData).map((category) => (
-              <button
-                key={category}
-                onClick={() => handleCategoryClick(category)}
-                className={`text-sm font-medium px-2 py-1 transition-colors ${
-                  selectedCategory === category
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-700 hover:text-blue-500'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="relative">
+            <div className="flex overflow-x-auto whitespace-nowrap py-2 px-4 gap-6">
+              {Object.keys(categoryData).map((category) => (
+                <div key={category} className="relative group">
+                  <button
+                    onClick={() => handleCategoryClick(category)}
+                    className={`text-sm font-medium px-2 py-1 transition-colors ${
+                      selectedCategory === category
+                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-700 hover:text-blue-500'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            {/* 서브 카테고리 드롭다운 */}
+            {openCategory && (
+              <div className="absolute left-0 w-full bg-gray-50 border-b shadow-sm z-20">
+                <div className="max-w-screen-xl mx-auto px-4 py-3">
+                  <div className="grid grid-cols-4 gap-2">
+                    {categoryData[openCategory].map((subCategory) => (
+                      <button
+                        key={subCategory}
+                        onClick={() => handleSubCategoryClick(openCategory, subCategory)}
+                        className={`text-sm px-3 py-2 text-left rounded hover:bg-blue-100 ${
+                          activeTab === subCategory ? 'bg-blue-100 text-blue-600 font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {subCategory}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

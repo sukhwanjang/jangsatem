@@ -105,6 +105,7 @@ export default function HomeClient() {
         setActiveTab={setActiveTab}
         setView={setView}
         setCurrentPage={setCurrentPage}
+        activeTab={activeTab}
       />
 
       {/* 메인 컨텐츠 */}
