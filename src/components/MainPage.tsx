@@ -16,14 +16,14 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
     <>
       <section>
         <h2 className="text-base font-semibold mb-3">💼 입점 대기 중인 홍보 업체</h2>
-        <div className="flex flex-wrap gap-2 justify-start">
-          {fillEmptyCards(businessCards.slice(0, 63), 63).map((card, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {fillEmptyCards(businessCards.slice(0, 15), 15).map((card, i) => (
             <a
               key={i}
               href={card?.link_url || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-[100px] h-[100px] border rounded-sm p-1 text-center shadow-sm hover:shadow-md transition bg-white block"
+              className="border rounded-lg p-2 text-center shadow-sm hover:shadow-md transition bg-white block"
             >
               {card ? (
                 <>
@@ -31,20 +31,22 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
                     <Image
                       src={card.image_url}
                       alt={card.name}
-                      width={100}
-                      height={55}
-                      className="w-full h-[55%] object-cover rounded mb-0.5"
+                      width={200}
+                      height={120}
+                      className="w-full h-32 object-cover rounded mb-2"
                     />
                   ) : (
-                    <div className="w-full h-[55%] bg-gray-100 rounded mb-0.5 flex items-center justify-center text-gray-300 text-[9px]">
+                    <div className="w-full h-32 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">
                       이미지 없음
                     </div>
                   )}
-                  <p className="font-medium text-[10px] truncate">{card.name}</p>
-                  <p className="text-[9px] text-gray-500">{card.region}</p>
+                  <p className="font-medium text-sm line-clamp-1">{card.name}</p>
+                  <p className="text-xs text-gray-500 mt-1">{card.region}</p>
                 </>
               ) : (
-                <div className="w-full h-full bg-gray-100 rounded" />
+                <div className="w-full h-48 bg-gray-100 rounded flex items-center justify-center text-gray-300">
+                  빈칸
+                </div>
               )}
             </a>
           ))}
@@ -53,7 +55,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
 
       <section className="mt-12">
         <h2 className="text-xl font-bold mb-4 text-gray-800">🔥 커뮤니티 최신글</h2>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 자유게시판 */}
           <div className="bg-white border rounded-lg p-4 shadow">
             <h3 className="text-lg font-semibold mb-2 text-blue-600">자유게시판</h3>
