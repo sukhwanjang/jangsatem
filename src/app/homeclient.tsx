@@ -9,10 +9,11 @@ import WriteForm from '@/components/WriteForm';
 // 분리한 컴포넌트들 임포트
 import { ITEMS_PER_PAGE, BusinessCard, Post } from '@/lib/categoryData';
 import Sidebar from '@/components/Sidebar';
-import Header from '@/components/Header';
 import Banner from '@/components/Banner';
 import MainPage from '@/components/MainPage';
 import CategoryPage from '@/components/CategoryPage';
+import HeaderNav from '@/components/HeaderNav';
+import AdBanner from '@/components/AdBanner';
 
 export default function HomeClient() {
   const categoryData: { [main: string]: string[] } = {
@@ -96,53 +97,87 @@ export default function HomeClient() {
   };
 
   return (
-    <div className="flex justify-center bg-gray-100 min-h-screen">
-      <div className="max-w-screen-xl w-full flex bg-white shadow-lg">
-        {/* 사이드바 */}
-        <Sidebar
-          openCategory={openCategory}
-          selectedCategory={selectedCategory}
-          setOpenCategory={setOpenCategory}
-          setSelectedCategory={setSelectedCategory}
-          setActiveTab={setActiveTab}
-          setView={setView}
-          setCurrentPage={setCurrentPage}
-          activeTab={activeTab}
-        />
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* 헤더 및 네비게이션 */}
+      <HeaderNav 
+        user={user}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
+        setActiveTab={setActiveTab}
+        setView={setView}
+        setCurrentPage={setCurrentPage}
+      />
 
-        <div className="flex-1 p-6">
-          {/* 헤더 */}
-          <Header user={user} />
-
-          {/* 배너 */}
-          <Banner />
-
-          {/* 메인 또는 카테고리 페이지 */}
-          {view === 'main' ? (
-            <MainPage
-              businessCards={businessCards}
-              posts={posts}
-            />
-          ) : (
-            <CategoryPage
+      {/* 메인 컨텐츠 */}
+      <div className="flex-1">
+        <div className="max-w-screen-xl mx-auto flex gap-6 py-6 px-4">
+          {/* 좌측 사이드바 */}
+          <div className="hidden md:block">
+            <Sidebar
+              openCategory={openCategory}
               selectedCategory={selectedCategory}
-              activeTab={activeTab}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              businessCards={businessCards}
-              posts={posts}
-              user={user}
-              isWriting={isWriting}
-              setIsWriting={setIsWriting}
-              setNewPostContent={setNewPostContent}
-              setPosts={setPosts}
+              setOpenCategory={setOpenCategory}
               setSelectedCategory={setSelectedCategory}
               setActiveTab={setActiveTab}
               setView={setView}
+              setCurrentPage={setCurrentPage}
+              activeTab={activeTab}
             />
-          )}
+          </div>
+
+          {/* 메인 콘텐츠 영역 */}
+          <div className="flex-1 bg-white p-6 rounded-lg shadow">
+            {/* 배너 */}
+            <Banner />
+
+            {/* 메인 또는 카테고리 페이지 */}
+            {view === 'main' ? (
+              <MainPage
+                businessCards={businessCards}
+                posts={posts}
+              />
+            ) : (
+              <CategoryPage
+                selectedCategory={selectedCategory}
+                activeTab={activeTab}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                businessCards={businessCards}
+                posts={posts}
+                user={user}
+                isWriting={isWriting}
+                setIsWriting={setIsWriting}
+                setNewPostContent={setNewPostContent}
+                setPosts={setPosts}
+                setSelectedCategory={setSelectedCategory}
+                setActiveTab={setActiveTab}
+                setView={setView}
+              />
+            )}
+          </div>
+
+          {/* 우측 광고 영역 */}
+          <div className="hidden lg:block">
+            <AdBanner />
+          </div>
         </div>
       </div>
+
+      {/* 푸터 */}
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="max-w-screen-xl mx-auto px-4">
+          <div className="text-center">
+            <h3 className="text-xl font-bold mb-2">장사템</h3>
+            <p className="text-gray-400 text-sm mb-4">소상공인 장비/간판/인력 정보 플랫폼</p>
+            <div className="flex justify-center space-x-6 text-sm">
+              <a href="/terms" className="hover:text-blue-400">이용약관</a>
+              <a href="/privacy" className="hover:text-blue-400">개인정보처리방침</a>
+              <a href="#" className="hover:text-blue-400">고객센터</a>
+            </div>
+            <p className="mt-4 text-xs text-gray-500">© 2024 장사템. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
