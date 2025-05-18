@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
-import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard } from '@/lib/categoryData';
+import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard, categoryData } from '@/lib/categoryData';
 import WriteForm from './WriteForm';
 import PostList from './PostList';
 
@@ -47,11 +47,40 @@ export default function CategoryPage({
     ? selectedCategory
     : `${selectedCategory}-${activeTab}`;
 
-  // 현재 지역에 해당하는 게시물만 필터링
-  const filteredPosts = posts.filter((post) => post.region === currentRegion);
+  // 필터링 로직 업데이트: activeTab이 없으면 해당 메인 카테고리의 모든 서브카테고리 게시물 표시
+  let filteredPosts: Post[];
+  
+  if (extraBoards.includes(selectedCategory)) {
+    // extraBoards에 있는 카테고리는 그대로 필터링
+    filteredPosts = posts.filter((post) => post.region === selectedCategory);
+  } else if (!activeTab && categoryData[selectedCategory]) {
+    // 메인 카테고리만 선택되고 서브 카테고리가 선택되지 않은 경우
+    // 해당 메인 카테고리에 속한 모든 서브카테고리의 게시물 필터링
+    const subCategories = categoryData[selectedCategory];
+    filteredPosts = posts.filter((post) => {
+      // 정확히 "메인카테고리-서브카테고리" 형태의 region을 가진 게시물만 필터링
+      return subCategories.some(sub => post.region === `${selectedCategory}-${sub}`);
+    });
+  } else {
+    // 서브 카테고리가 선택된 경우는 기존 방식대로 필터링
+    filteredPosts = posts.filter((post) => post.region === currentRegion);
+  }
+  
+  // 필터링된 게시물 정렬 (최신순)
+  filteredPosts = [...filteredPosts].sort((a, b) => {
+    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return dateB - dateA;
+  });
   
   // 총 페이지 수 계산
   const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
+
+  // 현재 페이지에 표시할 게시물
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <>
@@ -74,12 +103,16 @@ export default function CategoryPage({
 
       <header className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-blue-600">
-          {selectedCategory}{activeTab ? ` > ${activeTab}` : ''}
+          {selectedCategory}{activeTab ? ` > ${activeTab}` : ' > 전체게시판'}
         </h1>
         {user && (
           <button
             onClick={() => {
-              // 글쓰기 경로를 정확히 계산
+              // 글쓰기는 서브카테고리가 선택되어 있을 때만 가능
+              if (!activeTab && !extraBoards.includes(selectedCategory)) {
+                alert('글을 작성하려면 서브카테고리를 선택해주세요.');
+                return;
+              }
               router.push(`/write/${encodeURIComponent(currentRegion)}`);
             }}
             className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
@@ -107,8 +140,8 @@ export default function CategoryPage({
       {/* 게시글 목록 테이블 */}
       <div className="mb-6">
         <PostList 
-          posts={filteredPosts} 
-          currentCategory={`${selectedCategory}${activeTab ? ` > ${activeTab}` : ''}`}
+          posts={paginatedPosts} 
+          currentCategory={`${selectedCategory}${activeTab ? ` > ${activeTab}` : ' > 전체게시판'}`}
         />
       </div>
 
