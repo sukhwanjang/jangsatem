@@ -76,7 +76,10 @@ export default function HeaderNav({
           {/* 메인 카테고리 메뉴 (hover만, 클릭 이벤트 제거) */}
           <div className="hidden md:flex space-x-8">
             {categoryData.map((group) => (
-              <div key={group.group} className="px-4 py-2 font-bold cursor-pointer">
+              <div
+                key={group.group}
+                className="px-4 py-2 font-bold cursor-pointer text-base whitespace-nowrap"
+              >
                 {group.group}
               </div>
             ))}
@@ -153,12 +156,12 @@ export default function HeaderNav({
             <div className="max-w-screen-xl mx-auto grid grid-cols-4 gap-8 py-6">
               {categoryData.map((group) => (
                 <div key={group.group}>
-                  <div className="font-bold text-blue-600 mb-2">{group.group}</div>
+                  <div className="font-bold text-gray-900 mb-2 text-base whitespace-nowrap">{group.group}</div>
                   <ul>
                     {group.categories.map((sub) => (
                       <li
                         key={sub}
-                        className="py-1 px-2 hover:bg-blue-50 rounded cursor-pointer text-sm"
+                        className="py-1 px-2 hover:bg-blue-50 rounded cursor-pointer text-sm text-gray-800 whitespace-nowrap"
                         onClick={() => {
                           setSelectedCategory(group.group);
                           setActiveTab(sub);
