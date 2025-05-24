@@ -289,11 +289,7 @@ export default function MyPageClient() {
       console.log('Users 테이블 저장 시도');
       const { data: userData, error: userError } = await supabase
         .from('Users')
-        .upsert({
-          ...profileData,
-          // RLS 정책을 위한 추가 필드
-          auth_id: user.id
-        })
+        .upsert(profileData)
         .select();
 
       if (userError) {
