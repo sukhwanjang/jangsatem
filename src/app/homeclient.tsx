@@ -100,12 +100,9 @@ export default function HomeClient() {
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-8 px-4">
-          {/* 메인 콘텐츠 영역 */}
-          <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow">
-            {/* 광고/이벤트 배너 */}
-            <AdBanner className="mb-8" />
-            {/* 메인 또는 카테고리 페이지 */}
+        <div className="max-w-[1440px] mx-auto py-8 px-4">
+          {/* 메인 콘텐츠 영역 - 광고/배너/우측영역 모두 제거, MainPage만 남김 */}
+          <div className="bg-transparent p-0 shadow-none">
             {view === 'main' ? (
               <MainPage
                 businessCards={businessCards}
@@ -129,11 +126,6 @@ export default function HomeClient() {
                 setView={setView}
               />
             )}
-          </div>
-
-          {/* 우측 광고/이벤트 영역 */}
-          <div className="hidden lg:block">
-            <AdBanner />
           </div>
         </div>
       </div>
