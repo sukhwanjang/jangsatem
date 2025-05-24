@@ -268,9 +268,6 @@ export default function MyPageClient() {
         }
       }
       
-      // 현재 시간
-      const now = new Date().toISOString();
-      
       // 저장할 프로필 데이터 (필수 필드만 포함)
       const profileData = {
         user_id: user.id,
