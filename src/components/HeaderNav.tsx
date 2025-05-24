@@ -62,10 +62,10 @@ export default function HeaderNav({
         onMouseEnter={() => setMegaMenuOpen(true)}
         onMouseLeave={() => setMegaMenuOpen(false)}
       >
-        <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center w-full">
+        <div className="max-w-screen-xl mx-auto px-4 py-2 flex items-center w-full">
           {/* 로고 */}
           <div 
-            className="text-2xl font-bold cursor-pointer mr-6"
+            className="text-xl font-bold cursor-pointer mr-4"
             onClick={() => {
               setView('main');
               router.push('/');
@@ -74,11 +74,11 @@ export default function HeaderNav({
             장사템
           </div>
           {/* 메인 카테고리 메뉴 (hover만, 클릭 이벤트 제거) */}
-          <div className="hidden md:flex space-x-8">
+          <div className="hidden md:flex space-x-6">
             {categoryData.map((group) => (
               <div
                 key={group.group}
-                className="px-4 py-2 font-bold cursor-pointer text-base whitespace-nowrap"
+                className="px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap"
               >
                 {group.group}
               </div>
@@ -153,15 +153,15 @@ export default function HeaderNav({
         {/* 메가 드롭다운 (데스크톱에서만) */}
         {megaMenuOpen && (
           <div className="absolute left-0 w-full bg-white shadow-lg z-50 border-t">
-            <div className="max-w-screen-xl mx-auto grid grid-cols-4 gap-8 py-6">
+            <div className="max-w-screen-xl mx-auto grid grid-cols-4 gap-6 py-4">
               {categoryData.map((group) => (
                 <div key={group.group}>
-                  <div className="font-bold text-gray-900 mb-2 text-base whitespace-nowrap">{group.group}</div>
+                  <div className="font-bold text-gray-900 mb-1 text-sm whitespace-nowrap">{group.group}</div>
                   <ul>
                     {group.categories.map((sub) => (
                       <li
                         key={sub}
-                        className="py-1 px-2 hover:bg-blue-50 rounded cursor-pointer text-sm text-gray-800 whitespace-nowrap"
+                        className="py-1 px-2 hover:bg-blue-50 rounded cursor-pointer text-xs text-gray-800 whitespace-nowrap"
                         onClick={() => {
                           setSelectedCategory(group.group);
                           setActiveTab(sub);
@@ -270,12 +270,12 @@ export default function HeaderNav({
       {/* 데스크톱은 각 버튼 아래 드롭다운으로 노출되므로, 모바일에서만 전체 바 형태로 노출 */}
       <div className="md:hidden">
         {selectedCategory && (
-          <div className="flex justify-center gap-2 py-2 bg-white border-b">
+          <div className="flex justify-center gap-1 py-1 bg-white border-b">
             {categoryData.find(g => g.group === selectedCategory)?.categories.map((subCategory) => (
               <button
                 key={subCategory}
                 onClick={() => setSelectedCategory(selectedCategory)}
-                className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer ${
+                className={`text-xs px-2 py-1 rounded-full border whitespace-nowrap cursor-pointer ${
                   activeTab === subCategory
                     ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
