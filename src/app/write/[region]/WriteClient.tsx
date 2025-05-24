@@ -44,8 +44,8 @@ export default function WriteClient({ region }: Props) {
       const [mainCategory, subCategory] = region.split('-');
       const group = categoryData.find(g => g.group === mainCategory);
       if (group) {
-        setHeaders(group.categories);
-        if (subCategory && group.categories.includes(subCategory)) {
+        setHeaders(group.items.map(item => item.label));
+        if (subCategory && group.items.some(item => item.label === subCategory)) {
           setSelectedHeader(subCategory);
         }
       }
