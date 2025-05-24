@@ -295,11 +295,7 @@ export default function MyPageClient() {
       console.log('Users 테이블 저장 시도');
       const { data: userData, error: userError } = await supabase
         .from('Users')
-        .upsert({
-          ...profileData,
-          // 이메일이 이미 존재하는 경우 현재 사용자의 ID와 일치하는 경우에만 업데이트
-          ...(existingProfile && existingProfile.user_id !== user.id ? { email: null } : {})
-        })
+        .upsert(profileData, { onConflict: 'user_id' })
         .select();
 
       if (userError) {
