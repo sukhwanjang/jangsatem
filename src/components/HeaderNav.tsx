@@ -89,17 +89,17 @@ export default function HeaderNav({
             
             {/* 데스크톱 카테고리 메뉴 */}
             <div className="hidden md:flex space-x-6">
-              {Object.keys(categoryData).map((category) => (
+              {categoryData.map((group) => (
                 <button
-                  key={category}
-                  onClick={() => handleCategoryClick(category)}
+                  key={group.group}
+                  onClick={() => handleCategoryClick(group.group)}
                   className={`text-sm font-medium px-1 py-2 transition-colors cursor-pointer ${
-                    selectedCategory === category
+                    selectedCategory === group.group
                       ? 'text-yellow-300 border-b-2 border-yellow-300'
                       : 'text-white hover:text-yellow-100'
                   }`}
                 >
-                  {category}
+                  {group.group}
                 </button>
               ))}
             </div>
@@ -181,8 +181,10 @@ export default function HeaderNav({
           <div className="px-4 py-3 space-y-3">
             {/* 카테고리 모바일 메뉴 */}
             <div className="grid grid-cols-2 gap-2">
-              {Object.keys(categoryData).map((category) => (
+              {categoryData.map((group) => (
                 <button
+                  key={group.group}
+                  onClick={() => handleCategoryClick(group.group)}
                   key={category}
                   onClick={() => handleCategoryClick(category)}
                   className={`text-sm text-left px-3 py-2 rounded cursor-pointer ${
