@@ -204,12 +204,12 @@ export default function MyPageClient() {
       // 파일 확장자 가져오기
       const fileExt = profileImage.name.split('.').pop();
       // 고유한 파일명 생성 (타임스탬프 사용)
-      const fileName = `${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
       const filePath = `profile_images/${fileName}`;
       
-      // Supabase Storage에 이미지 업로드
+      // Supabase Storage에 이미지 업로드 (uploads 버킷 사용)
       const { data, error: uploadError } = await supabase.storage
-        .from('profiles')
+        .from('uploads')
         .upload(filePath, profileImage, {
           contentType: profileImage.type,
           cacheControl: '3600'
@@ -222,7 +222,7 @@ export default function MyPageClient() {
       
       // 이미지 URL 가져오기
       const { data: urlData } = supabase.storage
-        .from('profiles')
+        .from('uploads')
         .getPublicUrl(filePath);
         
       return urlData.publicUrl;
@@ -259,20 +259,21 @@ export default function MyPageClient() {
         }
       }
       
-      // users 테이블에 직접 사용자 정보 저장 시도
+      // Users 테이블에 사용자 정보 저장 (대문자 Users 사용)
       const { data: userData, error: userError } = await supabase
-        .from('users')
+        .from('Users')
         .upsert({
           user_id: user.id,
           nickname: nickname,
           username: nickname,
           email: user.email || '',
-          profile_image: profileImagePath
+          profile_image: profileImagePath,
+          updated_at: new Date().toISOString()
         })
         .select();
       
       if (userError) {
-        console.error('users 테이블 저장 오류:', userError);
+        console.error('Users 테이블 저장 오류:', userError);
         throw userError;
       }
       
