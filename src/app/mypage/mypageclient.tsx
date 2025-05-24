@@ -14,6 +14,8 @@ interface UserProfile {
   email: string;
   join_date?: string;
   profile_image?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export default function MyPageClient() {
@@ -259,22 +261,40 @@ export default function MyPageClient() {
         }
       }
       
-      // Users 테이블에 사용자 정보 저장 (대문자 Users 사용)
-      const { data: userData, error: userError } = await supabase
-        .from('Users')
-        .upsert({
-          user_id: user.id,
-          nickname: nickname,
-          username: nickname,
-          email: user.email || '',
-          profile_image: profileImagePath,
-          updated_at: new Date().toISOString()
-        })
-        .select();
+      // 현재 시간
+      const now = new Date().toISOString();
       
+      // 저장할 프로필 데이터
+      const profileData = {
+        user_id: user.id,
+        nickname: nickname,
+        username: nickname,
+        email: user.email || '',
+        profile_image: profileImagePath,
+        join_date: profile.join_date || now,
+        created_at: profile.created_at || now,
+        updated_at: now
+      };
+
+      // 먼저 Users 테이블에 저장 시도
+      let { data: userData, error: userError } = await supabase
+        .from('Users')
+        .upsert(profileData)
+        .select();
+
+      // Users 테이블 저장 실패 시 users 테이블에 저장 시도
       if (userError) {
-        console.error('Users 테이블 저장 오류:', userError);
-        throw userError;
+        console.log('Users 테이블 저장 실패, users 테이블로 시도:', userError);
+        const { data: lowerUserData, error: lowerUserError } = await supabase
+          .from('users')
+          .upsert(profileData)
+          .select();
+
+        if (lowerUserError) {
+          console.error('users 테이블 저장 오류:', lowerUserError);
+          throw lowerUserError;
+        }
+        userData = lowerUserData;
       }
       
       // 프로필 상태 업데이트
@@ -299,7 +319,7 @@ export default function MyPageClient() {
       console.error('프로필 저장 중 오류 발생:', error);
       setSaveMessage({
         type: 'error',
-        text: '프로필 저장 중 오류가 발생했습니다.'
+        text: '프로필 저장 중 오류가 발생했습니다. 다시 시도해주세요.'
       });
     } finally {
       setIsSaving(false);
