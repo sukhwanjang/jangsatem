@@ -268,6 +268,18 @@ export default function MyPageClient() {
         }
       }
       
+      // 현재 사용자의 이메일로 기존 프로필 확인
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('Users')
+        .select('user_id')
+        .eq('email', user.email)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('프로필 확인 중 오류:', checkError);
+        throw checkError;
+      }
+
       // 저장할 프로필 데이터 (필수 필드만 포함)
       const profileData = {
         user_id: user.id,
@@ -283,7 +295,11 @@ export default function MyPageClient() {
       console.log('Users 테이블 저장 시도');
       const { data: userData, error: userError } = await supabase
         .from('Users')
-        .upsert(profileData)
+        .upsert({
+          ...profileData,
+          // 이메일이 이미 존재하는 경우 현재 사용자의 ID와 일치하는 경우에만 업데이트
+          ...(existingProfile && existingProfile.user_id !== user.id ? { email: null } : {})
+        })
         .select();
 
       if (userError) {
@@ -329,6 +345,8 @@ export default function MyPageClient() {
         errorMessage = '권한이 없습니다. 관리자에게 문의해주세요.';
       } else if (error.code === '42P01') {
         errorMessage = '테이블이 존재하지 않습니다. 관리자에게 문의해주세요.';
+      } else if (error.code === '23505') {
+        errorMessage = '이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.';
       } else if (error.message) {
         errorMessage += ` (${error.message})`;
       }
