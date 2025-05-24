@@ -83,7 +83,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
       {sections.map((section, idx) => (
         <section
           key={section.title}
-          className={`px-2 ${idx % 3 !== 2 ? 'md:border-r' : ''}`}
+          className={`px-2 ${idx % 3 !== 2 ? 'md:border-r' : ''} border-b pb-4 mb-2 last:border-b-0`}
         >
           <h2 className={`font-bold text-base mb-1 border-b pb-1 ${section.color}`}>{section.title}</h2>
           <ul>
