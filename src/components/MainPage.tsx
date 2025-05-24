@@ -50,10 +50,10 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
   return (
     <div className="w-full">
       {/* 병렬 배치: 업체 포트폴리오(비즈카드) / 인기글 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* 업체 포트폴리오(비즈카드) */}
-        <section>
-          <h2 className="font-bold text-lg mb-4">업체 포트폴리오</h2>
+        <section className="bg-white rounded-2xl shadow-md p-6 mb-8 flex flex-col">
+          <h2 className="font-bold text-lg mb-4 flex items-center">업체 포트폴리오</h2>
           <div className="grid grid-cols-2 gap-4">
             {fillEmptyCards(businessCards.slice(0, 4), 4).map((card, i) => (
               <a
@@ -61,7 +61,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
                 href={card?.link_url || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border rounded-lg p-3 text-center shadow-sm hover:shadow-md transition bg-white block cursor-pointer min-h-[180px]"
+                className="border rounded-xl p-3 text-center shadow-sm hover:shadow-md transition bg-white block cursor-pointer min-h-[180px]"
               >
                 {card ? (
                   <>
@@ -92,9 +92,9 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
           <a href="/portfolio" className="block text-right text-blue-500 mt-2 text-sm">더보기</a>
         </section>
         {/* 인기글(커뮤니티) */}
-        <section>
-          <h2 className="font-bold text-lg mb-4">인기글</h2>
-          <div className="bg-white border rounded-lg overflow-hidden divide-y">
+        <section className="bg-white rounded-2xl shadow-md p-6 mb-8 flex flex-col">
+          <h2 className="font-bold text-lg mb-4 flex items-center">인기글</h2>
+          <div className="bg-white border rounded-xl overflow-hidden divide-y">
             {popularPosts.slice(0, 5).map((post) => (
               <div
                 key={post.id}
@@ -119,7 +119,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
       </div>
 
       {/* 공지/이벤트 섹션 */}
-      <section className="bg-blue-50 rounded-lg p-5 mb-12">
+      <section className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h3 className="font-semibold mb-2">공지사항</h3>
         <ul className="list-disc pl-5 text-sm">
           {notices.map(notice => (
@@ -129,7 +129,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
       </section>
 
       {/* 실시간 인기글(더쿠 스타일) */}
-      <section className="my-8">
+      <section className="bg-white rounded-2xl shadow-md p-6 mb-8">
         <h2 className="font-bold text-lg mb-4">실시간 인기글</h2>
         <ul>
           {hotPosts.map(post => (
