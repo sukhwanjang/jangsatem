@@ -82,7 +82,9 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
     <div className="max-w-7xl mx-auto py-6 px-2 bg-white">
       {/* 사이트 대문 로고 영역 */}
       <div className="flex justify-center items-center mb-8">
-        <img src="/logo.png" alt="장사템 로고" className="h-16 w-auto" />
+        <div className="h-16 w-48 bg-gray-100 rounded border flex items-center justify-center text-gray-400 text-lg font-bold">
+          로고 자리
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
         {sections.map((section, idx) => (
