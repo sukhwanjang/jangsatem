@@ -42,11 +42,10 @@ export default function WriteClient({ region }: Props) {
     // 그렇지 않은 경우 메인 카테고리-서브 카테고리 형태의 region에서 서브 카테고리 추출
     if (!extraBoards.includes(region) && region.includes('-')) {
       const [mainCategory, subCategory] = region.split('-');
-      if (categoryData[mainCategory]) {
-        // 현재 카테고리의 서브카테고리 목록 가져오기
-        setHeaders(categoryData[mainCategory]);
-        // 현재 선택된 서브카테고리를 기본값으로 설정
-        if (subCategory && categoryData[mainCategory].includes(subCategory)) {
+      const group = categoryData.find(g => g.group === mainCategory);
+      if (group) {
+        setHeaders(group.categories);
+        if (subCategory && group.categories.includes(subCategory)) {
           setSelectedHeader(subCategory);
         }
       }

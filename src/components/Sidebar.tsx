@@ -71,22 +71,22 @@ export default function Sidebar({
         <div>
           <h3 className="font-medium text-sm mb-2">갤러리</h3>
           <div className="space-y-2">
-            {Object.entries(categoryData).map(([main, subs]) => (
-              <div key={main}>
+            {categoryData.map((group) => (
+              <div key={group.group}>
                 <button
-                  onClick={() => handleMainCategoryClick(main)}
-                  className={`w-full text-left ${selectedCategory === main && !activeTab ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'} px-3 py-1.5 text-sm rounded`}
+                  onClick={() => handleMainCategoryClick(group.group)}
+                  className={`w-full text-left ${selectedCategory === group.group && !activeTab ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'} px-3 py-1.5 text-sm rounded`}
                 >
-                  {main}
+                  {group.group}
                 </button>
-                {openCategory === main && (
+                {openCategory === group.group && (
                   <div className="pl-4 pt-1 space-y-1">
-                    {subs.map((sub: string) => (
+                    {group.categories.map((sub: string) => (
                       <button
                         key={sub}
-                        onClick={() => handleSubCategoryClick(main, sub)}
+                        onClick={() => handleSubCategoryClick(group.group, sub)}
                         className={`block w-full text-left text-xs px-2 py-1 rounded ${
-                          selectedCategory === main && activeTab === sub ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
+                          selectedCategory === group.group && activeTab === sub ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
                         }`}
                       >
                         ▸ {sub}

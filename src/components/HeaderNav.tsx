@@ -185,15 +185,13 @@ export default function HeaderNav({
                 <button
                   key={group.group}
                   onClick={() => handleCategoryClick(group.group)}
-                  key={category}
-                  onClick={() => handleCategoryClick(category)}
                   className={`text-sm text-left px-3 py-2 rounded cursor-pointer ${
-                    selectedCategory === category
+                    selectedCategory === group.group
                       ? 'bg-blue-500 text-white'
                       : 'text-white hover:bg-blue-500'
                   }`}
                 >
-                  {category}
+                  {group.group}
                 </button>
               ))}
             </div>
@@ -262,26 +260,20 @@ export default function HeaderNav({
       )}
       
       {/* 서브 카테고리 바 - 메인 카테고리 선택 시에만 표시 */}
-      {selectedCategory && categoryData[selectedCategory] && (
-        <div className="bg-white border-b shadow-sm">
-          <div className="max-w-screen-xl mx-auto px-4 py-2 overflow-x-auto">
-            <div className="flex flex-nowrap gap-2 whitespace-nowrap">
-              {categoryData[selectedCategory].map((subCategory) => (
-                <button
-                  key={subCategory}
-                  onClick={() => handleSubCategoryClick(selectedCategory, subCategory)}
-                  className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer ${
-                    activeTab === subCategory
-                      ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  {subCategory}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+      {selectedCategory && (
+        categoryData.find(g => g.group === selectedCategory)?.categories.map((subCategory) => (
+          <button
+            key={subCategory}
+            onClick={() => handleSubCategoryClick(selectedCategory, subCategory)}
+            className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer ${
+              activeTab === subCategory
+                ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
+                : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            {subCategory}
+          </button>
+        ))
       )}
     </div>
   );
