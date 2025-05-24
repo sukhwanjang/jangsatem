@@ -90,17 +90,36 @@ export default function HeaderNav({
             {/* 데스크톱 카테고리 메뉴 */}
             <div className="hidden md:flex space-x-6">
               {categoryData.map((group) => (
-                <button
-                  key={group.group}
-                  onClick={() => handleCategoryClick(group.group)}
-                  className={`text-sm font-medium px-1 py-2 transition-colors cursor-pointer ${
-                    selectedCategory === group.group
-                      ? 'text-yellow-300 border-b-2 border-yellow-300'
-                      : 'text-white hover:text-yellow-100'
-                  }`}
-                >
-                  {group.group}
-                </button>
+                <div key={group.group} className="relative flex flex-col items-center">
+                  <button
+                    onClick={() => handleCategoryClick(group.group)}
+                    className={`text-sm font-medium px-1 py-2 transition-colors cursor-pointer ${
+                      selectedCategory === group.group
+                        ? 'text-yellow-300 border-b-2 border-yellow-300'
+                        : 'text-white hover:text-yellow-100'
+                    }`}
+                  >
+                    {group.group}
+                  </button>
+                  {/* 데스크톱: 선택된 메인카테고리의 서브카테고리만 아래에 드롭다운으로 노출 */}
+                  {selectedCategory === group.group && group.categories.length > 0 && (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 flex flex-col bg-white border rounded shadow z-20 min-w-max">
+                      {group.categories.map((subCategory) => (
+                        <button
+                          key={subCategory}
+                          onClick={() => handleSubCategoryClick(group.group, subCategory)}
+                          className={`text-xs px-4 py-2 whitespace-nowrap text-center border-b last:border-b-0 cursor-pointer ${
+                            activeTab === subCategory
+                              ? 'bg-blue-100 text-blue-600 font-medium'
+                              : 'bg-white text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {subCategory}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -259,24 +278,27 @@ export default function HeaderNav({
         </div>
       )}
       
-      {/* 서브 카테고리 바 - 메인 카테고리 선택 시에만 표시 */}
-      {selectedCategory && (
-        <div className="flex justify-center gap-2 py-2 bg-white border-b">
-          {categoryData.find(g => g.group === selectedCategory)?.categories.map((subCategory) => (
-            <button
-              key={subCategory}
-              onClick={() => handleSubCategoryClick(selectedCategory, subCategory)}
-              className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer ${
-                activeTab === subCategory
-                  ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
-                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-              }`}
-            >
-              {subCategory}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* 모바일에서만: 서브카테고리 바 */}
+      {/* 데스크톱은 각 버튼 아래 드롭다운으로 노출되므로, 모바일에서만 전체 바 형태로 노출 */}
+      <div className="md:hidden">
+        {selectedCategory && (
+          <div className="flex justify-center gap-2 py-2 bg-white border-b">
+            {categoryData.find(g => g.group === selectedCategory)?.categories.map((subCategory) => (
+              <button
+                key={subCategory}
+                onClick={() => handleSubCategoryClick(selectedCategory, subCategory)}
+                className={`text-xs px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer ${
+                  activeTab === subCategory
+                    ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                }`}
+              >
+                {subCategory}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
