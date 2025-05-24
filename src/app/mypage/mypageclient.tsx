@@ -237,7 +237,10 @@ export default function MyPageClient() {
   };
 
   const handleSaveProfile = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile) {
+      console.error('사용자 또는 프로필 정보가 없습니다.');
+      return;
+    }
     
     try {
       setIsSaving(true);
@@ -255,9 +258,13 @@ export default function MyPageClient() {
       // 프로필 이미지 업로드
       let profileImagePath = profile.profile_image;
       if (profileImage) {
+        console.log('프로필 이미지 업로드 시작');
         const uploadedImageUrl = await uploadProfileImage();
         if (uploadedImageUrl) {
+          console.log('프로필 이미지 업로드 성공:', uploadedImageUrl);
           profileImagePath = uploadedImageUrl;
+        } else {
+          console.log('프로필 이미지 업로드 실패');
         }
       }
       
@@ -276,7 +283,10 @@ export default function MyPageClient() {
         updated_at: now
       };
 
+      console.log('저장할 프로필 데이터:', profileData);
+
       // 먼저 Users 테이블에 저장 시도
+      console.log('Users 테이블 저장 시도');
       let { data: userData, error: userError } = await supabase
         .from('Users')
         .upsert(profileData)
@@ -285,6 +295,18 @@ export default function MyPageClient() {
       // Users 테이블 저장 실패 시 users 테이블에 저장 시도
       if (userError) {
         console.log('Users 테이블 저장 실패, users 테이블로 시도:', userError);
+        
+        // users 테이블 존재 여부 확인
+        const { data: tableCheck, error: tableCheckError } = await supabase
+          .from('users')
+          .select('count')
+          .limit(1);
+          
+        if (tableCheckError) {
+          console.error('users 테이블 확인 실패:', tableCheckError);
+          throw new Error('데이터베이스 테이블 접근 오류');
+        }
+
         const { data: lowerUserData, error: lowerUserError } = await supabase
           .from('users')
           .upsert(profileData)
@@ -294,7 +316,15 @@ export default function MyPageClient() {
           console.error('users 테이블 저장 오류:', lowerUserError);
           throw lowerUserError;
         }
+        
+        console.log('users 테이블 저장 성공');
         userData = lowerUserData;
+      } else {
+        console.log('Users 테이블 저장 성공');
+      }
+      
+      if (!userData) {
+        throw new Error('프로필 데이터 저장 실패');
       }
       
       // 프로필 상태 업데이트
@@ -315,11 +345,18 @@ export default function MyPageClient() {
         setSaveMessage(null);
       }, 3000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('프로필 저장 중 오류 발생:', error);
+      console.error('오류 상세:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      
       setSaveMessage({
         type: 'error',
-        text: '프로필 저장 중 오류가 발생했습니다. 다시 시도해주세요.'
+        text: `프로필 저장 중 오류가 발생했습니다. (${error.message || '알 수 없는 오류'})`
       });
     } finally {
       setIsSaving(false);
