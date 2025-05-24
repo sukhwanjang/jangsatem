@@ -100,14 +100,14 @@ export default function HomeClient() {
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1">
-        <div className="max-w-screen-xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-6 px-4">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-8 px-8">
           {/* 메인 콘텐츠 영역 */}
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow">
             {/* 배너 */}
             {/* <Banner /> */}
 
             {/* 메인 또는 카테고리 페이지 */}
-{view === 'main' ? (
+            {view === 'main' ? (
               <MainPage
                 businessCards={businessCards}
                 posts={posts}
@@ -120,17 +120,17 @@ export default function HomeClient() {
                 setCurrentPage={setCurrentPage}
                 businessCards={businessCards}
                 posts={posts}
-    user={user}
+                user={user}
                 isWriting={isWriting}
                 setIsWriting={setIsWriting}
                 setNewPostContent={setNewPostContent}
-    setPosts={setPosts}
-    setSelectedCategory={setSelectedCategory}
-    setActiveTab={setActiveTab}
-    setView={setView}
-  />
-)}
-</div>
+                setPosts={setPosts}
+                setSelectedCategory={setSelectedCategory}
+                setActiveTab={setActiveTab}
+                setView={setView}
+              />
+            )}
+          </div>
 
           {/* 우측 광고 영역 */}
           {/* <AdBanner /> */}
