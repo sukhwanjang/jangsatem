@@ -271,16 +271,13 @@ export default function MyPageClient() {
       // 현재 시간
       const now = new Date().toISOString();
       
-      // 저장할 프로필 데이터
+      // 저장할 프로필 데이터 (필수 필드만 포함)
       const profileData = {
         user_id: user.id,
         nickname: nickname,
         username: nickname,
         email: user.email || '',
-        profile_image: profileImagePath,
-        join_date: profile.join_date || now,
-        created_at: profile.created_at || now,
-        updated_at: now
+        profile_image: profileImagePath
       };
 
       console.log('저장할 프로필 데이터:', profileData);
