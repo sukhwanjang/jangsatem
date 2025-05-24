@@ -40,95 +40,90 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
   const getPostsByRegion = (region: string) => posts.filter(post => post.region === region).slice(0, 5);
 
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+    <div className="max-w-3xl mx-auto py-8">
       {/* 인기글 */}
-      <section className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="font-bold text-lg mb-4">인기글</h2>
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-blue-600 mb-2">인기글</h2>
         <ul>
           {popularPosts.map(post => (
-            <li key={post.id} className="py-2 border-b last:border-b-0 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
-              <span className="font-medium text-sm line-clamp-1">{post.title}</span>
-              <span className="ml-2 text-xs text-gray-400">♥ {post.like_count || 0}</span>
+            <li key={post.id} className="flex items-center py-2 border-b last:border-b-0 text-sm hover:bg-gray-100 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
+              <span className="flex-1 truncate">{post.title}</span>
+              {typeof post.comment_count === 'number' && (
+                <span className="ml-2 text-blue-500 text-xs">{post.comment_count}</span>
+              )}
             </li>
           ))}
         </ul>
       </section>
 
       {/* 업체찾기 (비즈카드) */}
-      <section className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="font-bold text-lg mb-4">업체찾기</h2>
-        <div className="grid grid-cols-2 gap-4">
-          {businessCards.slice(0, 4).map(card => (
-            <a
-              key={card.id}
-              href={card.link_url || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="border rounded-xl p-3 text-center shadow-sm hover:shadow-md transition bg-white block cursor-pointer min-h-[120px]"
-            >
-              {card.image_url ? (
-                <Image
-                  src={card.image_url}
-                  alt={card.name}
-                  width={120}
-                  height={80}
-                  className="w-full h-20 object-cover rounded mb-2"
-                />
-              ) : (
-                <div className="w-full h-20 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-400 text-sm">
-                  이미지 없음
-                </div>
-              )}
-              <p className="font-medium text-sm line-clamp-1">{card.name}</p>
-              <p className="text-xs text-gray-500 mt-1">{card.region}</p>
-            </a>
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-blue-600 mb-2">업체찾기</h2>
+        <ul>
+          {businessCards.slice(0, 5).map(card => (
+            <li key={card.id} className="flex items-center py-2 border-b last:border-b-0 text-sm hover:bg-gray-100 cursor-pointer" onClick={() => card.link_url && window.open(card.link_url, '_blank') }>
+              <span className="flex-1 truncate">{card.name}</span>
+              {card.region && <span className="ml-2 text-gray-400 text-xs">{card.region}</span>}
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
 
       {/* 급구 */}
-      <section className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="font-bold text-lg mb-4">급구</h2>
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-blue-600 mb-2">급구</h2>
         <ul>
           {getPostsByRegion('견적/의뢰-급구(긴급 의뢰)').map(post => (
-            <li key={post.id} className="py-2 border-b last:border-b-0 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
-              <span className="font-medium text-sm line-clamp-1">{post.title}</span>
+            <li key={post.id} className="flex items-center py-2 border-b last:border-b-0 text-sm hover:bg-gray-100 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
+              <span className="flex-1 truncate">{post.title}</span>
+              {typeof post.comment_count === 'number' && (
+                <span className="ml-2 text-blue-500 text-xs">{post.comment_count}</span>
+              )}
             </li>
           ))}
         </ul>
       </section>
 
       {/* 시공문의 */}
-      <section className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="font-bold text-lg mb-4">시공문의</h2>
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-blue-600 mb-2">시공문의</h2>
         <ul>
           {getPostsByRegion('견적/의뢰-시공문의').map(post => (
-            <li key={post.id} className="py-2 border-b last:border-b-0 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
-              <span className="font-medium text-sm line-clamp-1">{post.title}</span>
+            <li key={post.id} className="flex items-center py-2 border-b last:border-b-0 text-sm hover:bg-gray-100 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
+              <span className="flex-1 truncate">{post.title}</span>
+              {typeof post.comment_count === 'number' && (
+                <span className="ml-2 text-blue-500 text-xs">{post.comment_count}</span>
+              )}
             </li>
           ))}
         </ul>
       </section>
 
       {/* 창업노하우 */}
-      <section className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="font-bold text-lg mb-4">창업노하우</h2>
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-blue-600 mb-2">창업노하우</h2>
         <ul>
           {getPostsByRegion('노하우/정보-창업노하우').map(post => (
-            <li key={post.id} className="py-2 border-b last:border-b-0 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
-              <span className="font-medium text-sm line-clamp-1">{post.title}</span>
+            <li key={post.id} className="flex items-center py-2 border-b last:border-b-0 text-sm hover:bg-gray-100 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
+              <span className="flex-1 truncate">{post.title}</span>
+              {typeof post.comment_count === 'number' && (
+                <span className="ml-2 text-blue-500 text-xs">{post.comment_count}</span>
+              )}
             </li>
           ))}
         </ul>
       </section>
 
       {/* 유머게시판 */}
-      <section className="bg-white rounded-2xl shadow-md p-6">
-        <h2 className="font-bold text-lg mb-4">유머게시판</h2>
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-blue-600 mb-2">유머게시판</h2>
         <ul>
           {getPostsByRegion('커뮤니티-유머게시판').map(post => (
-            <li key={post.id} className="py-2 border-b last:border-b-0 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
-              <span className="font-medium text-sm line-clamp-1">{post.title}</span>
+            <li key={post.id} className="flex items-center py-2 border-b last:border-b-0 text-sm hover:bg-gray-100 cursor-pointer" onClick={() => router.push(`/read/${post.id}`)}>
+              <span className="flex-1 truncate">{post.title}</span>
+              {typeof post.comment_count === 'number' && (
+                <span className="ml-2 text-blue-500 text-xs">{post.comment_count}</span>
+              )}
             </li>
           ))}
         </ul>
