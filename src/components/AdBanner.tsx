@@ -10,6 +10,7 @@ interface AdBannerProps {
     imageUrl: string;
     link: string;
   }[];
+  className?: string;
 }
 
 export default function AdBanner({ 
@@ -27,10 +28,11 @@ export default function AdBanner({
       imageUrl: "https://placehold.co/300x250/2563eb/FFFFFF/png?text=게임+광고",
       link: "#"
     }
-  ] 
+  ],
+  className = ""
 }: AdBannerProps) {
   return (
-    <div className="w-64 space-y-6">
+    <div className={`w-64 space-y-6 ${className}`}>
       <div className="bg-white rounded-lg border shadow p-4">
         <h3 className="text-lg font-semibold mb-3 text-gray-800">{title}</h3>
         <div className="space-y-4">

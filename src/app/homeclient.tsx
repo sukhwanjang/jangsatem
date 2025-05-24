@@ -103,9 +103,8 @@ export default function HomeClient() {
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-8 px-4">
           {/* 메인 콘텐츠 영역 */}
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow">
-            {/* 배너 */}
-            {/* <Banner /> */}
-
+            {/* 광고/이벤트 배너 */}
+            <AdBanner className="mb-8" />
             {/* 메인 또는 카테고리 페이지 */}
             {view === 'main' ? (
               <MainPage
@@ -132,8 +131,10 @@ export default function HomeClient() {
             )}
           </div>
 
-          {/* 우측 광고 영역 */}
-          {/* <AdBanner /> */}
+          {/* 우측 광고/이벤트 영역 */}
+          <div className="hidden lg:block">
+            <AdBanner />
+          </div>
         </div>
       </div>
 
