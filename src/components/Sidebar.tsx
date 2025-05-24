@@ -80,12 +80,12 @@ export default function Sidebar({
                   {group.group}
                 </button>
                 {openCategory === group.group && (
-                  <div className="pl-4 pt-1 space-y-1">
+                  <div className="pl-4 pt-1 space-y-1 flex flex-col items-center">
                     {group.categories.map((sub: string) => (
                       <button
                         key={sub}
                         onClick={() => handleSubCategoryClick(group.group, sub)}
-                        className={`block w-full text-left text-xs px-2 py-1 rounded ${
+                        className={`block px-4 py-1 text-xs rounded mx-auto ${
                           selectedCategory === group.group && activeTab === sub ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
                         }`}
                       >
