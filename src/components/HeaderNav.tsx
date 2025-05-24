@@ -152,31 +152,46 @@ export default function HeaderNav({
         </div>
         {/* 메가 드롭다운 (데스크톱에서만) */}
         {megaMenuOpen && (
-          <div className="absolute left-0 w-full bg-white shadow-lg z-50 border-t">
-            <div className="max-w-screen-xl mx-auto grid grid-cols-4 gap-6 py-4">
+          <div className="absolute left-0 w-full bg-white shadow-2xl z-50 border-t">
+            <div className="max-w-screen-xl mx-auto grid grid-cols-7 divide-x divide-gray-100">
               {categoryData.map((group) => (
-                <div key={group.group}>
-                  <div className="font-bold text-gray-900 mb-1 text-sm whitespace-nowrap">{group.group}</div>
-                  <ul>
-                    {group.categories.map((sub) => (
+                <div key={group.group} className="px-8 py-8">
+                  <div className="font-bold text-gray-900 mb-4 text-base tracking-tight">{group.group}</div>
+                  <ul className="space-y-2">
+                    {group.items.map((item) => (
                       <li
-                        key={sub}
-                        className="py-1 px-2 hover:bg-gray-100 rounded cursor-pointer text-xs text-gray-800 whitespace-nowrap"
+                        key={item.label}
+                        className={`text-sm cursor-pointer transition
+                          ${item.highlight ? 'font-semibold text-blue-600' : 'text-gray-700'}
+                          hover:text-black hover:font-bold
+                        `}
                         onClick={() => {
                           setSelectedCategory(group.group);
-                          setActiveTab(sub);
+                          setActiveTab(item.label);
                           setView('category');
                           setCurrentPage(1);
-                          router.push(`/?category=${encodeURIComponent(group.group)}&tab=${encodeURIComponent(sub)}`);
+                          router.push(`/?category=${encodeURIComponent(group.group)}&tab=${encodeURIComponent(item.label)}`);
                           setMegaMenuOpen(false);
                         }}
                       >
-                        {sub}
+                        {item.label}
                       </li>
                     ))}
                   </ul>
                 </div>
               ))}
+              {/* 하단 별도 섹션 */}
+              <div className="col-span-1 flex flex-col justify-end border-t pt-6 mt-6 space-y-3">
+                <div className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
+                  <span>🎧</span> <span>고객센터</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
+                  <span>📢</span> <span>공지사항</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
+                  <span>🎉</span> <span>이벤트</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -271,17 +286,17 @@ export default function HeaderNav({
       <div className="md:hidden">
         {selectedCategory && (
           <div className="flex justify-center gap-1 py-1 bg-white border-b">
-            {categoryData.find(g => g.group === selectedCategory)?.categories.map((subCategory) => (
+            {categoryData.find(g => g.group === selectedCategory)?.items.map((item) => (
               <button
-                key={subCategory}
+                key={item.label}
                 onClick={() => setSelectedCategory(selectedCategory)}
                 className={`text-xs px-2 py-1 rounded-full border whitespace-nowrap cursor-pointer ${
-                  activeTab === subCategory
+                  activeTab === item.label
                     ? 'bg-gray-200 text-gray-900 border-gray-300 font-medium'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
-                {subCategory}
+                {item.label}
               </button>
             ))}
           </div>
