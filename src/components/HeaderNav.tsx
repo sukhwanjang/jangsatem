@@ -74,9 +74,9 @@ export default function HeaderNav({
     <div className="sticky top-0 z-50 w-full">
       {/* 상단 헤더 */}
       <div className="bg-blue-500 text-white">
-        <div className="max-w-screen-xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div className="max-w-screen-xl mx-auto px-4 py-3 flex flex-col md:flex-row md:justify-center items-center w-full">
           {/* 로고 및 데스크톱 메뉴 */}
-          <div className="flex items-center">
+          <div className="flex items-center mx-auto">
             <div 
               className="text-2xl font-bold cursor-pointer mr-6"
               onClick={() => {
@@ -124,7 +124,7 @@ export default function HeaderNav({
           </div>
           
           {/* 검색 및 로그인 버튼 */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 ml-auto">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
