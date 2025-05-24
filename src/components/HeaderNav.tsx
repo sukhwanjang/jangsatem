@@ -58,14 +58,14 @@ export default function HeaderNav({
     <div className="sticky top-0 z-50 w-full">
       {/* 상단 헤더 및 메가 드롭다운 래퍼 */}
       <div
-        className="bg-blue-500 text-white relative"
+        className="bg-white text-gray-900 border-b relative"
         onMouseEnter={() => setMegaMenuOpen(true)}
         onMouseLeave={() => setMegaMenuOpen(false)}
       >
         <div className="max-w-screen-xl mx-auto px-4 py-2 flex items-center w-full">
           {/* 로고 */}
           <div 
-            className="text-xl font-bold cursor-pointer mr-4"
+            className="text-xl font-bold cursor-pointer mr-4 text-gray-900"
             onClick={() => {
               setView('main');
               router.push('/');
@@ -78,7 +78,7 @@ export default function HeaderNav({
             {categoryData.map((group) => (
               <div
                 key={group.group}
-                className="px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap"
+                className="px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black"
               >
                 {group.group}
               </div>
@@ -92,7 +92,7 @@ export default function HeaderNav({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="검색어를 입력하세요"
-                className="py-1 pl-3 pr-10 rounded-full text-gray-800 text-sm w-60 focus:outline-none"
+                className="py-1 pl-3 pr-10 rounded-full text-gray-800 text-sm w-60 focus:outline-none border border-gray-200 bg-white"
               />
               <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-500">
@@ -103,14 +103,14 @@ export default function HeaderNav({
             {user ? (
               <button
                 onClick={handleLogout}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+                className="px-3 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 cursor-pointer border border-gray-300"
               >
                 로그아웃
               </button>
             ) : (
               <button
                 onClick={() => router.push('/login')}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
+                className="px-3 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 cursor-pointer border border-gray-300"
               >
                 로그인
               </button>
@@ -118,7 +118,7 @@ export default function HeaderNav({
             {user && (
               <button
                 onClick={() => router.push('/mypage')}
-                className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 cursor-pointer"
+                className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-black cursor-pointer border border-gray-700"
               >
                 마이페이지
               </button>
@@ -126,7 +126,7 @@ export default function HeaderNav({
             {!user && (
               <button
                 onClick={() => router.push('/register')}
-                className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 cursor-pointer"
+                className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-black cursor-pointer border border-gray-700"
               >
                 회원가입
               </button>
@@ -136,7 +136,7 @@ export default function HeaderNav({
           <div className="md:hidden">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white p-2"
+              className="text-gray-900 p-2"
             >
               {mobileMenuOpen ? (
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,7 +161,7 @@ export default function HeaderNav({
                     {group.categories.map((sub) => (
                       <li
                         key={sub}
-                        className="py-1 px-2 hover:bg-blue-50 rounded cursor-pointer text-xs text-gray-800 whitespace-nowrap"
+                        className="py-1 px-2 hover:bg-gray-100 rounded cursor-pointer text-xs text-gray-800 whitespace-nowrap"
                         onClick={() => {
                           setSelectedCategory(group.group);
                           setActiveTab(sub);
@@ -184,7 +184,7 @@ export default function HeaderNav({
       
       {/* 모바일 메뉴 드롭다운 */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-blue-600 text-white">
+        <div className="md:hidden bg-white text-gray-900 border-b">
           <div className="px-4 py-3 space-y-3">
             {/* 카테고리 모바일 메뉴 */}
             <div className="grid grid-cols-2 gap-2">
@@ -192,10 +192,10 @@ export default function HeaderNav({
                 <button
                   key={group.group}
                   onClick={() => setSelectedCategory(group.group)}
-                  className={`text-sm text-left px-3 py-2 rounded cursor-pointer ${
+                  className={`text-sm text-left px-3 py-2 rounded cursor-pointer border ${
                     selectedCategory === group.group
-                      ? 'bg-blue-500 text-white'
-                      : 'text-white hover:bg-blue-500'
+                      ? 'bg-gray-200 text-gray-900 border-gray-300'
+                      : 'text-gray-900 hover:bg-gray-100 border-transparent'
                   }`}
                 >
                   {group.group}
@@ -210,7 +210,7 @@ export default function HeaderNav({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="검색어를 입력하세요"
-                className="w-full py-2 pl-3 pr-10 rounded text-gray-800 text-sm focus:outline-none"
+                className="w-full py-2 pl-3 pr-10 rounded text-gray-800 text-sm focus:outline-none border border-gray-200 bg-white"
               />
               <button type="submit" className="absolute right-2 top-1/2 transform -translate-y-1/2">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-500">
@@ -225,7 +225,7 @@ export default function HeaderNav({
                 <>
                   <button
                     onClick={handleLogout}
-                    className="px-3 py-2 bg-blue-700 text-white text-sm rounded hover:bg-blue-800 flex-grow cursor-pointer"
+                    className="px-3 py-2 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 flex-grow cursor-pointer border border-gray-300"
                   >
                     로그아웃
                   </button>
@@ -234,7 +234,7 @@ export default function HeaderNav({
                       router.push('/mypage');
                       setMobileMenuOpen(false);
                     }}
-                    className="px-3 py-2 bg-green-500 text-white text-sm rounded hover:bg-green-600 flex-grow cursor-pointer"
+                    className="px-3 py-2 bg-gray-800 text-white text-sm rounded hover:bg-black flex-grow cursor-pointer border border-gray-700"
                   >
                     마이페이지
                   </button>
@@ -246,7 +246,7 @@ export default function HeaderNav({
                       router.push('/login');
                       setMobileMenuOpen(false);
                     }}
-                    className="px-3 py-2 bg-blue-700 text-white text-sm rounded hover:bg-blue-800 flex-grow cursor-pointer"
+                    className="px-3 py-2 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 flex-grow cursor-pointer border border-gray-300"
                   >
                     로그인
                   </button>
@@ -255,7 +255,7 @@ export default function HeaderNav({
                       router.push('/register');
                       setMobileMenuOpen(false);
                     }}
-                    className="px-3 py-2 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 flex-grow cursor-pointer"
+                    className="px-3 py-2 bg-gray-800 text-white text-sm rounded hover:bg-black flex-grow cursor-pointer border border-gray-700"
                   >
                     회원가입
                   </button>
@@ -277,7 +277,7 @@ export default function HeaderNav({
                 onClick={() => setSelectedCategory(selectedCategory)}
                 className={`text-xs px-2 py-1 rounded-full border whitespace-nowrap cursor-pointer ${
                   activeTab === subCategory
-                    ? 'bg-blue-100 text-blue-600 border-blue-300 font-medium'
+                    ? 'bg-gray-200 text-gray-900 border-gray-300 font-medium'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                 }`}
               >
