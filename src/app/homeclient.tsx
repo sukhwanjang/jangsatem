@@ -100,7 +100,7 @@ export default function HomeClient() {
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-8 px-8">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 py-8 px-4">
           {/* 메인 콘텐츠 영역 */}
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow">
             {/* 배너 */}
