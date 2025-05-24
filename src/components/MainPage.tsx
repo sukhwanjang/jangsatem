@@ -79,32 +79,38 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-2 bg-white grid grid-cols-1 md:grid-cols-3 gap-2">
-      {sections.map((section, idx) => (
-        <section
-          key={section.title}
-          className={`px-2 ${idx % 3 !== 2 ? 'md:border-r' : ''} border-b pb-4 mb-2 last:border-b-0`}
-        >
-          <h2 className={`font-bold text-base mb-1 border-b pb-1 ${section.color}`}>{section.title}</h2>
-          <ul>
-            {section.posts.map((post: any) => (
-              <li
-                key={post.id}
-                className="flex items-center py-1 text-xs hover:bg-gray-100 cursor-pointer"
-                onClick={post.onClick ? post.onClick : () => router.push(`/read/${post.id}`)}
-              >
-                <span className="flex-1 truncate">{post.title}</span>
-                {typeof post.comment_count === 'number' && (
-                  <span className={`${section.title === '인기글' ? 'text-orange-500' : 'text-blue-500'} ml-2 text-xs`}>{post.comment_count}</span>
-                )}
-                {post.region && section.title === '업체찾기' && (
-                  <span className="ml-2 text-gray-400 text-xs">{post.region}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+    <div className="max-w-7xl mx-auto py-6 px-2 bg-white">
+      {/* 사이트 대문 로고 영역 */}
+      <div className="flex justify-center items-center mb-8">
+        <img src="/logo.png" alt="장사템 로고" className="h-16 w-auto" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        {sections.map((section, idx) => (
+          <section
+            key={section.title}
+            className={`px-2 ${idx % 3 !== 2 ? 'md:border-r' : ''} border-b pb-4 mb-2 last:border-b-0`}
+          >
+            <h2 className={`font-bold text-base mb-1 border-b pb-1 ${section.color}`}>{section.title}</h2>
+            <ul>
+              {section.posts.map((post: any) => (
+                <li
+                  key={post.id}
+                  className="flex items-center py-1 text-xs hover:bg-gray-100 cursor-pointer"
+                  onClick={post.onClick ? post.onClick : () => router.push(`/read/${post.id}`)}
+                >
+                  <span className="flex-1 truncate">{post.title}</span>
+                  {typeof post.comment_count === 'number' && (
+                    <span className={`${section.title === '인기글' ? 'text-orange-500' : 'text-blue-500'} ml-2 text-xs`}>{post.comment_count}</span>
+                  )}
+                  {post.region && section.title === '업체찾기' && (
+                    <span className="ml-2 text-gray-400 text-xs">{post.region}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
     </div>
   );
 } 
