@@ -90,7 +90,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
             {section.posts.map((post: any) => (
               <li
                 key={post.id}
-                className="flex items-center py-1 border-b last:border-b-0 text-xs hover:bg-gray-100 cursor-pointer"
+                className="flex items-center py-1 text-xs hover:bg-gray-100 cursor-pointer"
                 onClick={post.onClick ? post.onClick : () => router.push(`/read/${post.id}`)}
               >
                 <span className="flex-1 truncate">{post.title}</span>
