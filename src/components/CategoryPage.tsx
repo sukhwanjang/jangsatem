@@ -51,7 +51,7 @@ export default function CategoryPage({
   let filteredPosts: Post[];
   
   const currentGroup = categoryData.find(g => g.group === selectedCategory);
-  const subCategories = currentGroup ? currentGroup.categories : [];
+  const subCategories = currentGroup ? currentGroup.items.map(item => item.label) : [];
 
   if (extraBoards.includes(selectedCategory)) {
     filteredPosts = posts.filter((post) => post.region === selectedCategory);
