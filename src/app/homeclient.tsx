@@ -104,7 +104,7 @@ export default function HomeClient() {
           {/* 메인 콘텐츠 영역 */}
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow">
             {/* 배너 */}
-            <Banner />
+            {/* <Banner /> */}
 
             {/* 메인 또는 카테고리 페이지 */}
 {view === 'main' ? (
@@ -133,9 +133,7 @@ export default function HomeClient() {
 </div>
 
           {/* 우측 광고 영역 */}
-          <div className="hidden lg:block">
-            <AdBanner />
-          </div>
+          {/* <AdBanner /> */}
         </div>
       </div>
 
