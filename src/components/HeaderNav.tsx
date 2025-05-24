@@ -161,10 +161,7 @@ export default function HeaderNav({
                     {group.items.map((item) => (
                       <li
                         key={item.label}
-                        className={`text-sm cursor-pointer transition
-                          ${item.highlight ? 'font-semibold text-blue-600' : 'text-gray-700'}
-                          hover:text-black hover:font-bold
-                        `}
+                        className={`text-sm cursor-pointer transition text-gray-700 hover:text-black hover:font-bold`}
                         onClick={() => {
                           setSelectedCategory(group.group);
                           setActiveTab(item.label);
@@ -180,18 +177,6 @@ export default function HeaderNav({
                   </ul>
                 </div>
               ))}
-              {/* 하단 별도 섹션 */}
-              <div className="col-span-1 flex flex-col justify-end border-t pt-6 mt-6 space-y-3">
-                <div className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
-                  <span>🎧</span> <span>고객센터</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
-                  <span>📢</span> <span>공지사항</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 cursor-pointer">
-                  <span>🎉</span> <span>이벤트</span>
-                </div>
-              </div>
             </div>
           </div>
         )}
