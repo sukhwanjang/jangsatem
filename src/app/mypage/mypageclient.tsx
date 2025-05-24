@@ -285,44 +285,22 @@ export default function MyPageClient() {
 
       console.log('저장할 프로필 데이터:', profileData);
 
-      // 먼저 Users 테이블에 저장 시도
+      // Users 테이블에 저장 시도
       console.log('Users 테이블 저장 시도');
-      let { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('Users')
-        .upsert(profileData)
+        .upsert({
+          ...profileData,
+          // RLS 정책을 위한 추가 필드
+          auth_id: user.id
+        })
         .select();
 
-      // Users 테이블 저장 실패 시 users 테이블에 저장 시도
       if (userError) {
-        console.log('Users 테이블 저장 실패, users 테이블로 시도:', userError);
-        
-        // users 테이블 존재 여부 확인
-        const { data: tableCheck, error: tableCheckError } = await supabase
-          .from('users')
-          .select('count')
-          .limit(1);
-          
-        if (tableCheckError) {
-          console.error('users 테이블 확인 실패:', tableCheckError);
-          throw new Error('데이터베이스 테이블 접근 오류');
-        }
-
-        const { data: lowerUserData, error: lowerUserError } = await supabase
-          .from('users')
-          .upsert(profileData)
-          .select();
-
-        if (lowerUserError) {
-          console.error('users 테이블 저장 오류:', lowerUserError);
-          throw lowerUserError;
-        }
-        
-        console.log('users 테이블 저장 성공');
-        userData = lowerUserData;
-      } else {
-        console.log('Users 테이블 저장 성공');
+        console.error('Users 테이블 저장 오류:', userError);
+        throw userError;
       }
-      
+
       if (!userData) {
         throw new Error('프로필 데이터 저장 실패');
       }
@@ -354,9 +332,20 @@ export default function MyPageClient() {
         code: error.code
       });
       
+      let errorMessage = '프로필 저장 중 오류가 발생했습니다.';
+      
+      // Supabase 오류 코드에 따른 메시지 처리
+      if (error.code === '42501') {
+        errorMessage = '권한이 없습니다. 관리자에게 문의해주세요.';
+      } else if (error.code === '42P01') {
+        errorMessage = '테이블이 존재하지 않습니다. 관리자에게 문의해주세요.';
+      } else if (error.message) {
+        errorMessage += ` (${error.message})`;
+      }
+      
       setSaveMessage({
         type: 'error',
-        text: `프로필 저장 중 오류가 발생했습니다. (${error.message || '알 수 없는 오류'})`
+        text: errorMessage
       });
     } finally {
       setIsSaving(false);
