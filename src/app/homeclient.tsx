@@ -124,7 +124,7 @@ export default function HomeClient() {
         >
           {sliderImages.map((src, idx) => (
             <SwiperSlide key={idx}>
-              <Image src={src} alt={`배너${idx+1}`} width={1152} height={288} className="w-full h-72 object-cover" />
+              <Image src={src} alt={`배너${idx+1}`} width={1152} height={192} className="w-full h-48 object-cover" />
             </SwiperSlide>
           ))}
         </Swiper>
