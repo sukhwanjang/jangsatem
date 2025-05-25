@@ -110,11 +110,12 @@ export default function HomeClient() {
       />
 
       {/* Swiper 이미지 슬라이더 - 헤더 아래, 메인 컨텐츠 위 */}
-      <div className="w-full max-w-4xl mx-auto mt-6">
+      <div className="w-full max-w-[1440px] mx-auto mt-6">
         <Swiper
           modules={[Pagination, Navigation]}
+          centeredSlides={true}
+          slidesPerView={1.3}
           spaceBetween={20}
-          slidesPerView={1}
           loop={true}
           pagination={{ clickable: true }}
           navigation
@@ -123,7 +124,7 @@ export default function HomeClient() {
         >
           {sliderImages.map((src, idx) => (
             <SwiperSlide key={idx}>
-              <Image src={src} alt={`배너${idx+1}`} width={1200} height={300} className="w-full h-64 object-cover" />
+              <Image src={src} alt={`배너${idx+1}`} width={1440} height={360} className="w-full h-72 object-cover" />
             </SwiperSlide>
           ))}
         </Swiper>
