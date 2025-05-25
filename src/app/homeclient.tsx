@@ -6,7 +6,10 @@ import { supabase, clearSession } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import WriteForm from '@/components/WriteForm';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Navigation } from 'swiper/modules';
 import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 
 // 분리한 컴포넌트들 임포트
 import { ITEMS_PER_PAGE, BusinessCard, Post, categoryData, extraBoards } from '@/lib/categoryData';
@@ -109,10 +112,12 @@ export default function HomeClient() {
       {/* Swiper 이미지 슬라이더 - 헤더 아래, 메인 컨텐츠 위 */}
       <div className="w-full max-w-4xl mx-auto mt-6">
         <Swiper
+          modules={[Pagination, Navigation]}
           spaceBetween={20}
           slidesPerView={1}
           loop={true}
           pagination={{ clickable: true }}
+          navigation
           className="rounded-xl overflow-hidden shadow-lg"
         >
           {sliderImages.map((src, idx) => (
