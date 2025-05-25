@@ -118,6 +118,7 @@ export default function HomeClient() {
           loop={true}
           pagination={{ clickable: true }}
           navigation
+          speed={900}
           className="rounded-xl overflow-hidden shadow-lg"
         >
           {sliderImages.map((src, idx) => (
