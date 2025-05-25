@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase, clearSession } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import WriteForm from '@/components/WriteForm';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
 
 // 분리한 컴포넌트들 임포트
 import { ITEMS_PER_PAGE, BusinessCard, Post, categoryData, extraBoards } from '@/lib/categoryData';
@@ -29,6 +31,13 @@ export default function HomeClient() {
   const [user, setUser] = useState<User | null>(null);
   const [isWriting, setIsWriting] = useState<{ [key: string]: boolean }>({});
   const [newPostContent, setNewPostContent] = useState<string | File>("");
+
+  // 슬라이더에 사용할 이미지 경로 배열 (public/images/에 배치)
+  const sliderImages = [
+    '/images/banner1.jpg',
+    '/images/banner2.jpg',
+    '/images/banner3.jpg',
+  ];
 
   useEffect(() => {
     const fetchUserAndData = async () => {
@@ -97,6 +106,23 @@ export default function HomeClient() {
         setCurrentPage={setCurrentPage}
         activeTab={activeTab}
       />
+
+      {/* Swiper 이미지 슬라이더 - 헤더 아래, 메인 컨텐츠 위 */}
+      <div className="w-full max-w-4xl mx-auto mt-6">
+        <Swiper
+          spaceBetween={20}
+          slidesPerView={1}
+          loop={true}
+          pagination={{ clickable: true }}
+          className="rounded-xl overflow-hidden shadow-lg"
+        >
+          {sliderImages.map((src, idx) => (
+            <SwiperSlide key={idx}>
+              <Image src={src} alt={`배너${idx+1}`} width={1200} height={300} className="w-full h-64 object-cover" />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1">
