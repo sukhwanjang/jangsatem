@@ -34,9 +34,8 @@ export default function HomeClient() {
 
   // 슬라이더에 사용할 이미지 경로 배열 (public/images/에 배치)
   const sliderImages = [
-    '/images/banner1.jpg',
-    '/images/banner2.jpg',
-    '/images/banner3.jpg',
+    '/images/banner1.png',
+    '/images/banner2.png',
   ];
 
   useEffect(() => {
