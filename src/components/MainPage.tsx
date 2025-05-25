@@ -47,7 +47,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
     },
     {
       title: '업체찾기',
-      color: 'text-black',
+      color: 'text-blue-500',
       posts: businessCards.slice(0, 7).map(card => ({
         id: card.id,
         title: card.name,
@@ -58,60 +58,64 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
     },
     {
       title: '급구',
-      color: 'text-black',
+      color: 'text-blue-500',
       posts: getPostsByRegion('견적/의뢰-급구(긴급 의뢰)'),
     },
     {
       title: '시공문의',
-      color: 'text-black',
+      color: 'text-blue-500',
       posts: getPostsByRegion('견적/의뢰-시공문의'),
     },
     {
       title: '창업노하우',
-      color: 'text-black',
+      color: 'text-blue-500',
       posts: getPostsByRegion('노하우/정보-창업노하우'),
     },
     {
       title: '유머게시판',
-      color: 'text-black',
+      color: 'text-blue-500',
       posts: getPostsByRegion('커뮤니티-유머게시판'),
     },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-2 bg-white">
-      {/* 사이트 대문 로고 영역 */}
-      <div className="flex justify-center items-center mb-8">
-        <div className="h-16 w-48 bg-gray-100 rounded border flex items-center justify-center text-gray-400 text-lg font-bold">
-          로고 자리
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="max-w-7xl mx-auto py-8 px-2">
+        {/* 로고 + 슬로건 */}
+        <div className="flex flex-col items-center mb-10">
+          <div className="h-16 w-48 bg-white rounded-xl border shadow-sm flex items-center justify-center text-gray-400 text-lg font-bold mb-2">
+            로고 자리
+          </div>
+          <div className="text-gray-500 text-sm tracking-tight">소상공인 장비/간판/인력 정보 플랫폼</div>
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-        {sections.map((section, idx) => (
-          <section
-            key={section.title}
-            className={`px-2 ${idx % 3 !== 2 ? 'md:border-r' : ''} border-b pb-4 mb-2 last:border-b-0`}
-          >
-            <h2 className={`font-bold text-base mb-1 border-b pb-1 ${section.color}`}>{section.title}</h2>
-            <ul>
-              {section.posts.map((post: any) => (
-                <li
-                  key={post.id}
-                  className="flex items-center py-1 text-xs hover:bg-gray-100 cursor-pointer"
-                  onClick={post.onClick ? post.onClick : () => router.push(`/read/${post.id}`)}
-                >
-                  <span className="flex-1 truncate">{post.title}</span>
-                  {typeof post.comment_count === 'number' && (
-                    <span className={`${section.title === '인기글' ? 'text-orange-500' : 'text-blue-500'} ml-2 text-xs`}>{post.comment_count}</span>
-                  )}
-                  {post.region && section.title === '업체찾기' && (
-                    <span className="ml-2 text-gray-400 text-xs">{post.region}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        {/* 3단 그리드 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {sections.map((section, idx) => (
+            <section
+              key={section.title}
+              className={`px-2 border-b border-gray-200 pb-6 mb-2 last:border-b-0`}
+            >
+              <h2 className={`font-bold text-base mb-2 border-b border-gray-200 pb-1 tracking-tight ${section.color}`}>{section.title}</h2>
+              <ul>
+                {section.posts.map((post: any) => (
+                  <li
+                    key={post.id}
+                    className="flex items-center py-2 text-sm text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={post.onClick ? post.onClick : () => router.push(`/read/${post.id}`)}
+                  >
+                    <span className="flex-1 truncate">{post.title}</span>
+                    {typeof post.comment_count === 'number' && (
+                      <span className={`${section.title === '인기글' ? 'text-orange-500' : 'text-blue-500'} ml-2 text-xs`}>{post.comment_count}</span>
+                    )}
+                    {post.region && section.title === '업체찾기' && (
+                      <span className="ml-2 text-gray-400 text-xs">{post.region}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );
