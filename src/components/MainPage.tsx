@@ -107,9 +107,6 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
                     {typeof post.comment_count === 'number' && (
                       <span className={`${section.title === '인기글' ? 'text-orange-500' : 'text-blue-500'} ml-2 text-xs`}>{post.comment_count}</span>
                     )}
-                    {post.region && section.title === '업체찾기' && (
-                      <span className="ml-2 text-gray-400 text-xs">{post.region}</span>
-                    )}
                   </li>
                 ))}
               </ul>
