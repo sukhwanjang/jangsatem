@@ -80,13 +80,7 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto py-8 px-2">
-        {/* 로고 + 슬로건 */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="h-16 w-48 bg-white rounded-xl border shadow-sm flex items-center justify-center text-gray-400 text-lg font-bold mb-2">
-            로고 자리
-          </div>
-          <div className="text-gray-500 text-sm tracking-tight">소상공인 장비/간판/인력 정보 플랫폼</div>
-        </div>
+        {/* 로고 + 슬로건 제거됨 */}
         {/* 메인 그리드: 왼쪽 홍보업체, 오른쪽 2x3 섹션 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 왼쪽: 홍보중인 업체 */}
