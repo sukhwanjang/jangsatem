@@ -83,6 +83,10 @@ export default function CategoryPage({
   }, [filteredPosts]);
 
   const handleCategoryClick = (mainCategory: string) => {
+    setSelectedCategory(mainCategory);
+    setActiveTab('');
+    setView('category');
+    setCurrentPage(1);
     router.push(`/?category=${mainCategory}`);
   };
 
