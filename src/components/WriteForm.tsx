@@ -3,14 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  region: string;
-  user_id: string;
-}
+import { Post } from '@/lib/categoryData';
 
 interface Props {
   user: User | null;
@@ -18,11 +11,11 @@ interface Props {
   selectedCategory: string;
   extraBoards: string[];
   setPosts: (posts: Post[]) => void;
-  setNewPostContent: (v: string | File) => void;
-  setSelectedCategory: (v: string) => void;
-  setActiveTab: (v: string) => void;
-  setView: (v: 'main' | 'category') => void;
-  setIsWriting: (v: (prev: { [key: string]: boolean }) => { [key: string]: boolean }) => void;
+  setNewPostContent: (content: string | File) => void;
+  setSelectedCategory: (category: string) => void;
+  setActiveTab: (tab: string) => void;
+  setView: (view: 'main' | 'category') => void;
+  setIsWriting: (fn: (prev: { [key: string]: boolean }) => { [key: string]: boolean }) => void;
 }
 
 export default function WriteForm({

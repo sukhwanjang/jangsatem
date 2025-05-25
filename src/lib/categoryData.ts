@@ -98,16 +98,18 @@ export interface BusinessCard {
 }
 
 export interface Post {
-  id: number;
+  id: string;
   title: string;
   content: string;
-  user_id: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
   region: string;
-  created_at?: string;
-  view_count?: number;
-  like_count?: number;
-  comment_count?: number;
-  image_url?: string;
+  category: string;
+  views: number;
+  view_count: number;
+  like_count: number;
+  comment_count: number;
 }
 
 // 카드 뷰 헬퍼 함수
@@ -120,4 +122,15 @@ export const fillEmptyCards = <T extends object>(items: T[], total: number): (T 
 // 비즈니스 카드 타입 가드
 export const isBusinessCard = (item: any): item is BusinessCard => {
   return "name" in item;
-}; 
+};
+
+// 메인 카테고리 목록
+export const mainCategories = [
+  '업체찾기',
+  '견적/의뢰',
+  '노하우/정보',
+  '커뮤니티',
+  '지역별',
+  '홍보',
+  '공지사항'
+]; 
