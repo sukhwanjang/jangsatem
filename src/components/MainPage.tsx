@@ -74,7 +74,6 @@ function PromotedBusinessCard({ business }: { business: typeof promotedBusinesse
       <div className="p-3 flex-1 flex flex-col">
         <h3 className="font-bold text-base text-black mb-1 truncate">{business.name}</h3>
         <p className="text-sm text-gray-600 flex-1 truncate">{business.description}</p>
-        <button className="mt-2 py-1 px-3 bg-blue-600 text-white rounded text-xs self-start">바로가기</button>
       </div>
     </div>
   );
