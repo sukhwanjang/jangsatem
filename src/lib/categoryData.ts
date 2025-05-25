@@ -102,6 +102,7 @@ export interface Post {
   title: string;
   content: string;
   author: string;
+  user_id: string;
   created_at: string;
   updated_at: string;
   region: string;
