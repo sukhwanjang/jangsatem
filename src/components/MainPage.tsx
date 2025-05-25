@@ -42,12 +42,12 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
   const sections = [
     {
       title: '인기글',
-      color: 'text-orange-500',
+      color: 'text-black',
       posts: popularPosts,
     },
     {
       title: '업체찾기',
-      color: 'text-blue-500',
+      color: 'text-black',
       posts: businessCards.slice(0, 7).map(card => ({
         id: card.id,
         title: card.name,
@@ -57,22 +57,22 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
     },
     {
       title: '급구',
-      color: 'text-blue-500',
+      color: 'text-black',
       posts: getPostsByRegion('견적/의뢰-급구(긴급 의뢰)'),
     },
     {
       title: '시공문의',
-      color: 'text-blue-500',
+      color: 'text-black',
       posts: getPostsByRegion('견적/의뢰-시공문의'),
     },
     {
       title: '창업노하우',
-      color: 'text-blue-500',
+      color: 'text-black',
       posts: getPostsByRegion('노하우/정보-창업노하우'),
     },
     {
       title: '유머게시판',
-      color: 'text-blue-500',
+      color: 'text-black',
       posts: getPostsByRegion('커뮤니티-유머게시판'),
     },
   ];
@@ -85,12 +85,12 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 왼쪽: 홍보중인 업체 */}
           <aside className="md:col-span-1">
-            <h2 className="font-bold text-base mb-2 border-b border-gray-200 pb-1 tracking-tight text-blue-500">홍보중인 업체</h2>
+            <h2 className="font-bold text-base mb-2 border-b border-gray-200 pb-1 tracking-tight text-black">홍보중인 업체</h2>
             <ul>
               {businessCards.slice(0, 4).map(card => (
                 <li
                   key={card.id}
-                  className="flex items-center py-3 text-base text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="flex items-center py-3 text-base text-black hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-b-0"
                   onClick={() => card.link_url && window.open(card.link_url, '_blank')}
                 >
                   <span className="flex-1 truncate font-semibold">{card.name}</span>
@@ -106,17 +106,17 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
                   key={section.title}
                   className={`px-2 border-b border-gray-200 pb-6 mb-2 last:border-b-0`}
                 >
-                  <h2 className={`font-bold text-base mb-2 border-b border-gray-200 pb-1 tracking-tight ${section.color}`}>{section.title}</h2>
+                  <h2 className={`font-bold text-base mb-2 border-b border-gray-200 pb-1 tracking-tight text-black`}>{section.title}</h2>
                   <ul>
                     {section.posts.map((post: any) => (
                       <li
                         key={post.id}
-                        className="flex items-center py-2 text-sm text-gray-800 hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="flex items-center py-2 text-sm text-black hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={post.onClick ? post.onClick : () => router.push(`/read/${post.id}`)}
                       >
                         <span className="flex-1 truncate">{post.title}</span>
                         {typeof post.comment_count === 'number' && (
-                          <span className={`${section.title === '인기글' ? 'text-orange-500' : 'text-blue-500'} ml-2 text-xs`}>{post.comment_count}</span>
+                          <span className={`ml-2 text-xs text-black`}>{post.comment_count}</span>
                         )}
                       </li>
                     ))}
