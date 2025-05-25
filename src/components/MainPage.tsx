@@ -10,6 +10,76 @@ interface MainPageProps {
   posts: Post[];
 }
 
+// 1. 홍보업체 카드 데이터 (이미지 경로는 public/images/에 넣으면 됨)
+const promotedBusinesses = [
+  {
+    id: '1',
+    name: '장사템 간판',
+    image: '/images/promo1.png',
+    description: '저렴하고 빠른 간판 시공!',
+    link_url: 'https://yourbusiness1.com',
+  },
+  {
+    id: '2',
+    name: '장사템 인테리어',
+    image: '/images/promo2.png',
+    description: '소상공인 맞춤 인테리어 전문!',
+    link_url: 'https://yourbusiness2.com',
+  },
+  {
+    id: '3',
+    name: '장사템 주방설비',
+    image: '/images/promo3.png',
+    description: '주방설비, 중고매입/설치!',
+    link_url: 'https://yourbusiness3.com',
+  },
+  {
+    id: '4',
+    name: '장사템 인력파견',
+    image: '/images/promo4.png',
+    description: '믿을 수 있는 인력 파견!',
+    link_url: 'https://yourbusiness4.com',
+  },
+  {
+    id: '5',
+    name: '장사템 세무회계',
+    image: '/images/promo5.png',
+    description: '소상공인 세무/회계 전문!',
+    link_url: 'https://yourbusiness5.com',
+  },
+  {
+    id: '6',
+    name: '장사템 마케팅',
+    image: '/images/promo6.png',
+    description: '온라인/오프라인 마케팅!',
+    link_url: 'https://yourbusiness6.com',
+  },
+];
+
+// 2. 홍보업체 카드 컴포넌트 (인라인)
+function PromotedBusinessCard({ business }: { business: typeof promotedBusinesses[0] }) {
+  return (
+    <div
+      className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition cursor-pointer flex flex-col border border-gray-100"
+      onClick={() => window.open(business.link_url, '_blank')}
+    >
+      <div className="relative w-full aspect-[16/9] bg-gray-100">
+        {/* 이미지 비율 16:9, 이미지 없으면 회색 배경 */}
+        <img
+          src={business.image}
+          alt={business.name}
+          className="object-cover w-full h-full"
+        />
+      </div>
+      <div className="p-3 flex-1 flex flex-col">
+        <h3 className="font-bold text-base text-black mb-1 truncate">{business.name}</h3>
+        <p className="text-sm text-gray-600 flex-1 truncate">{business.description}</p>
+        <button className="mt-2 py-1 px-3 bg-blue-600 text-white rounded text-xs self-start">바로가기</button>
+      </div>
+    </div>
+  );
+}
+
 export default function MainPage({ businessCards, posts }: MainPageProps) {
   const router = useRouter();
   const [popularPosts, setPopularPosts] = useState<Post[]>([]);
@@ -80,6 +150,14 @@ export default function MainPage({ businessCards, posts }: MainPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto py-8 px-2">
+        {/* 배너 아래 홍보업체 네모카드 (6개, 참고 이미지처럼) */}
+        <div className="w-full mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {promotedBusinesses.map(biz => (
+              <PromotedBusinessCard key={biz.id} business={biz} />
+            ))}
+          </div>
+        </div>
         {/* 로고 + 슬로건 제거됨 */}
         {/* 메인 그리드: 왼쪽 홍보업체, 오른쪽 2x3 섹션 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
