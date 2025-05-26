@@ -76,12 +76,19 @@ export default function HeaderNav({
           {/* 메인 카테고리 메뉴 (hover만, 클릭 이벤트 제거) */}
           <div className="hidden md:flex space-x-6">
             {categoryData.map((group) => (
-              <div
+              <button
                 key={group.group}
-                className="px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black"
+                className={`px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black ${selectedCategory === group.group && !activeTab ? 'bg-blue-600 text-white rounded-full' : ''}`}
+                onClick={() => {
+                  setSelectedCategory(group.group);
+                  setActiveTab('');
+                  setView('category');
+                  setCurrentPage(1);
+                  router.push(`/?category=${encodeURIComponent(group.group)}`);
+                }}
               >
                 {group.group}
-              </div>
+              </button>
             ))}
           </div>
           {/* 검색 및 로그인/회원가입 버튼 등 기존 코드 유지 */}
