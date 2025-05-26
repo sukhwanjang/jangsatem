@@ -78,17 +78,27 @@ export default function HomeClient() {
     }
   }, [searchParams]);
 
+  // region/category 구조와 필터링 로직 명확화 및 콘솔 로그 추가
   const currentRegion = extraBoards.includes(selectedCategory)
     ? selectedCategory
     : `${selectedCategory}-${activeTab}`;
 
+  useEffect(() => {
+    console.log('posts:', posts);
+    console.log('selectedCategory:', selectedCategory, 'activeTab:', activeTab, 'currentRegion:', currentRegion);
+  }, [posts, selectedCategory, activeTab, currentRegion]);
+
+  const filteredPosts = (posts || []).filter(
+    (post) => (post.region || '') === (currentRegion || '')
+  );
+
+  // fillEmptyCards 함수 선언을 아래로 이동
   const fillEmptyCards = <T extends object>(items: T[], total: number): (T | null)[] => {
     const filled: (T | null)[] = [...items];
     while (filled.length < total) filled.push(null);
     return filled;
   };
 
-  const filteredPosts = posts.filter((post) => post.region === currentRegion);
   const paginatedPosts = fillEmptyCards(
     filteredPosts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
     itemsPerPage
