@@ -166,7 +166,7 @@ export default function CategoryPage({
         <div className="bg-white rounded-lg shadow-sm">
           <div className="divide-y divide-gray-100">
             {filteredPosts.map((post) => {
-              const [mainCat, subCat] = post.category.split('-');
+              const [mainCat, subCat] = (post.category || '').split('-');
               return (
                 <div
                   key={post.id}

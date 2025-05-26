@@ -17,7 +17,7 @@ export default function PostList({ posts, currentCategory }: PostListProps) {
           <div className="p-8 text-center text-gray-400">게시글이 없습니다.</div>
         ) : (
           posts.map((post) => {
-            const [mainCat, subCat] = post.category.split('-');
+            const [mainCat, subCat] = (post.category || '').split('-');
             return (
               <div
                 key={post.id}
