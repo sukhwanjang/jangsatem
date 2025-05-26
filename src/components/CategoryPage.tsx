@@ -84,6 +84,11 @@ export default function CategoryPage({
     setFilteredPosts(sortedPosts);
   }, [filteredPosts]);
 
+  useEffect(() => {
+    // 필터링된 posts 로그로 확인
+    console.log('CategoryPage filteredPosts:', filteredPosts);
+  }, [filteredPosts]);
+
   const handleCategoryClick = (mainCategory: string) => {
     setSelectedCategory(mainCategory);
     setActiveTab('');
@@ -93,6 +98,7 @@ export default function CategoryPage({
   };
 
   const handleTabClick = (mainCategory: string, subCategory: string) => {
+    setActiveTab(subCategory); // 상태를 즉시 반영
     router.push(`/?category=${mainCategory}&tab=${subCategory}`);
   };
 
