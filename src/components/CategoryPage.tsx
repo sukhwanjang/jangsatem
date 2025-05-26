@@ -113,20 +113,20 @@ export default function CategoryPage({
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto py-8 px-4">
-        {/* 카테고리 네비게이션 */}
+        {/* 서브카테고리 네비게이션 */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">
-            {mainCategories.map((mainCat) => (
+            {(categoryData.find(g => g.group === currentCategory)?.items || []).map((item) => (
               <button
-                key={mainCat}
-                onClick={() => handleCategoryClick(mainCat)}
+                key={item.label}
+                onClick={() => handleTabClick(currentCategory, item.label)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
-                  ${currentCategory === mainCat
+                  ${currentTab === item.label
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
               >
-                {mainCat}
+                {item.label}
               </button>
             ))}
           </div>
