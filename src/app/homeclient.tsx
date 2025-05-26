@@ -62,17 +62,19 @@ export default function HomeClient() {
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
     const tabFromUrl = searchParams.get('tab');
-
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
       setOpenCategory(categoryFromUrl);
       setView('category');
-
-      if (tabFromUrl) {
-        setActiveTab(tabFromUrl);
-      } else {
-        setActiveTab('');
-      }
+      setCurrentPage(1);
+      if (tabFromUrl) setActiveTab(tabFromUrl);
+      else setActiveTab('');
+    } else {
+      setView('main');
+      setSelectedCategory('');
+      setActiveTab('');
+      setOpenCategory(null);
+      setCurrentPage(1);
     }
   }, [searchParams]);
 
