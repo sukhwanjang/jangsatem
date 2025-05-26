@@ -43,6 +43,8 @@ export default function CategoryPage({
   setView
 }: CategoryPageProps) {
   const router = useRouter();
+  // posts가 undefined/null일 때 빈 배열로 보장
+  const safePosts = Array.isArray(posts) ? posts : [];
   let [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [currentCategory, setCurrentCategory] = useState(selectedCategory);
   const [currentTab, setCurrentTab] = useState(activeTab);
@@ -57,20 +59,20 @@ export default function CategoryPage({
       // 메인 카테고리만 선택된 경우 (서브카테고리 미선택)
       if (!currentTab) {
         // 해당 메인 카테고리의 모든 서브카테고리 글을 필터링
-        const mainCategoryPosts = posts.filter(post => {
-          const [mainCat] = post.category.split('-');
+        const mainCategoryPosts = safePosts.filter(post => {
+          const [mainCat] = (post.category || '').split('-');
           return mainCat === currentCategory;
         });
         setFilteredPosts(mainCategoryPosts);
       } else {
         // 특정 서브카테고리가 선택된 경우
-        const subCategoryPosts = posts.filter(post => post.category === `${currentCategory}-${currentTab}`);
+        const subCategoryPosts = safePosts.filter(post => (post.category || '') === `${currentCategory}-${currentTab}`);
         setFilteredPosts(subCategoryPosts);
       }
     } else {
-      setFilteredPosts(posts);
+      setFilteredPosts(safePosts);
     }
-  }, [posts, currentCategory, currentTab]);
+  }, [safePosts, currentCategory, currentTab]);
 
   // 필터링된 게시물 정렬 (최신순)
   useEffect(() => {
@@ -165,7 +167,7 @@ export default function CategoryPage({
         {/* 게시글 목록 */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="divide-y divide-gray-100">
-            {filteredPosts.map((post) => {
+            {(filteredPosts || []).map((post) => {
               const [mainCat, subCat] = (post.category || '').split('-');
               return (
                 <div
