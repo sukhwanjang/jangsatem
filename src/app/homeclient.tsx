@@ -69,10 +69,10 @@ export default function HomeClient() {
       setCurrentPage(1);
       if (tabFromUrl) setActiveTab(tabFromUrl);
       else setActiveTab('');
-    } else {
+      } else {
       setView('main');
       setSelectedCategory('');
-      setActiveTab('');
+        setActiveTab('');
       setOpenCategory(null);
       setCurrentPage(1);
     }
@@ -114,6 +114,10 @@ export default function HomeClient() {
     SwiperCore.use([Navigation]);
   }, []);
 
+  const handleCategoryClick = (category: string) => {
+    router.push(`/category/${category}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* 헤더 및 네비게이션 */}
@@ -153,19 +157,19 @@ export default function HomeClient() {
           {/* 커스텀 내비게이션 버튼 */}
           <button className="custom-swiper-prev absolute left-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-white border border-gray-200 shadow-lg rounded-full hover:bg-gray-100 transition-all group" aria-label="이전 슬라이드">
             <svg className="w-6 h-6 text-gray-900 group-hover:text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          </button>
+                    </button>
           <button className="custom-swiper-next absolute right-0 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-white border border-gray-200 shadow-lg rounded-full hover:bg-gray-100 transition-all group" aria-label="다음 슬라이드">
             <svg className="w-6 h-6 text-gray-900 group-hover:text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-          </button>
-        </div>
-      </div>
+            </button>
+  </div>
+</div>
 
       {/* 메인 컨텐츠 */}
       <div className="flex-1">
         <div className="max-w-[1440px] mx-auto py-8 px-4">
           {/* 메인 콘텐츠 영역 - 광고/배너/우측영역 모두 제거, MainPage만 남김 */}
           <div className="bg-transparent p-0 shadow-none">
-            {view === 'main' ? (
+{view === 'main' ? (
               <MainPage
                 businessCards={businessCards}
                 posts={posts}
@@ -178,18 +182,18 @@ export default function HomeClient() {
                 setCurrentPage={setCurrentPage}
                 businessCards={businessCards}
                 posts={posts}
-                user={user}
+    user={user}
                 isWriting={isWriting}
                 setIsWriting={setIsWriting}
                 setNewPostContent={setNewPostContent}
-                setPosts={setPosts}
-                setSelectedCategory={setSelectedCategory}
-                setActiveTab={setActiveTab}
-                setView={setView}
-              />
-            )}
+    setPosts={setPosts}
+    setSelectedCategory={setSelectedCategory}
+    setActiveTab={setActiveTab}
+    setView={setView}
+  />
+)}
           </div>
-        </div>
+</div>
       </div>
 
       {/* 푸터 */}

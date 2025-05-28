@@ -531,9 +531,9 @@ export default function ReadPage() {
           
           {/* 게시글 내용 */}
           <div className="mb-8">
-            {post.image_url && (
-              <img
-                src={post.image_url}
+      {post.image_url && (
+        <img
+          src={post.image_url}
                 alt="게시글 이미지"
                 className="w-full mb-4 rounded-lg"
               />
@@ -600,18 +600,18 @@ export default function ReadPage() {
           
           {/* 좋아요 */}
           <div className="flex justify-center mb-8">
-            <button
+        <button
               className="py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-full text-sm"
               onClick={() => handleLike()}
             >
               👍 <span className="font-semibold">{likeCount}</span>
-            </button>
-          </div>
-          
+        </button>
+      </div>
+
           {/* 댓글 섹션 */}
           <div className="border-t pt-6">
             <h2 className="font-semibold mb-4">댓글 {comments.length}개</h2>
-            
+
             {comments.length > 0 ? (
               <div className="space-y-4 mb-6">
                 {comments.map((comment) => {
@@ -643,22 +643,22 @@ export default function ReadPage() {
                     </div>
                   );
                 })}
-              </div>
+          </div>
             ) : (
               <p className="text-gray-500 text-sm mb-6">아직 댓글이 없습니다. 첫 댓글을 작성해 보세요!</p>
             )}
-            
+
             {/* 댓글 입력 폼 */}
             <div className="flex gap-2">
-              <input
+          <input
                 type="text"
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
                 placeholder="댓글을 입력하세요..."
                 className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-              />
-              <button
-                onClick={handleCommentSubmit}
+          />
+          <button
+            onClick={handleCommentSubmit}
                 className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
                 등록
@@ -678,9 +678,9 @@ export default function ReadPage() {
             <button
               onClick={() => router.back()}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm"
-            >
+          >
               목록으로
-            </button>
+          </button>
           </div>
         </div>
       </div>

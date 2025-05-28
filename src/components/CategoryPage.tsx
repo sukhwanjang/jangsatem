@@ -43,7 +43,6 @@ export default function CategoryPage({
   setView
 }: CategoryPageProps) {
   const router = useRouter();
-  // posts가 undefined/null일 때 빈 배열로 보장
   const safePosts = Array.isArray(posts) ? posts : [];
   let [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [currentCategory, setCurrentCategory] = useState(selectedCategory);
@@ -56,16 +55,13 @@ export default function CategoryPage({
 
   useEffect(() => {
     if (currentCategory) {
-      // 메인 카테고리만 선택된 경우 (서브카테고리 미선택)
       if (!currentTab) {
-        // 해당 메인 카테고리의 모든 서브카테고리 글을 필터링
         const mainCategoryPosts = safePosts.filter(post => {
           const [mainCat] = (post.category || '').split('-');
           return mainCat === currentCategory;
         });
         setFilteredPosts(mainCategoryPosts);
       } else {
-        // 특정 서브카테고리가 선택된 경우
         const subCategoryPosts = safePosts.filter(post => (post.category || '') === `${currentCategory}-${currentTab}`);
         setFilteredPosts(subCategoryPosts);
       }
@@ -74,7 +70,6 @@ export default function CategoryPage({
     }
   }, [safePosts, currentCategory, currentTab]);
 
-  // 필터링된 게시물 정렬 (최신순)
   useEffect(() => {
     const sortedPosts = [...filteredPosts].sort((a, b) => {
       const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -84,33 +79,19 @@ export default function CategoryPage({
     setFilteredPosts(sortedPosts);
   }, [filteredPosts]);
 
-  useEffect(() => {
-    // 필터링된 posts 로그로 확인
-    console.log('CategoryPage filteredPosts:', filteredPosts);
-  }, [filteredPosts]);
-
   const handleCategoryClick = (mainCategory: string) => {
-    setSelectedCategory(mainCategory);
-    setActiveTab('');
-    setView('category');
-    setCurrentPage(1);
-    router.push(`/?category=${mainCategory}`);
+    router.push(`/category/${mainCategory}`);
   };
 
   const handleTabClick = (mainCategory: string, subCategory: string) => {
-    setActiveTab(subCategory); // 상태를 즉시 반영
-    router.push(`/?category=${mainCategory}&tab=${subCategory}`);
+    router.push(`/category/${mainCategory}/${subCategory}`);
   };
 
-  // 현재 선택된 카테고리에 맞는 지역 설정
   const currentRegion = extraBoards.includes(selectedCategory)
     ? selectedCategory
     : `${selectedCategory}-${activeTab}`;
 
-  // 총 페이지 수 계산
   const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
-
-  // 현재 페이지에 표시할 게시물
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE, 
     currentPage * ITEMS_PER_PAGE
@@ -125,8 +106,8 @@ export default function CategoryPage({
             {(categoryData.find(g => g.group === currentCategory)?.items || []).map((item) => (
               <button
                 key={item.label}
-                onClick={() => router.push(`/?category=${encodeURIComponent(currentCategory)}&tab=${encodeURIComponent(item.label)}`)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                onClick={() => handleTabClick(currentCategory, item.label)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer
                   ${currentTab === item.label
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -201,12 +182,11 @@ export default function CategoryPage({
           </div>
         </div>
 
-        {/* 글쓰기 버튼은 계속 하단에 유지 */}
+        {/* 글쓰기 버튼 */}
         <div className="flex justify-end mb-4">
           {user && (
             <button
               onClick={() => {
-                // 글쓰기는 서브카테고리가 선택되어 있을 때만 가능
                 if (!activeTab && !extraBoards.includes(selectedCategory)) {
                   alert('글을 작성하려면 서브카테고리를 선택해주세요.');
                   return;
