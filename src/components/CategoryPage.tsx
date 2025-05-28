@@ -106,7 +106,10 @@ export default function CategoryPage({
             {(categoryData.find(g => g.group === currentCategory)?.items || []).map((item) => (
               <button
                 key={item.label}
-                onClick={() => handleTabClick(currentCategory, item.label)}
+                onClick={() => {
+                  setCurrentTab(item.label);
+                  handleTabClick(currentCategory, item.label);
+                }}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer
                   ${currentTab === item.label
                     ? 'bg-blue-600 text-white'
