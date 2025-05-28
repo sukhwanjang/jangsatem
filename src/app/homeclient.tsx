@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase, clearSession } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import WriteForm from '@/components/WriteForm';
@@ -22,7 +22,6 @@ import AdBanner from '@/components/AdBanner';
 
 export default function HomeClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [view, setView] = useState<'main' | 'category'>('main');
   const [selectedCategory, setSelectedCategory] = useState("");
   const [activeTab, setActiveTab] = useState("");
@@ -58,25 +57,6 @@ export default function HomeClient() {
     };
     fetchUserAndData();
   }, []);
-
-  useEffect(() => {
-    const categoryFromUrl = searchParams.get('category');
-    const tabFromUrl = searchParams.get('tab');
-    if (categoryFromUrl) {
-      setSelectedCategory(categoryFromUrl);
-      setOpenCategory(categoryFromUrl);
-      setView('category');
-      setCurrentPage(1);
-      if (tabFromUrl) setActiveTab(tabFromUrl);
-      else setActiveTab('');
-      } else {
-      setView('main');
-      setSelectedCategory('');
-        setActiveTab('');
-      setOpenCategory(null);
-      setCurrentPage(1);
-    }
-  }, [searchParams]);
 
   // region/category 구조와 필터링 로직 명확화 및 콘솔 로그 추가
   const currentRegion = extraBoards.includes(selectedCategory)
@@ -115,6 +95,11 @@ export default function HomeClient() {
   }, []);
 
   const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+    setActiveTab("");
+    setView('category');
+    setCurrentPage(1);
+    // path 기반으로 이동
     router.push(`/category/${category}`);
   };
 
