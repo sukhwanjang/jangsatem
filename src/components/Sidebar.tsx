@@ -40,6 +40,7 @@ export default function Sidebar({
     setActiveTab(''); // 서브 카테고리는 초기화
     setView('category');
     setCurrentPage(1);
+    router.push(`/category/${encodeURIComponent(main)}`);
   };
 
   const handleSubCategoryClick = (main: string, sub: string) => {
@@ -47,6 +48,7 @@ export default function Sidebar({
     setActiveTab(sub);
     setView('category');
     setCurrentPage(1);
+    router.push(`/category/${encodeURIComponent(main)}/${encodeURIComponent(sub)}`);
   };
 
   return (

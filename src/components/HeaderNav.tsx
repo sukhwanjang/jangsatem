@@ -84,7 +84,7 @@ export default function HeaderNav({
                   setActiveTab('');
                   setView('category');
                   setCurrentPage(1);
-                  setMegaMenuOpen(false);
+                  router.push(`/category/${encodeURIComponent(group.group)}`);
                 }}
               >
                 {group.group}
@@ -181,6 +181,7 @@ export default function HeaderNav({
                           setView('category');
                           setCurrentPage(1);
                           setMegaMenuOpen(false);
+                          router.push(`/category/${encodeURIComponent(group.group)}/${encodeURIComponent(item.label)}`);
                         }}
                       >
                         {item.label}

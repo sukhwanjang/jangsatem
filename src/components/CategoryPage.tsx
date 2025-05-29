@@ -84,6 +84,7 @@ export default function CategoryPage({
     setActiveTab('');
     setView('category');
     setCurrentPage(1);
+    router.push(`/category/${encodeURIComponent(mainCategory)}`);
   };
 
   const handleTabClick = (mainCategory: string, subCategory: string) => {
@@ -91,6 +92,7 @@ export default function CategoryPage({
     setActiveTab(subCategory);
     setView('category');
     setCurrentPage(1);
+    router.push(`/category/${encodeURIComponent(mainCategory)}/${encodeURIComponent(subCategory)}`);
   };
 
   const currentRegion = extraBoards.includes(selectedCategory)
