@@ -27,28 +27,26 @@ export default function Sidebar({
 }: SidebarProps) {
   const router = useRouter();
 
-  const handleMainCategoryClick = (main: string) => {
-    // 현재 열린 카테고리와 같으면 닫기
-    if (openCategory === main) {
+  const handleMainCategoryClick = (group: string) => {
+    if (openCategory === group) {
       setOpenCategory(null);
       return;
     }
     
-    // 열린 카테고리 변경 및 해당 카테고리 페이지로 이동
-    setOpenCategory(main);
-    setSelectedCategory(main);
-    setActiveTab(''); // 서브 카테고리는 초기화
+    setOpenCategory(group);
+    setSelectedCategory(group);
+    setActiveTab('');
     setView('category');
     setCurrentPage(1);
-    router.push(`/category/${encodeURIComponent(main)}`);
+    router.push(`/category/${encodeURIComponent(group)}`);
   };
 
-  const handleSubCategoryClick = (main: string, sub: string) => {
-    setSelectedCategory(main);
-    setActiveTab(sub);
+  const handleSubCategoryClick = (group: string, item: string) => {
+    setSelectedCategory(group);
+    setActiveTab(item);
     setView('category');
     setCurrentPage(1);
-    router.push(`/category/${encodeURIComponent(main)}/${encodeURIComponent(sub)}`);
+    router.push(`/category/${encodeURIComponent(group)}/${encodeURIComponent(item)}`);
   };
 
   return (
@@ -60,6 +58,7 @@ export default function Sidebar({
           setSelectedCategory('');
           setActiveTab('');
           setCurrentPage(1);
+          router.push('/');
         }}
       >
         장사템
@@ -73,7 +72,11 @@ export default function Sidebar({
               <div key={group.group}>
                 <button
                   onClick={() => handleMainCategoryClick(group.group)}
-                  className={`w-full text-left ${selectedCategory === group.group && !activeTab ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'} px-3 py-1.5 text-sm rounded`}
+                  className={`w-full text-left ${
+                    selectedCategory === group.group && !activeTab 
+                      ? 'bg-blue-100 text-blue-600' 
+                      : 'hover:bg-gray-100'
+                  } px-3 py-1.5 text-sm rounded`}
                 >
                   {group.group}
                 </button>
@@ -84,7 +87,9 @@ export default function Sidebar({
                         key={item.label}
                         onClick={() => handleSubCategoryClick(group.group, item.label)}
                         className={`block px-4 py-1 text-xs rounded mx-auto ${
-                          selectedCategory === group.group && activeTab === item.label ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
+                          selectedCategory === group.group && activeTab === item.label 
+                            ? 'bg-blue-50 text-blue-600' 
+                            : 'hover:bg-gray-100'
                         }`}
                       >
                         ▸ {item.label}
@@ -105,12 +110,15 @@ export default function Sidebar({
                 key={board}
                 onClick={() => {
                   setSelectedCategory(board);
-                  setActiveTab("");
-                  setView("category");
+                  setActiveTab('');
+                  setView('category');
                   setCurrentPage(1);
+                  router.push(`/category/${encodeURIComponent(board)}`);
                 }}
                 className={`w-full text-left rounded px-3 py-1.5 text-sm ${
-                  selectedCategory === board ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
+                  selectedCategory === board 
+                    ? 'bg-blue-100 text-blue-600' 
+                    : 'hover:bg-gray-100'
                 }`}
               >
                 {board}

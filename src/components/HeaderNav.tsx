@@ -50,48 +50,60 @@ export default function HeaderNav({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // 검색 기능 추가 예정
     alert(`'${searchTerm}' 검색 기능은 개발 중입니다.`);
+  };
+
+  const handleMainCategoryClick = (group: string) => {
+    setSelectedCategory(group);
+    setActiveTab('');
+    setView('category');
+    setCurrentPage(1);
+    router.push(`/category/${encodeURIComponent(group)}`);
+  };
+
+  const handleSubCategoryClick = (group: string, item: string) => {
+    setSelectedCategory(group);
+    setActiveTab(item);
+    setView('category');
+    setCurrentPage(1);
+    router.push(`/category/${encodeURIComponent(group)}/${encodeURIComponent(item)}`);
   };
 
   return (
     <div className="sticky top-0 z-50 w-full">
-      {/* 상단 헤더 및 메가 드롭다운 래퍼 */}
-      <div
-        className="bg-white text-gray-900 border-b relative"
-        onMouseEnter={() => setMegaMenuOpen(true)}
-        onMouseLeave={() => setMegaMenuOpen(false)}
-      >
+      <div className="bg-white text-gray-900 border-b relative">
         <div className="max-w-screen-xl mx-auto px-4 py-2 flex items-center w-full">
           {/* 로고 */}
           <div 
             className="text-xl font-bold cursor-pointer mr-4 text-gray-900"
             onClick={() => {
               setView('main');
+              setSelectedCategory('');
+              setActiveTab('');
+              setCurrentPage(1);
               router.push('/');
             }}
           >
             장사템
           </div>
-          {/* 메인 카테고리 메뉴 (hover만, 클릭 이벤트 제거) */}
+
+          {/* 메인 카테고리 메뉴 */}
           <div className="hidden md:flex space-x-6">
             {categoryData.map((group) => (
               <button
                 key={group.group}
-                className={`px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black ${selectedCategory === group.group && !activeTab ? 'bg-blue-600 text-white rounded-full' : ''}`}
-                onClick={() => {
-                  setSelectedCategory(group.group);
-                  setActiveTab('');
-                  setView('category');
-                  setCurrentPage(1);
-                  router.push(`/category/${encodeURIComponent(group.group)}`);
-                }}
+                className={`px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black ${
+                  selectedCategory === group.group && !activeTab ? 'bg-blue-600 text-white rounded-full' : ''
+                }`}
+                onClick={() => handleMainCategoryClick(group.group)}
+                onMouseEnter={() => setMegaMenuOpen(true)}
               >
                 {group.group}
               </button>
             ))}
           </div>
-          {/* 검색 및 로그인/회원가입 버튼 등 기존 코드 유지 */}
+
+          {/* 검색 및 로그인/회원가입 버튼 */}
           <div className="hidden md:flex items-center space-x-4 ml-auto">
             <form onSubmit={handleSearch} className="relative">
               <input
@@ -107,45 +119,41 @@ export default function HeaderNav({
                 </svg>
               </button>
             </form>
+
             {user ? (
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 cursor-pointer border border-gray-300"
-              >
-                로그아웃
-              </button>
+              <>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 cursor-pointer border border-gray-300"
+                >
+                  로그아웃
+                </button>
+                <button
+                  onClick={() => router.push('/mypage')}
+                  className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-black cursor-pointer border border-gray-700"
+                >
+                  마이페이지
+                </button>
+              </>
             ) : (
-              <button
-                onClick={() => {
-                  router.push('/login');
-                }}
-                className="px-3 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 cursor-pointer border border-gray-300"
-              >
-                로그인
-              </button>
-            )}
-            {user && (
-              <button
-                onClick={() => {
-                  router.push('/mypage');
-                }}
-                className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-black cursor-pointer border border-gray-700"
-              >
-                마이페이지
-              </button>
-            )}
-            {!user && (
-              <button
-                onClick={() => {
-                  router.push('/register');
-                }}
-                className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-black cursor-pointer border border-gray-700"
-              >
-                회원가입
-              </button>
+              <>
+                <button
+                  onClick={() => router.push('/login')}
+                  className="px-3 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300 cursor-pointer border border-gray-300"
+                >
+                  로그인
+                </button>
+                <button
+                  onClick={() => router.push('/register')}
+                  className="px-3 py-1 bg-gray-800 text-white text-sm rounded hover:bg-black cursor-pointer border border-gray-700"
+                >
+                  회원가입
+                </button>
+              </>
             )}
           </div>
-          {/* 모바일 메뉴 버튼 (기존 유지) */}
+
+          {/* 모바일 메뉴 버튼 */}
           <div className="md:hidden">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -163,9 +171,13 @@ export default function HeaderNav({
             </button>
           </div>
         </div>
-        {/* 메가 드롭다운 (데스크톱에서만) */}
+
+        {/* 메가 드롭다운 (데스크톱) */}
         {megaMenuOpen && (
-          <div className="absolute left-0 w-full bg-white shadow-2xl z-50 border-t">
+          <div 
+            className="absolute left-0 w-full bg-white shadow-2xl z-50 border-t"
+            onMouseLeave={() => setMegaMenuOpen(false)}
+          >
             <div className="max-w-screen-xl mx-auto grid grid-cols-7 divide-x divide-gray-100">
               {categoryData.map((group) => (
                 <div key={group.group} className="px-8 py-8">
@@ -175,14 +187,7 @@ export default function HeaderNav({
                       <li
                         key={item.label}
                         className={`text-sm cursor-pointer transition text-gray-700 hover:text-black hover:font-bold`}
-                        onClick={() => {
-                          setSelectedCategory(group.group);
-                          setActiveTab(item.label);
-                          setView('category');
-                          setCurrentPage(1);
-                          setMegaMenuOpen(false);
-                          router.push(`/category/${encodeURIComponent(group.group)}/${encodeURIComponent(item.label)}`);
-                        }}
+                        onClick={() => handleSubCategoryClick(group.group, item.label)}
                       >
                         {item.label}
                       </li>
@@ -194,8 +199,8 @@ export default function HeaderNav({
           </div>
         )}
       </div>
-      
-      {/* 모바일 메뉴 드롭다운 */}
+
+      {/* 모바일 메뉴 */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white text-gray-900 border-b">
           <div className="px-4 py-3 space-y-3">
@@ -205,10 +210,7 @@ export default function HeaderNav({
                 <button
                   key={group.group}
                   onClick={() => {
-                    setSelectedCategory(group.group);
-                    setActiveTab('');
-                    setView('category');
-                    setCurrentPage(1);
+                    handleMainCategoryClick(group.group);
                     setMobileMenuOpen(false);
                   }}
                   className={`text-sm text-left px-3 py-2 rounded cursor-pointer border ${
@@ -221,7 +223,7 @@ export default function HeaderNav({
                 </button>
               ))}
             </div>
-            
+
             {/* 모바일 검색 */}
             <form onSubmit={handleSearch} className="relative mt-3">
               <input
@@ -237,7 +239,7 @@ export default function HeaderNav({
                 </svg>
               </button>
             </form>
-            
+
             {/* 모바일 인증 버튼 */}
             <div className="flex flex-wrap gap-2 mt-3">
               {user ? (
@@ -284,19 +286,16 @@ export default function HeaderNav({
           </div>
         </div>
       )}
-      
-      {/* 모바일에서만: 서브카테고리 바 */}
-      {/* 데스크톱은 각 버튼 아래 드롭다운으로 노출되므로, 모바일에서만 전체 바 형태로 노출 */}
+
+      {/* 모바일 서브카테고리 바 */}
       <div className="md:hidden">
         {selectedCategory && (
-          <div className="flex justify-center gap-1 py-1 bg-white border-b">
+          <div className="flex justify-center gap-1 py-1 bg-white border-b overflow-x-auto">
             {categoryData.find(g => g.group === selectedCategory)?.items.map((item) => (
               <button
                 key={item.label}
                 onClick={() => {
-                  setActiveTab(item.label);
-                  setView('category');
-                  setCurrentPage(1);
+                  handleSubCategoryClick(selectedCategory, item.label);
                 }}
                 className={`text-xs px-2 py-1 rounded-full border whitespace-nowrap cursor-pointer ${
                   activeTab === item.label

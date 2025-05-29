@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
-import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard, categoryData, mainCategories } from '@/lib/categoryData';
+import { BusinessCard, Post, ITEMS_PER_PAGE, extraBoards, fillEmptyCards, isBusinessCard, categoryData } from '@/lib/categoryData';
 import WriteForm from './WriteForm';
 import PostList from './PostList';
 import { supabase } from '@/lib/supabase';
@@ -44,31 +44,26 @@ export default function CategoryPage({
 }: CategoryPageProps) {
   const router = useRouter();
   const safePosts = Array.isArray(posts) ? posts : [];
-  let [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [currentCategory, setCurrentCategory] = useState(selectedCategory);
-  const [currentTab, setCurrentTab] = useState(activeTab);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    setCurrentCategory(selectedCategory);
-    setCurrentTab(activeTab);
-  }, [selectedCategory, activeTab]);
-
-  useEffect(() => {
-    if (currentCategory) {
-      if (!currentTab) {
+    if (selectedCategory) {
+      if (!activeTab) {
         const mainCategoryPosts = safePosts.filter(post => {
           const [mainCat] = (post.category || '').split('-');
-          return mainCat === currentCategory;
+          return mainCat === selectedCategory;
         });
         setFilteredPosts(mainCategoryPosts);
       } else {
-        const subCategoryPosts = safePosts.filter(post => (post.category || '') === `${currentCategory}-${currentTab}`);
+        const subCategoryPosts = safePosts.filter(post => 
+          (post.category || '') === `${selectedCategory}-${activeTab}`
+        );
         setFilteredPosts(subCategoryPosts);
       }
     } else {
       setFilteredPosts(safePosts);
     }
-  }, [safePosts, currentCategory, currentTab]);
+  }, [safePosts, selectedCategory, activeTab]);
 
   useEffect(() => {
     const sortedPosts = [...filteredPosts].sort((a, b) => {
@@ -79,20 +74,20 @@ export default function CategoryPage({
     setFilteredPosts(sortedPosts);
   }, [filteredPosts]);
 
-  const handleCategoryClick = (mainCategory: string) => {
-    setSelectedCategory(mainCategory);
+  const handleCategoryClick = (group: string) => {
+    setSelectedCategory(group);
     setActiveTab('');
     setView('category');
     setCurrentPage(1);
-    router.push(`/category/${encodeURIComponent(mainCategory)}`);
+    router.push(`/category/${encodeURIComponent(group)}`);
   };
 
-  const handleTabClick = (mainCategory: string, subCategory: string) => {
-    setSelectedCategory(mainCategory);
-    setActiveTab(subCategory);
+  const handleTabClick = (group: string, item: string) => {
+    setSelectedCategory(group);
+    setActiveTab(item);
     setView('category');
     setCurrentPage(1);
-    router.push(`/category/${encodeURIComponent(mainCategory)}/${encodeURIComponent(subCategory)}`);
+    router.push(`/category/${encodeURIComponent(group)}/${encodeURIComponent(item)}`);
   };
 
   const currentRegion = extraBoards.includes(selectedCategory)
@@ -111,15 +106,12 @@ export default function CategoryPage({
         {/* 서브카테고리 네비게이션 */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">
-            {(categoryData.find(g => g.group === currentCategory)?.items || []).map((item) => (
+            {(categoryData.find(g => g.group === selectedCategory)?.items || []).map((item) => (
               <button
                 key={item.label}
-                onClick={() => {
-                  setCurrentTab(item.label);
-                  handleTabClick(currentCategory, item.label);
-                }}
+                onClick={() => handleTabClick(selectedCategory, item.label)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer
-                  ${currentTab === item.label
+                  ${activeTab === item.label
                     ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                   }`}
@@ -133,7 +125,6 @@ export default function CategoryPage({
         {/* 선택된 카테고리에 해당하는 로고 보여주기 */}
         {(() => {
           const topLogo = businessCards.find(card => card.region === currentRegion && card.image_url);
-
           return topLogo ? (
             <div className="mb-6">
               <Image
@@ -165,15 +156,13 @@ export default function CategoryPage({
         {/* 게시글 목록 */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="divide-y divide-gray-100">
-            {(filteredPosts || []).map((post) => {
+            {paginatedPosts.map((post) => {
               const [mainCat, subCat] = (post.category || '').split('-');
               return (
                 <div
                   key={post.id}
                   className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => {
-                    router.push(`/read/${post.id}`);
-                  }}
+                  onClick={() => router.push(`/read/${post.id}`)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
