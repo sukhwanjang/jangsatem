@@ -80,7 +80,7 @@ export default function HeaderNav({
                 key={group.group}
                 className={`px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black ${selectedCategory === group.group && !activeTab ? 'bg-blue-600 text-white rounded-full' : ''}`}
                 onClick={() => {
-                  router.push(`/category/${encodeURIComponent(group.group)}`);
+                  router.push(`/?category=${encodeURIComponent(group.group)}`);
                 }}
               >
                 {group.group}
@@ -170,7 +170,7 @@ export default function HeaderNav({
                           setActiveTab(item.label);
                           setView('category');
                           setCurrentPage(1);
-                          router.push(`/category/${encodeURIComponent(group.group)}/${encodeURIComponent(item.label)}`);
+                          router.push(`/?category=${encodeURIComponent(group.group)}&tab=${encodeURIComponent(item.label)}`);
                           setMegaMenuOpen(false);
                         }}
                       >
