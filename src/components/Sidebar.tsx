@@ -55,7 +55,9 @@ export default function Sidebar({
         className="text-xl font-bold mb-4 text-blue-600 cursor-pointer" 
         onClick={() => {
           setView('main');
-          router.push('/');
+          setSelectedCategory('');
+          setActiveTab('');
+          setCurrentPage(1);
         }}
       >
         장사템

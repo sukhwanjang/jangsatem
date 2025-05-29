@@ -169,7 +169,9 @@ export default function CategoryPage({
                 <div
                   key={post.id}
                   className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => router.push(`/read/${post.id}`)}
+                  onClick={() => {
+                    router.push(`/read/${post.id}`);
+                  }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
