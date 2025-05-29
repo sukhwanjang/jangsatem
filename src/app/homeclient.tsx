@@ -99,8 +99,6 @@ export default function HomeClient() {
     setActiveTab("");
     setView('category');
     setCurrentPage(1);
-    // path 기반으로 이동
-    router.push(`/category/${category}`);
   };
 
   return (

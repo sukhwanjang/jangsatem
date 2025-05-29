@@ -80,7 +80,11 @@ export default function HeaderNav({
                 key={group.group}
                 className={`px-2 py-1 font-bold cursor-pointer text-sm whitespace-nowrap text-gray-800 hover:text-black ${selectedCategory === group.group && !activeTab ? 'bg-blue-600 text-white rounded-full' : ''}`}
                 onClick={() => {
-                  router.push(`/?category=${encodeURIComponent(group.group)}`);
+                  setSelectedCategory(group.group);
+                  setActiveTab('');
+                  setView('category');
+                  setCurrentPage(1);
+                  setMegaMenuOpen(false);
                 }}
               >
                 {group.group}
@@ -170,7 +174,6 @@ export default function HeaderNav({
                           setActiveTab(item.label);
                           setView('category');
                           setCurrentPage(1);
-                          router.push(`/?category=${encodeURIComponent(group.group)}&tab=${encodeURIComponent(item.label)}`);
                           setMegaMenuOpen(false);
                         }}
                       >
@@ -194,7 +197,13 @@ export default function HeaderNav({
               {categoryData.map((group) => (
                 <button
                   key={group.group}
-                  onClick={() => setSelectedCategory(group.group)}
+                  onClick={() => {
+                    setSelectedCategory(group.group);
+                    setActiveTab('');
+                    setView('category');
+                    setCurrentPage(1);
+                    setMobileMenuOpen(false);
+                  }}
                   className={`text-sm text-left px-3 py-2 rounded cursor-pointer border ${
                     selectedCategory === group.group
                       ? 'bg-gray-200 text-gray-900 border-gray-300'
@@ -277,7 +286,11 @@ export default function HeaderNav({
             {categoryData.find(g => g.group === selectedCategory)?.items.map((item) => (
               <button
                 key={item.label}
-                onClick={() => setSelectedCategory(selectedCategory)}
+                onClick={() => {
+                  setActiveTab(item.label);
+                  setView('category');
+                  setCurrentPage(1);
+                }}
                 className={`text-xs px-2 py-1 rounded-full border whitespace-nowrap cursor-pointer ${
                   activeTab === item.label
                     ? 'bg-gray-200 text-gray-900 border-gray-300 font-medium'

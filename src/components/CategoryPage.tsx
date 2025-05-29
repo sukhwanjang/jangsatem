@@ -80,11 +80,17 @@ export default function CategoryPage({
   }, [filteredPosts]);
 
   const handleCategoryClick = (mainCategory: string) => {
-    router.push(`/category/${mainCategory}`);
+    setSelectedCategory(mainCategory);
+    setActiveTab('');
+    setView('category');
+    setCurrentPage(1);
   };
 
   const handleTabClick = (mainCategory: string, subCategory: string) => {
-    router.push(`/category/${mainCategory}/${subCategory}`);
+    setSelectedCategory(mainCategory);
+    setActiveTab(subCategory);
+    setView('category');
+    setCurrentPage(1);
   };
 
   const currentRegion = extraBoards.includes(selectedCategory)

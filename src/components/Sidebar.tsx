@@ -40,9 +40,6 @@ export default function Sidebar({
     setActiveTab(''); // 서브 카테고리는 초기화
     setView('category');
     setCurrentPage(1);
-    
-    // URL 업데이트 (메인 카테고리만 쿼리로 전달)
-    router.push(`/?category=${encodeURIComponent(main)}`);
   };
 
   const handleSubCategoryClick = (main: string, sub: string) => {
@@ -50,9 +47,6 @@ export default function Sidebar({
     setActiveTab(sub);
     setView('category');
     setCurrentPage(1);
-    
-    // URL 업데이트 (메인 및 서브 카테고리 쿼리 전달)
-    router.push(`/?category=${encodeURIComponent(main)}&tab=${encodeURIComponent(sub)}`);
   };
 
   return (
@@ -110,9 +104,6 @@ export default function Sidebar({
                   setActiveTab("");
                   setView("category");
                   setCurrentPage(1);
-                  
-                  // URL 업데이트
-                  router.push(`/?category=${encodeURIComponent(board)}`);
                 }}
                 className={`w-full text-left rounded px-3 py-1.5 text-sm ${
                   selectedCategory === board ? "bg-blue-100 text-blue-600" : "hover:bg-gray-100"
