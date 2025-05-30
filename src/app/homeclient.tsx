@@ -20,11 +20,16 @@ import CategoryPage from '@/components/CategoryPage';
 import HeaderNav from '@/components/HeaderNav';
 import AdBanner from '@/components/AdBanner';
 
-export default function HomeClient() {
+interface HomeClientProps {
+  initialCategory?: string;
+  initialTab?: string;
+}
+
+export default function HomeClient({ initialCategory = '', initialTab = '' }: HomeClientProps) {
   const router = useRouter();
-  const [view, setView] = useState<'main' | 'category'>('main');
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [activeTab, setActiveTab] = useState("");
+  const [view, setView] = useState<'main' | 'category'>(initialCategory ? 'category' : 'main');
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 18;
