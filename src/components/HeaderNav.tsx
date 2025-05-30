@@ -87,6 +87,17 @@ export default function HeaderNav({
             장사템
           </div>
 
+          {/* 상단 네비게이션 메뉴 */}
+          <div className="hidden md:flex space-x-4 mr-8">
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/업체찾기')}>업체찾기</button>
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/견적의뢰')}>견적/의뢰</button>
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/창업템추천')}>창업템 추천</button>
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/노하우정보')}>노하우/정보</button>
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/커뮤니티')}>커뮤니티</button>
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/업종별토론')}>업종별 토론</button>
+            <button className="font-bold text-sm px-2 py-1 hover:text-blue-600 cursor-pointer" onClick={() => router.push('/공지이벤트')}>공지/이벤트</button>
+          </div>
+
           {/* 메인 카테고리 메뉴 */}
           <div className="hidden md:flex space-x-6">
             {categoryData.map((group) => (
